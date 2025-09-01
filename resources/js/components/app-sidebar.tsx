@@ -5,10 +5,11 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, BuildingIcon, Folder, LayoutGrid, UserIcon } from 'lucide-react';
+import { BookOpen, BuildingIcon, Folder, FolderIcon, LayoutGrid, UserIcon } from 'lucide-react';
 import AppLogo from './app-logo';
 import divisions from '@/routes/divisions';
 import users from '@/routes/users';
+import borrowers from '@/routes/borrowers';
 
 const mainNavItems: NavItem[] = [
     {
@@ -17,14 +18,19 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
+        title: 'User',
+        href: users.index(),
+        icon: UserIcon,
+    },
+    {
         title: 'Divisi',
         href: divisions.index(),
         icon: BuildingIcon,
     },
     {
-        title: 'User',
-        href: users.index(),
-        icon: UserIcon,
+        title: 'Debitur',
+        href: borrowers.index(),
+        icon: FolderIcon,
     }
 ];
 

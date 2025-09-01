@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AppLayout from "@/layouts/app-layout";
 import { dashboard } from "@/routes";
-import users from "@/routes/users";
+import borrowers from "@/routes/borrowers";
 import { BreadcrumbItem } from "@/types";
 import { Head, Link, router, useForm } from "@inertiajs/react";
 import { ArrowLeftIcon } from "lucide-react";
@@ -30,33 +30,30 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: dashboard().url
     },
     {
-        title: "Divisi",
-        href: users.index().url
+        title: "Debitur",
+        href: borrowers.index().url
     },
     {
-        title: "Tambah Divisi",
-        href: users.create().url
+        title: "Tambah Debitur",
+        href: borrowers.create().url
     }
 ];
 
-export default function UserCreate({ divisions }: Props) {
+export default function BorrowerCreate({ divisions }: Props) {
     const defaultValues = {
         name: "",
-        email: "",
-        password: "",
-        password_confirmation: "",
         division_id: 0,
     }
-    
+
     const { data, setData, post, reset, processing, errors, isDirty } = useForm(defaultValues);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        post(users.store().url, {
+        post(borrowers.store().url, {
             onSuccess: () => {
-                toast.success("User berhasil ditambahkan.");
-                router.visit(users.index().url, {
+                toast.success("Debitur berhasil ditambahkan.");
+                router.visit(borrowers.index().url, {
                     preserveScroll: true,
                 });
             },
@@ -70,15 +67,15 @@ export default function UserCreate({ divisions }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Tambah Divisi" />
+            <Head title="Tambah Debitur"/>
             <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                     <Card>
                         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:items-center sm:justify-between">
-                            <CardTitle className="text-lg font-bold md:text-2xl">Tambah Divisi</CardTitle>
-                            <Link href={users.index().url}>
+                            <CardTitle className="text-lg font-bold md:text-2xl">Tambah Debitur</CardTitle>
+                            <Link href={borrowers.index().url}>
                                 <Button variant={"outline"}>
-                                    <ArrowLeftIcon className="h-4 w-4" />
+                                    <ArrowLeftIcon className="h-4 w-4"/>
                                     Kembali
                                 </Button>
                             </Link>
@@ -87,49 +84,16 @@ export default function UserCreate({ divisions }: Props) {
                             <CardContent className="space-y-6">
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">Nama</Label>
-                                    <Input 
-                                        id="name" 
-                                        value={data.name} 
+                                    <Input
+                                        id="name"
+                                        value={data.name}
                                         onChange={(e) => setData("name", e.target.value)}
-                                        placeholder="Masukkan nama user"
+                                        placeholder="Masukkan nama debitur"
                                     />
                                     <InputError message={errors.name} />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input 
-                                        id="email"
-                                        type="email" 
-                                        value={data.email} 
-                                        onChange={(e) => setData("email", e.target.value)}
-                                        placeholder="Masukkan email user"
-                                    />
-                                    <InputError message={errors.email} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="password">Password</Label>
-                                    <Input 
-                                        id="password" 
-                                        type="password"
-                                        value={data.password} 
-                                        onChange={(e) => setData("password", e.target.value)}
-                                        placeholder="Masukkan password user"
-                                    />
-                                    <InputError message={errors.email} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="password_confirmation">Password</Label>
-                                    <Input 
-                                        id="password_confirmation" 
-                                        type="password"
-                                        value={data.password_confirmation} 
-                                        onChange={(e) => setData("password", e.target.value)}
-                                        placeholder="Masukkan password user"
-                                    />
-                                    <InputError message={errors.email} />
-                                </div>
-                                <div>
-                                    <Label htmlFor="division">Divisi</Label>
+                                    <Label htmlFor="name">Nama</Label>
                                     <Select
                                         value={data.division_id ? String(data.division_id) : ""}
                                         onValueChange={(value) => setData("division_id", Number(value))}
@@ -170,4 +134,4 @@ export default function UserCreate({ divisions }: Props) {
             </div>
         </AppLayout>
     );
-}   
+}

@@ -35,7 +35,7 @@ type Division = {
 interface Props {
     user: User,
     divisions: Division[]
-}
+};
 
 export default function UserEdit({ user, divisions }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
