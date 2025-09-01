@@ -5,8 +5,10 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { BookOpen, BuildingIcon, Folder, LayoutGrid, UserIcon } from 'lucide-react';
 import AppLogo from './app-logo';
+import divisions from '@/routes/divisions';
+import users from '@/routes/users';
 
 const mainNavItems: NavItem[] = [
     {
@@ -14,6 +16,16 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+    {
+        title: 'Divisi',
+        href: divisions.index(),
+        icon: BuildingIcon,
+    },
+    {
+        title: 'User',
+        href: users.index(),
+        icon: UserIcon,
+    }
 ];
 
 const footerNavItems: NavItem[] = [
@@ -49,7 +61,7 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+                {/* <NavFooter items={footerNavItems} className="mt-auto" /> */}
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

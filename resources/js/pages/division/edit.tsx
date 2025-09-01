@@ -35,7 +35,7 @@ export default function DivisionEdit({ division }: Props) {
         },
         {
             title: `Edit - Divisi ${division.code}`,
-            href: "#"
+            href: divisions.edit(division.id).url
         }
     ];
 
@@ -63,12 +63,12 @@ export default function DivisionEdit({ division }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Tambah Divisi" />
+            <Head title="Edit Divisi" />
             <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                     <Card>
-                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:items-center sm:justify-between">
-                            <CardTitle className="text-lg font-bold md:text-2xl">Tambah Divisi</CardTitle>
+                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <CardTitle className="text-lg font-bold md:text-2xl">Edit Divisi</CardTitle>
                             <Link href={divisions.index().url}>
                                 <Button variant={"outline"}>
                                     <ArrowLeftIcon className="h-4 w-4" />

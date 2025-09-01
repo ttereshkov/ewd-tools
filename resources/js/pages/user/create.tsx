@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AppLayout from "@/layouts/app-layout";
 import { dashboard } from "@/routes";
-import divisions from "@/routes/divisions";
+import users from "@/routes/users";
 import { BreadcrumbItem } from "@/types";
 import { Head, Link, router, useForm } from "@inertiajs/react";
 import { ArrowLeftIcon } from "lucide-react";
@@ -18,25 +18,32 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: "Divisi",
-        href: divisions.index().url
+        href: users.index().url
     },
     {
         title: "Tambah Divisi",
-        href: divisions.create().url
+        href: users.create().url
     }
 ];
 
-export default function DivisionCreate() {
-    const defaultValues = { code: "", name: "" };
+export default function UserCreate() {
+    const defaultValues = {
+        name: "",
+        email: "",
+        password: "",
+        password_confirmation: "",
+        division_id: null,
+    }
+    
     const { data, setData, post, reset, processing, errors, isDirty } = useForm(defaultValues);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        post(divisions.store().url, {
+        post(users.store().url, {
             onSuccess: () => {
-                toast.success("Divisi berhasil ditambahkan.");
-                router.visit(divisions.index().url, {
+                toast.success("User berhasil ditambahkan.");
+                router.visit(users.index().url, {
                     preserveScroll: true,
                 });
             },
@@ -56,7 +63,7 @@ export default function DivisionCreate() {
                     <Card>
                         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:items-center sm:justify-between">
                             <CardTitle className="text-lg font-bold md:text-2xl">Tambah Divisi</CardTitle>
-                            <Link href={divisions.index().url}>
+                            <Link href={users.index().url}>
                                 <Button variant={"outline"}>
                                     <ArrowLeftIcon className="h-4 w-4" />
                                     Kembali
@@ -66,24 +73,47 @@ export default function DivisionCreate() {
                         <form onSubmit={submit} className="space-y-6">
                             <CardContent className="space-y-6">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="code">Kode Divisi</Label>
-                                    <Input 
-                                        id="code" 
-                                        value={data.code} 
-                                        onChange={(e) => setData("code", e.target.value)}
-                                        placeholder="Masukkan kode divisi"
-                                    />
-                                    <InputError message={errors.code} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Nama Divisi</Label>
+                                    <Label htmlFor="name">Nama</Label>
                                     <Input 
                                         id="name" 
                                         value={data.name} 
                                         onChange={(e) => setData("name", e.target.value)}
-                                        placeholder="Masukkan nama divisi"
+                                        placeholder="Masukkan nama user"
                                     />
                                     <InputError message={errors.name} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input 
+                                        id="email"
+                                        type="email" 
+                                        value={data.email} 
+                                        onChange={(e) => setData("email", e.target.value)}
+                                        placeholder="Masukkan email user"
+                                    />
+                                    <InputError message={errors.email} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="password">Password</Label>
+                                    <Input 
+                                        id="password" 
+                                        type="password"
+                                        value={data.password} 
+                                        onChange={(e) => setData("password", e.target.value)}
+                                        placeholder="Masukkan password user"
+                                    />
+                                    <InputError message={errors.email} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="password_confirmation">Password</Label>
+                                    <Input 
+                                        id="password_confirmation" 
+                                        type="password"
+                                        value={data.password_confirmation} 
+                                        onChange={(e) => setData("password", e.target.value)}
+                                        placeholder="Masukkan password user"
+                                    />
+                                    <InputError message={errors.email} />
                                 </div>
                             </CardContent>
                             <CardFooter className="flex items-center justify-end gap-4">
@@ -108,5 +138,5 @@ export default function DivisionCreate() {
                 </div>
             </div>
         </AppLayout>
-    )
-}
+    );
+}   

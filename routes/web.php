@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -17,6 +18,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::resource('divisions', DivisionController::class)
     ->middleware(['auth', 'verified'])
     ->names('divisions');
+
+Route::resource('users', UserController::class)
+    ->middleware(['auth', 'verified'])
+    ->names('users');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

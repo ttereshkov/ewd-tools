@@ -3,12 +3,22 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import AppLayout from "@/layouts/app-layout";
 import { dashboard } from "@/routes";
-import divisions from "@/routes/divisions";
-import { type BreadcrumbItem } from "@/types";
+import users from "@/routes/users";
+import { BreadcrumbItem } from "@/types";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { EditIcon, EyeIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
+
+type User = {
+    id: number;
+    name: string;
+    email: string;
+    division_id: number;
+    division: Division;
+    created_at: string;
+    updated_at: string;
+}
 
 type Division = {
     id: number;
@@ -19,25 +29,25 @@ type Division = {
 };
 
 type PageProps = {
-    divisions: Division[];
+    users: User[];
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: "Dashboard",
-        href: dashboard().url
+        href: dashboard().url,
     },
     {
-        title: "Divisi",
-        href: divisions.index().url
+        title: "User",
+        href: users.index().url,
     }
 ];
 
-export default function DivisionIndex() {
-    const { divisions: divisionList } = usePage<PageProps>().props;
+export default function UserIndex() {
+    const { users: userList } = usePage<PageProps>().props;
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [divisionToDelete, setDivisionToDelete] = useState<number | null>(null);
-    
+
     const openDeleteModal = (id: number) => {
         setDivisionToDelete(id);
         setIsDeleteModalOpen(true);
@@ -49,9 +59,9 @@ export default function DivisionIndex() {
     };
 
     const handleDelete = (id: number) => {
-        router.delete(divisions.destroy(divisionToDelete!).url, {
+        router.delete(users.destroy(divisionToDelete!).url, {
             onSuccess: () => {
-                toast.success("Divisi berhasil dihapus");
+                toast.success("User berhasil dihapus");
             },
             onError: (errs) => {
                 Object.values(errs).forEach((error) => {
@@ -66,55 +76,57 @@ export default function DivisionIndex() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="List Divisi" />
+            <Head title="List User" />
             <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                     <Card>
                         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="text-lg font-bold md:text-2xl">List Divisi</CardTitle>
-                            <Link href={divisions.create().url}>
+                            <CardTitle className="text-lg font-bold md:text-2xl">List User</CardTitle>
+                            <Link href={users.create().url}>
                                 <Button>
                                     <PlusIcon className="h-4 w-4" />
-                                    Tambah Divisi
+                                    Tambah User
                                 </Button>
                             </Link>
                         </CardHeader>
                         <CardContent>
-                            {divisionList.length === 0 ? (
+                            {userList.length === 0 ? (
                                 <div className="py-8 text-center text-gray-500">
-                                    Belum ada divisi yang terdaftar. Silahkan tambahkan divisi baru.
+                                    Belum ada user yang terdaftar. Silahkan tambahkan user baru.
                                 </div>
                             ) : (
                                 <Table className="w-full overflow-x-auto">
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Kode</TableHead>
                                             <TableHead>Nama</TableHead>
+                                            <TableHead>Email</TableHead>
+                                            <TableHead>Divisi</TableHead>
                                             <TableHead className="text-right">Aksi</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {divisionList.map((division) => (
-                                            <TableRow key={division.id}>
-                                                <TableCell>{division.code}</TableCell>
-                                                <TableCell>{division.name}</TableCell>
+                                        {userList.map((user) => (
+                                            <TableRow key={user.id}>
+                                                <TableCell>{user.name}</TableCell>
+                                                <TableCell>{user.email}</TableCell>
+                                                <TableCell>{user.division?.name ?? "-"}</TableCell>
                                                 <TableCell className="flex justify-end space-x-3 text-right">
-                                                    <Link
-                                                        href={divisions.edit(division.id).url}
+                                                    <Link 
+                                                        href={users.edit(user.id).url}
                                                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                        title="Edit Divisi"
+                                                        title="Edit User"
                                                     >
                                                         <EditIcon className="h-5 w-5" />
                                                     </Link>
-                                                    <Link
-                                                        href={divisions.show(division.id).url}
+                                                    <Link 
+                                                        href={users.show(user.id).url}
                                                         className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                                                        title="Lihat Divisi"
+                                                        title="Edit User"
                                                     >
                                                         <EyeIcon className="h-5 w-5" />
                                                     </Link>
                                                     <button
-                                                        onClick={() => openDeleteModal(division.id)}
+                                                        onClick={() => openDeleteModal(user.id)}
                                                         className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                                                         title="Hapus Divisi"
                                                     >
