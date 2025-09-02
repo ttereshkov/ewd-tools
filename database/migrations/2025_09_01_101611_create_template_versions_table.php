@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('borrowers', function (Blueprint $table) {
+        Schema::create('template_versions', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->foreignId('division_id')->constrained('divisions');
+            $table->foreignId('template_id')->constrained('templates')->cascadeOnDelete();
+            $table->integer('version_number');
+            $table->string('description')->nullable();
             $table->timestamps();
+
+            $table->unique(['template_id', 'version_number']);
         });
     }
 
@@ -24,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('borrowers');
+        Schema::dropIfExists('template_versions');
     }
 };

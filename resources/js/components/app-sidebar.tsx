@@ -1,15 +1,15 @@
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { BookOpen, BuildingIcon, Folder, FolderIcon, LayoutGrid, UserIcon } from 'lucide-react';
-import AppLogo from './app-logo';
+import aspects from '@/routes/aspects';
+import borrowers from '@/routes/borrowers';
 import divisions from '@/routes/divisions';
 import users from '@/routes/users';
-import borrowers from '@/routes/borrowers';
+import { type NavItem } from '@/types';
+import { Link } from '@inertiajs/react';
+import { BookOpen, BuildingIcon, ClipboardListIcon, FileTextIcon, Folder, FolderIcon, LayoutGrid, UserIcon } from 'lucide-react';
+import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
     {
@@ -31,7 +31,17 @@ const mainNavItems: NavItem[] = [
         title: 'Debitur',
         href: borrowers.index(),
         icon: FolderIcon,
-    }
+    },
+    {
+        title: 'Template',
+        href: borrowers.index(),
+        icon: FileTextIcon,
+    },
+    {
+        title: 'Aspek',
+        href: aspects.index(),
+        icon: ClipboardListIcon,
+    },
 ];
 
 const footerNavItems: NavItem[] = [

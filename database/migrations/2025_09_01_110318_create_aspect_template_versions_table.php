@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('borrowers', function (Blueprint $table) {
+        Schema::create('aspect_template_versions', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->foreignId('division_id')->constrained('divisions');
+            $table->foreignId('template_version_id')->constrained('template_versions')->cascadeOnDelete();
+            $table->foreignId('aspect_version_id')->constrained('aspect_versions')->cascadeOnDelete();
+            $table->integer('weight');
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('borrowers');
+        Schema::dropIfExists('aspect_template_versions');
     }
 };

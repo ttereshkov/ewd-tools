@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AspectController;
 use App\Http\Controllers\BorrowerController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\UserController;
@@ -27,6 +28,10 @@ Route::resource('users', UserController::class)
 Route::resource('borrowers', BorrowerController::class)
     ->middleware(['auth', 'verified'])
     ->names('borrowers');
+
+Route::resource('aspects', AspectController::class)
+    ->middleware(['auth', 'verified'])
+    ->names('aspects');
     
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

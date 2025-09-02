@@ -11,10 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('borrowers', function (Blueprint $table) {
+        Schema::create('visibility_rules', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->foreignId('division_id')->constrained('divisions');
+            $table->morphs('entity');
+            $table->text('description')->nullable();
+            $table->enum('source_type', ['borrower_detail', 'borrower_facility', 'answer']);
+            $table->string('source_field');
+            $table->string('operator');
+            $table->text('value');
             $table->timestamps();
         });
     }
@@ -24,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('borrowers');
+        Schema::dropIfExists('visibility_rules');
     }
 };
