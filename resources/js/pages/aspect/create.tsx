@@ -2,9 +2,10 @@ import InputError from '@/components/input-error';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import aspects from '@/routes/aspects';
@@ -80,12 +81,43 @@ export default function AspectCreate() {
 
     const questionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+    const sourceTypeOptions = [
+        { value: 'borrower_detail', label: 'Informasi Debitur' },
+        { value: 'borrower_facility', label: 'Fasilitas Debitur' },
+        { value: 'answer', label: 'Jawaban' },
+    ];
+
+    const sourceFieldsMap: Record<string, string[]> = {
+        borrower_detail: [
+            'borrower_id',
+            'borrower_group',
+            'purpose',
+            'economic_sector',
+            'business_field',
+            'borrower_business',
+            'collectibility',
+            'restructuring',
+        ],
+        borrower_facility: [
+            'borrower_id',
+            'facility_name',
+            'limit',
+            'outstanding',
+            'interest_rate',
+            'principal_arrears',
+            'interest_arrears',
+            'pdo_days',
+            'maturity_rate',
+        ],
+        answer: [],
+    };
+
     const addQuestions = () => {
         setData('questions', [
             ...data.questions,
             {
                 question_text: '',
-                weight: 0,
+                weight: 1,
                 is_mandatory: false,
                 options: [{ option_text: '', score: 0 }],
                 visibility_rules: [],
@@ -200,12 +232,12 @@ export default function AspectCreate() {
                                     <CardContent className="space-y-6">
                                         <div>
                                             <Label htmlFor="code">Kode</Label>
-                                            <Input id="code" value={data.code} onChange={(e) => setData('code', e.target.value)} />
+                                            <Input id="code" value={data.code} onChange={(e) => setData('code', e.target.value)} maxLength={50} />
                                             <InputError message={errors.code} />
                                         </div>
                                         <div>
                                             <Label htmlFor="name">Nama</Label>
-                                            <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} />
+                                            <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} maxLength={255} />
                                             <InputError message={errors.name} />
                                         </div>
                                         <div>
@@ -281,6 +313,8 @@ export default function AspectCreate() {
                                                                 updated[qIndex].weight = Number(e.target.value);
                                                                 setData('questions', updated);
                                                             }}
+                                                            max={100}
+                                                            min={1}
                                                         />
                                                     </div>
                                                     <div className="mt-6 flex items-center gap-2">
@@ -321,6 +355,7 @@ export default function AspectCreate() {
                                                                     updated[qIndex].options[oIndex].option_text = e.target.value;
                                                                     setData('questions', updated);
                                                                 }}
+                                                                maxLength={255}
                                                             />
                                                             <Input
                                                                 type="number"
@@ -332,6 +367,8 @@ export default function AspectCreate() {
                                                                     updated[qIndex].options[oIndex].score = Number(e.target.value);
                                                                     setData('questions', updated);
                                                                 }}
+                                                                max={100}
+                                                                min={-100}
                                                             />
                                                             {question.options.length > 1 && (
                                                                 <Button
@@ -390,28 +427,54 @@ export default function AspectCreate() {
                                                                 <div className="grid grid-cols-2 gap-3">
                                                                     <div>
                                                                         <Label>Source Type</Label>
-                                                                        <Input
-                                                                            placeholder="misal: question"
+                                                                        <Select
                                                                             value={rule.source_type}
-                                                                            onChange={(e) => {
+                                                                            onValueChange={(value) => {
                                                                                 const updated = [...data.questions];
-                                                                                updated[qIndex].visibility_rules[rIndex].source_type = e.target.value;
+                                                                                updated[qIndex].visibility_rules[rIndex].source_type = value;
+                                                                                updated[qIndex].visibility_rules[rIndex].source_field = '';
                                                                                 setData('questions', updated);
                                                                             }}
-                                                                        />
+                                                                        >
+                                                                            <SelectTrigger>
+                                                                                <SelectValue placeholder="Pilih Source Type" />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {sourceTypeOptions.map((opt) => (
+                                                                                    <SelectItem key={opt.value} value={opt.value}>
+                                                                                        {opt.label}
+                                                                                    </SelectItem>
+                                                                                ))}
+                                                                            </SelectContent>
+                                                                        </Select>
                                                                     </div>
                                                                     <div>
                                                                         <Label>Source Field</Label>
-                                                                        <Input
-                                                                            placeholder="misal: q1"
+                                                                        <Select
                                                                             value={rule.source_field}
-                                                                            onChange={(e) => {
+                                                                            onValueChange={(value) => {
                                                                                 const updated = [...data.questions];
-                                                                                updated[qIndex].visibility_rules[rIndex].source_field =
-                                                                                    e.target.value;
+                                                                                updated[qIndex].visibility_rules[rIndex].source_field = value;
                                                                                 setData('questions', updated);
                                                                             }}
-                                                                        />
+                                                                            disabled={!rule.source_type}
+                                                                        >
+                                                                            <SelectTrigger>
+                                                                                <SelectValue placeholder="Pilih Source Field" />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {sourceFieldsMap[rule.source_type]?.map((field) => (
+                                                                                    <SelectItem key={field} value={field}>
+                                                                                        {field}
+                                                                                    </SelectItem>
+                                                                                ))}
+                                                                                {rule.source_type === 'answer' && (
+                                                                                    <SelectItem value={`q${qIndex + 1}`}>
+                                                                                        Pertanyaan {qIndex + 1}
+                                                                                    </SelectItem>
+                                                                                )}
+                                                                            </SelectContent>
+                                                                        </Select>
                                                                     </div>
                                                                 </div>
 
@@ -457,16 +520,16 @@ export default function AspectCreate() {
                                 </Card>
                             </CardContent>
 
-                            <div className="flex items-center justify-end gap-3 px-6 pb-6">
+                            <CardFooter className="flex items-center justify-end gap-3 px-6 pb-6">
                                 <Link href={aspects.index().url}>
                                     <Button type="button" variant="outline">
                                         Batal
                                     </Button>
                                 </Link>
-                                <Button type="submit" disabled={processing}>
+                                <Button type="submit" disabled={!isDirty || !isWeightValid || processing}>
                                     {processing ? 'Menyimpan...' : 'Simpan'}
                                 </Button>
-                            </div>
+                            </CardFooter>
                         </form>
                     </Card>
                 </div>

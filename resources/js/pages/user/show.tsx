@@ -1,12 +1,11 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import AppLayout from "@/layouts/app-layout";
-import { dashboard } from "@/routes";
-import divisions from "@/routes/divisions";
-import users from "@/routes/users";
-import { BreadcrumbItem } from "@/types";
-import { Head, Link } from "@inertiajs/react";
-import { ArrowLeftIcon } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import AppLayout from '@/layouts/app-layout';
+import { dashboard } from '@/routes';
+import users from '@/routes/users';
+import { BreadcrumbItem } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeftIcon } from 'lucide-react';
 
 type User = {
     id: number;
@@ -33,21 +32,21 @@ interface Props {
     division: Division;
 }
 
-export default function UserShow({ user, division}: Props) {
+export default function UserShow({ user }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: "Dashboard",
-            href: dashboard().url
+            title: 'Dashboard',
+            href: dashboard().url,
         },
         {
-            title: "User",
-            href: users.index().url
+            title: 'User',
+            href: users.index().url,
         },
         {
             title: `${user.name}`,
-            href: users.show(user.id).url
-        }
-    ]
+            href: users.show(user.id).url,
+        },
+    ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -57,8 +56,8 @@ export default function UserShow({ user, division}: Props) {
                     <Card>
                         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <Link href={users.index().url}>
-                                <Button variant={"outline"}>
-                                    <ArrowLeftIcon className="h-4 w-4"/>
+                                <Button variant={'outline'}>
+                                    <ArrowLeftIcon className="h-4 w-4" />
                                     Kembali
                                 </Button>
                             </Link>
@@ -67,21 +66,15 @@ export default function UserShow({ user, division}: Props) {
                             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <div className="text-sm text-gray-500">Nama</div>
-                                    <div className="flex items-center font-medium">
-                                        {user.name}
-                                    </div>
+                                    <div className="flex items-center font-medium">{user.name}</div>
                                 </div>
                                 <div className="space-y-2">
                                     <div className="text-sm text-gray-500">Email</div>
-                                    <div className="flex items-center font-medium">
-                                        {user.email}
-                                    </div>
+                                    <div className="flex items-center font-medium">{user.email}</div>
                                 </div>
                                 <div className="space-y-2">
                                     <div className="text-sm text-gray-500">Division</div>
-                                    <div className="flex items-center font-medium">
-                                        {user.division?.name || "-"}
-                                    </div>
+                                    <div className="flex items-center font-medium">{user.division?.name || '-'}</div>
                                 </div>
                             </div>
                         </CardContent>

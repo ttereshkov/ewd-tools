@@ -13,7 +13,6 @@ import { toast } from 'react-toastify';
 type Aspect = {
     id: number;
     code: string;
-    name: string;
     latest_aspect_version: AspectVersion;
     created_at: string;
     updated_at: string;
