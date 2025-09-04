@@ -5,10 +5,11 @@ import { dashboard } from '@/routes';
 import aspects from '@/routes/aspects';
 import borrowers from '@/routes/borrowers';
 import divisions from '@/routes/divisions';
+import periods from '@/routes/periods';
 import users from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, BuildingIcon, ClipboardListIcon, FileTextIcon, Folder, FolderIcon, LayoutGrid, UserIcon } from 'lucide-react';
+import { BookOpen, BuildingIcon, ClipboardListIcon, ClockIcon, FileTextIcon, Folder, FolderIcon, LayoutGrid, UserIcon } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -41,6 +42,11 @@ const mainNavItems: NavItem[] = [
         title: 'Aspek',
         href: aspects.index(),
         icon: ClipboardListIcon,
+    },
+    {
+        title: 'Periode',
+        href: periods.index(),
+        icon: ClockIcon,
     },
 ];
 

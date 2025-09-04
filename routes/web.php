@@ -3,6 +3,7 @@
 use App\Http\Controllers\AspectController;
 use App\Http\Controllers\BorrowerController;
 use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -15,6 +16,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+
+    Route::post('periods/{period}/start', [PeriodController::class, 'start'])->name('periods.start');
+    Route::post('periods/{period}/stop', [PeriodController::class, 'stop'])->name('periods.stop');
 });
 
 Route::resource('divisions', DivisionController::class)
@@ -33,5 +37,9 @@ Route::resource('aspects', AspectController::class)
     ->middleware(['auth', 'verified'])
     ->names('aspects');
     
+Route::resource('periods', PeriodController::class)
+    ->middleware(['auth', 'verified'])
+    ->names('periods');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
