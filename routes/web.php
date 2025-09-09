@@ -4,6 +4,7 @@ use App\Http\Controllers\AspectController;
 use App\Http\Controllers\BorrowerController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\PeriodController;
+use App\Http\Controllers\TemplateController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -36,6 +37,10 @@ Route::resource('borrowers', BorrowerController::class)
 Route::resource('aspects', AspectController::class)
     ->middleware(['auth', 'verified'])
     ->names('aspects');
+
+Route::resource('templates', TemplateController::class)
+    ->middleware(['auth', 'verified'])
+    ->names('templates');
     
 Route::resource('periods', PeriodController::class)
     ->middleware(['auth', 'verified'])

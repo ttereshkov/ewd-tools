@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -23,5 +24,10 @@ class Aspect extends Model
     public function latestAspectVersion(): HasOne
     {
         return $this->hasOne(AspectVersion::class)->latestOfMany();
+    }
+
+    public function templateVersions(): BelongsToMany
+    {
+        return $this->belongsToMany(TemplateVersion::class)->withPivot('weight');
     }
 }

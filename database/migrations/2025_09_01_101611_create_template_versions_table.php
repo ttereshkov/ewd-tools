@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('template_versions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('template_id')->constrained('templates')->cascadeOnDelete();
+            $table->string('name');
             $table->integer('version_number');
             $table->string('description')->nullable();
             $table->timestamps();

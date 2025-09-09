@@ -6,6 +6,7 @@ import aspects from '@/routes/aspects';
 import borrowers from '@/routes/borrowers';
 import divisions from '@/routes/divisions';
 import periods from '@/routes/periods';
+import templates from '@/routes/templates';
 import users from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
@@ -35,7 +36,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Template',
-        href: borrowers.index(),
+        href: templates.index(),
         icon: FileTextIcon,
     },
     {
