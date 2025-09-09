@@ -98,6 +98,8 @@ const borrowerFacilityFields = [
 ];
 
 export default function TemplateEdit({ template, aspects }: Props) {
+    const [selectedAspectIds, setSelectedAspectIds] = useState<number[]>(template.latest_template_version.aspects.map((a) => a.id));
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Dashboard',
@@ -113,8 +115,6 @@ export default function TemplateEdit({ template, aspects }: Props) {
         },
     ];
 
-    const [selectedAspectIds, setSelectedAspectIds] = useState<number[]>(template.latest_template_version.aspects.map((a) => a.id));
-
     const defaultValues = {
         name: template.latest_template_version.name || '',
         description: template.latest_template_version.description || '',
@@ -124,6 +124,7 @@ export default function TemplateEdit({ template, aspects }: Props) {
         })),
         visibility_rules: template.latest_template_version.visibility_rules || [],
     };
+
     const { data, setData, put, processing, errors } = useForm(defaultValues);
 
     useEffect(() => {
