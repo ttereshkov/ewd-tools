@@ -6,61 +6,41 @@ import { dashboard } from '@/routes';
 import templates from '@/routes/templates';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeftIcon, EyeIcon, Info } from 'lucide-react';
+import { ArrowLeftIcon } from 'lucide-react';
 
-type VisibilityRule = {
+type Template = {
     id: number;
-    description: string | null;
-    source_type: string;
-    source_field: string;
-    operator: string;
-    value: string;
-    aspect_id: number;
-};
-
-type Aspect = {
-    id: number;
-    code: string;
-    latest_aspect_version: {
-        name: string;
-        description?: string;
-    };
-    pivot: {
-        weight: number;
-    };
+    latest_template_version: TemplateVersion;
+    created_at: string;
+    updated_at: string;
 };
 
 type TemplateVersion = {
     id: number;
     name: string;
-    description?: string;
     version_number: number;
+    description: string | null;
     aspects: Aspect[];
-    visibility_rules: VisibilityRule[];
 };
 
-type Template = {
+type Aspect = {
     id: number;
-    latest_template_version: TemplateVersion;
+    code: string;
+    latest_aspect_version: AspectVersion;
+    created_at: string;
+    updated_at: string;
+};
+
+type AspectVersion = {
+    id: number;
+    name: string;
+    version_number: string;
+    description?: string;
 };
 
 interface Props {
     template: Template;
 }
-
-const getOperatorLabel = (operator: string) => {
-    const labels: Record<string, string> = {
-        '=': 'Sama dengan',
-        '!=': 'Tidak sama dengan',
-        '>': 'Lebih besar dari',
-        '<': 'Lebih kecil dari',
-        '>=': 'Lebih besar atau sama dengan',
-        '<=': 'Lebih kecil atau sama dengan',
-        in: 'Termasuk dalam',
-        not_in: 'Tidak termasuk dalam',
-    };
-    return labels[operator] || operator;
-};
 
 export default function TemplateShow({ template }: Props) {
     console.log(template);
@@ -80,12 +60,8 @@ export default function TemplateShow({ template }: Props) {
     ];
 
     const {
-        latest_template_version: { name, version_number, description, aspects, visibility_rules },
+        latest_template_version: { name, version_number, description, aspects },
     } = template;
-
-    const getAspectVisibilityRules = (aspectId: number) => {
-        return visibility_rules.filter((rule) => rule.aspect_id === aspectId);
-    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -97,73 +73,22 @@ export default function TemplateShow({ template }: Props) {
                             <div>
                                 <CardTitle className="flex items-center gap-2 text-lg font-bold md:text-2xl">
                                     <span>{name}</span>
+                                    <Badge variant="secondary">V{version_number}</Badge>
                                 </CardTitle>
+                                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{description || 'Tidak ada deskripsi.'}</p>
                             </div>
                             <Link href={templates.index().url}>
-                                <Button>
+                                <Button variant={'outline'} size={'sm'}>
                                     <ArrowLeftIcon className="h-4 w-4" />
                                     Kembali
                                 </Button>
                             </Link>
                         </CardHeader>
-
-                        <Card className="mt-6">
-                            <CardHeader>
-                                <CardTitle>Detail Aspek ({aspects.length})</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {aspects.length > 0 ? (
-                                    <div className="space-y-6">
-                                        {aspects.map((aspect) => (
-                                            <Card key={aspect.id} className="p-4">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center space-x-3">
-                                                        <Info className="h-5 w-5 text-gray-500" />
-                                                        <span className="text-lg font-semibold">
-                                                            {aspect.latest_aspect_version?.name || aspect.code}
-                                                        </span>
-                                                    </div>
-                                                    <Badge variant="default" className="bg-green-500 hover:bg-green-600">
-                                                        Bobot: {aspect.pivot.weight}%
-                                                    </Badge>
-                                                </div>
-                                                {/* Nested card untuk aturan visibilitas */}
-                                                <div className="mt-4 border-t pt-4">
-                                                    <h3 className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                        <EyeIcon className="h-4 w-4" />
-                                                        Aturan Visibilitas ({getAspectVisibilityRules(aspect.id).length})
-                                                    </h3>
-                                                    {getAspectVisibilityRules(aspect.id).length > 0 ? (
-                                                        <div className="mt-2 space-y-2">
-                                                            {getAspectVisibilityRules(aspect.id).map((rule, ruleIndex) => (
-                                                                <div
-                                                                    key={ruleIndex}
-                                                                    className="rounded-md border bg-gray-50 p-3 text-sm dark:bg-gray-800"
-                                                                >
-                                                                    <p className="font-semibold">Aturan {ruleIndex + 1}</p>
-                                                                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                                                                        {rule.description || 'Tidak ada deskripsi.'}
-                                                                    </p>
-                                                                    <p className="mt-1">
-                                                                        Jika `<strong>{rule.source_field}</strong>` `
-                                                                        <strong>{getOperatorLabel(rule.operator)}</strong>` `
-                                                                        <strong>"{rule.value}"</strong>`
-                                                                    </p>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <p className="mt-2 text-sm text-gray-500">Tidak ada aturan visibilitas untuk aspek ini.</p>
-                                                    )}
-                                                </div>
-                                            </Card>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-gray-500">Tidak ada aspek yang terlampir pada template ini.</p>
-                                )}
-                            </CardContent>
-                        </Card>
+                        <CardContent>
+                            <div className="grid gap-4">
+                                <h2 className="text-xl font-semibold">Daftar Aspek ({aspects.length})</h2>
+                            </div>
+                        </CardContent>
                     </Card>
                 </div>
             </div>

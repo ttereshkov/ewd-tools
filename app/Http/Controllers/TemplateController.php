@@ -35,6 +35,8 @@ class TemplateController extends Controller
     {
         try {
             $validated = $request->validated();
+            
+            dd($validated);
 
             DB::transaction(function () use ($validated) {
                 $template = Template::create([]);
@@ -70,5 +72,12 @@ class TemplateController extends Controller
         return Inertia::render('template/show', [
             'template' => $template
         ]);
+    }
+
+    public function destroy(Template $template)
+    {
+        $template->delete();
+
+        return redirect()->route('templates.index')->with('success', 'Template berhasil dihapus.');
     }
 }

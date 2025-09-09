@@ -95,7 +95,6 @@ const borrowerFacilityFields = [
 
 export default function TemplateCreate({ aspects }: Props) {
     const [selectedAspectIds, setSelectedAspectIds] = useState<number[]>([]);
-    const [visibilityRules, setVisibilityRules] = useState<VisibilityRule[]>([]);
 
     const defaultValues = {
         name: '',
@@ -141,8 +140,8 @@ export default function TemplateCreate({ aspects }: Props) {
     };
 
     const addVisibilityRule = () => {
-        setVisibilityRules((prevRules) => [
-            ...prevRules,
+        setData('visibility_rules', [
+            ...data.visibility_rules,
             {
                 description: '',
                 source_type: '',
@@ -154,7 +153,10 @@ export default function TemplateCreate({ aspects }: Props) {
     };
 
     const removeVisibilityRule = (indexToRemove: number) => {
-        setVisibilityRules((prevRules) => prevRules.filter((_, index) => index !== indexToRemove));
+        setData(
+            'visibility_rules',
+            data.visibility_rules.filter((_, index) => index !== indexToRemove),
+        );
     };
 
     const getFieldOptions = (sourceType: string) => {
@@ -323,14 +325,14 @@ export default function TemplateCreate({ aspects }: Props) {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-6">
-                                        {visibilityRules.length === 0 && (
+                                        {data.visibility_rules.length === 0 && (
                                             <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-6 text-center">
                                                 <p className="text-sm text-gray-500">
                                                     Tidak ada aturan visibilitas. Template akan selalu ditampilkan
                                                 </p>
                                             </div>
                                         )}
-                                        {visibilityRules.map((rule, index) => (
+                                        {data.visibility_rules.map((rule, index) => (
                                             <div key={index} className="space-y-4 rounded-lg border p-4">
                                                 <div className="flex items-center justify-between">
                                                     <h4 className="font-medium">Aturan {index + 1}</h4>
@@ -348,9 +350,9 @@ export default function TemplateCreate({ aspects }: Props) {
                                                     <Textarea
                                                         value={rule.description}
                                                         onChange={(e) => {
-                                                            const newRules = [...visibilityRules];
+                                                            const newRules = [...data.visibility_rules];
                                                             newRules[index].description = e.target.value;
-                                                            setVisibilityRules(newRules);
+                                                            setData({ ...data, visibility_rules: newRules });
                                                         }}
                                                         placeholder="Deskripsi aturan"
                                                     />
@@ -361,10 +363,10 @@ export default function TemplateCreate({ aspects }: Props) {
                                                         <Select
                                                             value={rule.source_type}
                                                             onValueChange={(value) => {
-                                                                const newRules = [...visibilityRules];
+                                                                const newRules = [...data.visibility_rules];
                                                                 newRules[index].source_type = value;
                                                                 newRules[index].source_field = '';
-                                                                setVisibilityRules(newRules);
+                                                                setData({ ...data, visibility_rules: newRules });
                                                             }}
                                                         >
                                                             <SelectTrigger>
@@ -384,9 +386,9 @@ export default function TemplateCreate({ aspects }: Props) {
                                                         <Select
                                                             value={rule.source_field}
                                                             onValueChange={(value) => {
-                                                                const newRules = [...visibilityRules];
+                                                                const newRules = [...data.visibility_rules];
                                                                 newRules[index].source_field = value;
-                                                                setVisibilityRules(newRules);
+                                                                setData({ ...data, visibility_rules: newRules });
                                                             }}
                                                             disabled={!rule.source_type}
                                                         >
@@ -407,9 +409,9 @@ export default function TemplateCreate({ aspects }: Props) {
                                                         <Select
                                                             value={rule.operator}
                                                             onValueChange={(value) => {
-                                                                const newRules = [...visibilityRules];
+                                                                const newRules = [...data.visibility_rules];
                                                                 newRules[index].operator = value;
-                                                                setVisibilityRules(newRules);
+                                                                setData({ ...data, visibility_rules: newRules });
                                                             }}
                                                         >
                                                             <SelectTrigger>
@@ -430,9 +432,9 @@ export default function TemplateCreate({ aspects }: Props) {
                                                     <Input
                                                         value={rule.value}
                                                         onChange={(e) => {
-                                                            const newRules = [...visibilityRules];
+                                                            const newRules = [...data.visibility_rules];
                                                             newRules[index].value = e.target.value;
-                                                            setVisibilityRules(newRules);
+                                                            setData({ ...data, visibility_rules: newRules });
                                                         }}
                                                         placeholder="Masukan nilai untuk perbandingan"
                                                     />
@@ -457,7 +459,6 @@ export default function TemplateCreate({ aspects }: Props) {
                     </Card>
                 </div>
             </div>
-            <div>Template Create</div>
         </AppLayout>
     );
 }
