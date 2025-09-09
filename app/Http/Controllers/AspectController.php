@@ -6,9 +6,8 @@ use App\Http\Requests\StoreAspectRequest;
 use App\Http\Requests\UpdateAspectRequest;
 use App\Models\Aspect;
 use App\Models\Question;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log; // Ensure Log facade is imported
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Throwable;
 
@@ -99,8 +98,8 @@ class AspectController extends Controller
             $validated = $request->validated();
 
             DB::transaction(function () use ($validated, $aspect) {
-                $lastVersion = $aspect->aspectVersions()->latest('version_number')->first();
-                $newVersionNumber = $lastVersion ? $lastVersion->version_number + 1 : 1;
+                $latestVersion = $aspect->aspectVersions()->latest('version_number')->first();
+                $newVersionNumber = $latestVersion ? $latestVersion->version_number + 1 : 1;
 
                 $aspectVersion = $aspect->aspectVersions()->create([
                     'version_number' => $newVersionNumber,
@@ -136,7 +135,6 @@ class AspectController extends Controller
 
             return redirect()->route('aspects.index')->with('success', 'Aspek berhasil diperbarui.');
         } catch (Throwable $e) {
-            Log::error('Error updating aspect', ['exception' => $e]);
             return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data.');
         }
     }

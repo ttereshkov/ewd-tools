@@ -15,10 +15,29 @@ import { ArrowLeftIcon, Info, PlusCircle, Trash2Icon } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
+type Template = {
+    id: number;
+    latest_template_version: TemplateVersion;
+    created_at: string;
+    updated_at: string;
+};
+
+type TemplateVersion = {
+    id: number;
+    name: string;
+    version_number: number;
+    description: string | null;
+    aspects: Aspect[];
+    visibility_rules: VisibilityRule[];
+};
+
 type Aspect = {
     id: number;
     code: string;
     latest_aspect_version: AspectVersion;
+    pivot: {
+        weight: number;
+    };
     created_at: string;
     updated_at: string;
 };
