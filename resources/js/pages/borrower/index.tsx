@@ -1,14 +1,14 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import AppLayout from "@/layouts/app-layout";
-import { dashboard } from "@/routes";
-import borrowers from "@/routes/borrowers";
-import { BreadcrumbItem } from "@/types";
-import { Head, Link, router, usePage } from "@inertiajs/react";
-import { EditIcon, EyeIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import { useState } from "react";
-import { toast } from "react-toastify";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
+import { dashboard } from '@/routes';
+import borrowers from '@/routes/borrowers';
+import { BreadcrumbItem } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { EditIcon, EyeIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
 
 type Borrower = {
     id: number;
@@ -29,17 +29,17 @@ type Division = {
 
 type PageProps = {
     borrowers: Borrower[];
-}
+};
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: "Dashboard",
+        title: 'Dashboard',
         href: dashboard().url,
     },
     {
-        title: "Debitur",
-        href: borrowers.index().url
-    }
+        title: 'Debitur',
+        href: borrowers.index().url,
+    },
 ];
 
 export default function BorrowerIndex() {
@@ -60,7 +60,7 @@ export default function BorrowerIndex() {
     const handleDelete = (id: number) => {
         router.delete(borrowers.destroy(borrowerToDelete!).url, {
             onSuccess: () => {
-                toast.success("Debitur berhasil dihapus");
+                toast.success('Debitur berhasil dihapus');
             },
             onError: (errs) => {
                 Object.values(errs).forEach((error) => {
@@ -71,7 +71,7 @@ export default function BorrowerIndex() {
                 closeDeleteModal();
             },
         });
-    }
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -115,7 +115,7 @@ export default function BorrowerIndex() {
                                                     >
                                                         <EditIcon className="h-5 w-5" />
                                                     </Link>
-                                                    <Link 
+                                                    <Link
                                                         href={borrowers.show(borrower.id).url}
                                                         className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
                                                         title="Lihat Debitur"
@@ -158,16 +158,13 @@ export default function BorrowerIndex() {
                             <Button variant="outline" onClick={closeDeleteModal}>
                                 Batal
                             </Button>
-                            <Button
-                                variant="destructive"
-                                onClick={() => borrowerToDelete && handleDelete(borrowerToDelete)}
-                            >
+                            <Button variant="destructive" onClick={() => borrowerToDelete && handleDelete(borrowerToDelete)}>
                                 Ya, Hapus
                             </Button>
                         </CardFooter>
                     </Card>
                 </div>
             )}
-        </AppLayout>   
-    )
-};
+        </AppLayout>
+    );
+}

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class TemplateVersion extends Model
 {
@@ -27,5 +28,10 @@ class TemplateVersion extends Model
     public function aspects(): BelongsToMany
     {
         return $this->belongsToMany(Aspect::class)->withPivot('weight');
+    }
+
+    public function visibilityRules(): MorphMany
+    {
+        return $this->morphMany(VisibilityRule::class, 'entity');
     }
 }

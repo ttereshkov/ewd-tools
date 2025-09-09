@@ -62,4 +62,13 @@ class TemplateController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
+
+    public function show(Template $template)
+    {
+        $template->load(['latestTemplateVersion.aspects', 'latestTemplateVersion.visibilityRules']);
+
+        return Inertia::render('template/show', [
+            'template' => $template
+        ]);
+    }
 }
