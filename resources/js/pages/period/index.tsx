@@ -292,7 +292,7 @@ export default function PeriodIndex() {
                     )}
 
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <CardTitle className="text-xl font-bold md:text-2xl">Periode</CardTitle>
                             <Link href={periods.create().url}>
                                 <Button>

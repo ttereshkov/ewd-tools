@@ -1,0 +1,66 @@
+<?php
+
+namespace App\Models;
+
+use App\ReportStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
+class Report extends Model
+{
+    use HasFactory;
+    
+    protected $fillable = [
+        'borrower_id',
+        'period_id',
+        'template_id',
+        'status',
+        'submitted_at',
+        'rejection_reason',
+        'created_by',
+    ];
+
+    protected $casts = [
+        'status' => ReportStatus::class,
+        'submitted_at' => 'datetime',
+    ];
+
+    public function borrower(): BelongsTo
+    {
+        return $this->belongsTo(Borrower::class);
+    }
+
+    public function period(): BelongsTo
+    {
+        return $this->belongsTo(Period::class);
+    }
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(Template::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function answers(): HasMany
+    {
+        return $this->hasMany(Answer::class);
+    }
+
+     public function summary(): HasOne
+    {
+        return $this->hasOne(ReportSummary::class);
+    }
+
+    public function aspects(): HasMany
+    {
+        return $this->hasMany(ReportAspect::class);
+    }
+
+}

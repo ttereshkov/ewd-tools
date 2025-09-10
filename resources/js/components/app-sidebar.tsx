@@ -5,13 +5,26 @@ import { dashboard } from '@/routes';
 import aspects from '@/routes/aspects';
 import borrowers from '@/routes/borrowers';
 import divisions from '@/routes/divisions';
+import forms from '@/routes/forms';
 import periods from '@/routes/periods';
 import templates from '@/routes/templates';
 import users from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, BuildingIcon, ClipboardListIcon, ClockIcon, FileTextIcon, Folder, FolderIcon, LayoutGrid, UserIcon } from 'lucide-react';
+import {
+    BookOpen,
+    BuildingIcon,
+    ClipboardListIcon,
+    ClockIcon,
+    FileTextIcon,
+    Folder,
+    FolderIcon,
+    LayoutGrid,
+    PlusCircleIcon,
+    UserIcon,
+} from 'lucide-react';
 import AppLogo from './app-logo';
+import { Button } from './ui/button';
 
 const mainNavItems: NavItem[] = [
     {
@@ -80,6 +93,14 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
+                <div className="px-2 py-1">
+                    <Link href={forms.index().url}>
+                        <Button className="w-full" size={'sm'}>
+                            <PlusCircleIcon className="h-5 w-5" />
+                            <span>Tambah Report Baru</span>
+                        </Button>
+                    </Link>
+                </div>
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
