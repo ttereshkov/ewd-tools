@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\HasVisibilityRules;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class TemplateVersion extends Model
 {
-    use HasFactory;
+    use HasFactory, HasVisibilityRules;
 
     protected $fillable = [
         'template_id',
@@ -25,13 +26,42 @@ class TemplateVersion extends Model
         return $this->belongsTo(Template::class);
     }
 
-    public function aspects(): BelongsToMany
+    public function aspectVersions(): BelongsToMany
     {
-        return $this->belongsToMany(Aspect::class)->withPivot('weight');
+        return $this->belongsToMany(AspectVersion::class, 'aspect_template_versions')
+                    ->withPivot('weight')
+                    ->withTimestamps();
     }
 
     public function visibilityRules(): MorphMany
     {
         return $this->morphMany(VisibilityRule::class, 'entity');
+    }
+
+    /** FUNCTION */
+    public function getVisibleAspectGroups(array $borrowerData, array $facilityData): array
+    {
+        $aspectGroups = [];
+
+        $this->load([
+            'aspectVersions.questionVersions.questionOptions',
+            'aspectVersions.questionVersions.visibilityRules'
+        ]);
+
+        foreach ($this->aspectVersions as $aspect) {
+            $questions = $aspect->getVisibleQuestions($borrowerData, $facilityData);
+            if (!empty($questions)) {
+                $aspectGroups[] = [
+                    'id' => $aspect->id,
+                    'aspect_id' => $aspect->aspect_id,
+                    'name' => $aspect->name,
+                    'description' => $aspect->description,
+                    'weight' => $aspect->pivot->weight ?? 0,
+                    'aspects' => $questions,
+                ];
+            }
+        }
+
+        return $aspectGroups;
     }
 }

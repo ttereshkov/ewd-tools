@@ -45,7 +45,6 @@ interface FormStoreState {
     aspectsBorrower: Aspect[];
     reportMeta: ReportMeta;
 
-    // Actions
     setActiveStep: (step: number) => void;
     setIsSaving: (status: boolean) => void;
     setLastSavedStep: (step: string | null) => void;

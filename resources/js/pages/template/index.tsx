@@ -50,6 +50,7 @@ export default function TemplateIndex() {
     const { templates: templateList } = usePage<PageProps>().props;
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [templateToDelete, setTemplateToDelete] = useState<number | null>(null);
+    console.log(templateList);
 
     const openDeleteModal = (id: number) => {
         setTemplateToDelete(id);

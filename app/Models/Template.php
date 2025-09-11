@@ -20,4 +20,18 @@ class Template extends Model
     {
         return $this->hasOne(TemplateVersion::class)->latestOfMany();
     }
+
+    /** FUNCTION */
+    public static function getApplicableTemplateId(array $borrowerData, array $facilityData): ?int
+    {
+        $templates = self::with('latestTemplateVersion.visibilityRules')->get();
+
+        foreach ($templates as $template) {
+            if ($template->latestTemplateVersion && $template->latestTemplateVersion->checkVisibility($borrowerData, $facilityData)) {
+                return $template->id;
+            }
+        }
+
+        return null;
+    }
 }

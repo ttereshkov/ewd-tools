@@ -18,7 +18,7 @@ class Borrower extends Model
         return $this->belongsTo(Division::class);
     }
 
-    public function details(): HasOne
+    public function detail(): HasOne
     {
         return $this->hasOne(BorrowerDetail::class);
     }

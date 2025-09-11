@@ -15,7 +15,7 @@ class TemplateController extends Controller
 {
     public function index() 
     {
-        $templates = Template::with('latestTemplateVersion.aspects')->latest()->get();
+        $templates = Template::with('latestTemplateVersion.aspectVersions')->latest()->get();
 
         return Inertia::render('template/index', [
             'templates' => $templates,
@@ -46,9 +46,15 @@ class TemplateController extends Controller
                 ]);
 
                 if (!empty($validated['selected_aspects'])) {
-                    foreach ($validated['selected_aspects'] as $aspectData) {
-                        $templateVersion->aspects()->attach($aspectData['id'], ['weight' => $aspectData['weight']]);
-                    }
+                    $aspectDataToAttach = collect($validated['selected_aspects'])->mapWithKeys(function ($aspectData) {
+                        $aspect = Aspect::with('latestAspectVersion')->find($aspectData['id']);
+                        if ($aspect && $aspect->latestAspectVersion) {
+                            return [$aspect->latestAspectVersion->id => ['weight' => $aspectData['weight']]];
+                        }
+                        return [];
+                    })->filter();
+
+                    $templateVersion->aspectVersions()->attach($aspectDataToAttach);
                 }
 
                 if (!empty($validated['visibility_rules'])) {
@@ -99,11 +105,15 @@ class TemplateController extends Controller
                 ]);
 
                 if (!empty($validated['selected_aspects'])) {
-                    $templateVersion->aspects()->sync(
-                        collect($validated['selected_aspects'])->mapWithKeys(function ($aspect) {
-                            return [$aspect['id'] => ['weight' => $aspect['weight']]];
-                        })
-                    );
+                    $aspectDataToSync = collect($validated['selected_aspects'])->mapWithKeys(function ($aspectData) {
+                        $aspect = Aspect::with('latestAspectVersion')->find($aspectData['id']);
+                        if ($aspect && $aspect->latestAspectVersion) {
+                            return [$aspect->latestAspectVersion->id => ['weight' => $aspectData['weight']]];
+                        }
+                        return [];
+                    })->filter();
+
+                    $templateVersion->aspectVersions()->sync($aspectDataToSync);
                 } else {
                     $templateVersion->aspects()->detach();
                 }

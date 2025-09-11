@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('aspect_template_version', function (Blueprint $table) {
+        Schema::create('aspect_template_versions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('template_version_id')->constrained('template_versions')->cascadeOnDelete();
-            $table->foreignId('aspect_id')->constrained('aspects')->cascadeOnDelete();
+            $table->foreignId('template_version_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('aspect_version_id')->constrained()->cascadeOnDelete();
             $table->integer('weight');
             $table->timestamps();
 
-            $table->unique(['aspect_id', 'template_version_id']);
+            $table->unique(['template_version_id', 'aspect_version_id'],'template_aspect_unique');
         });
     }
 
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('aspect_template_version');
+        Schema::dropIfExists('aspect_template_versions');
     }
 };

@@ -11,6 +11,11 @@ import FormInformation from './information-form';
 interface FormProps {
     borrowers?: any[];
     borrower_id?: number | null;
+    period: any;
+    aspect_groups: any[];
+    template_id?: number | null;
+    borrower_data?: any;
+    facility_data?: any;
 }
 
 interface StepperStep {
@@ -22,7 +27,22 @@ interface StepperStep {
     props: any;
 }
 
-export default function FormIndex({ borrowers = [], borrower_id = null }: FormProps) {
+export default function FormIndex({
+    borrowers = [],
+    borrower_id = null,
+    period,
+    aspect_groups,
+    template_id = null,
+    borrower_data = {},
+    facility_data = {},
+}: FormProps) {
+    console.log('Borrower', borrowers);
+    console.log('Period', period);
+    console.log('Aspect Groups', aspect_groups);
+    console.log('Template ID', template_id);
+    console.log('Borrower Data', borrower_data);
+    console.log('Facility Data', facility_data);
+
     const { activeStep, totalSteps, nextStep, prevStep } = useFormStore();
 
     const steps: StepperStep[] = [

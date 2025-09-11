@@ -87,7 +87,10 @@ export default function FormInformation({ borrowers, borrower_id }: FormProps) {
                             <Label htmlFor="borrower_id" className="text-sm font-medium text-gray-700">
                                 Nama Debitur <span className="text-red-500">*</span>
                             </Label>
-                            <Select>
+                            <Select
+                                onValueChange={(value) => setData('borrower_id', Number(value))}
+                                value={data.borrower_id ? data.borrower_id.toString() : ''}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih debitur..." />
                                 </SelectTrigger>
@@ -105,8 +108,15 @@ export default function FormInformation({ borrowers, borrower_id }: FormProps) {
                             <Label htmlFor="borrower_group" className="text-sm font-medium text-gray-700">
                                 Grup Debitur
                             </Label>
-                            <Input id="borrower_group" value={data.borrower_group} placeholder="Masukkan grup debitur..." />
-                            <InputError message={data.borrower_group} />
+                            <Input
+                                id="borrower_group"
+                                value={data.borrower_group}
+                                onChange={(e) => setData('borrower_group', e.target.value)}
+                                type="text"
+                                placeholder="Masukkan grup debitur..."
+                                className="w-full"
+                            />
+                            <InputError message={errors.borrower_group} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="purpose" className="text-sm font-medium text-gray-700">
