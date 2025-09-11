@@ -26,9 +26,12 @@ export default function FormFacility() {
     const showKmkeTable = purpose === 'kmke' || purpose === 'both';
 
     const [kieRows, setKieRows] = useState<Facility[]>(() => {
-        const kie = facilitiesBorrower.filter((facility) => facility.name?.toLowerCase().includes('kie'));
+        const kie = facilitiesBorrower.filter((facility, index) => {
+            return facility.name?.toLowerCase().includes('kie') || (index < Math.ceil(facilitiesBorrower.length / 2) && showKieTable);
+        });
+
         return kie.length > 0
-            ? kie.map((facility, index) => ({ ...facility, name: `KIE ${index + 1}` }))
+            ? kie
             : [
                   {
                       id: null,

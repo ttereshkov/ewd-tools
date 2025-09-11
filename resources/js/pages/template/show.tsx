@@ -21,7 +21,7 @@ type TemplateVersion = {
     name: string;
     version_number: number;
     description: string | null;
-    aspects: Aspect[];
+    aspect_versions: Aspect[];
     visibility_rules: VisibilityRule[];
 };
 
@@ -87,7 +87,7 @@ export default function TemplateShow({ template }: Props) {
     ];
 
     const {
-        latest_template_version: { name, version_number, description, aspects, visibility_rules },
+        latest_template_version: { name, version_number, description, aspect_versions, visibility_rules },
     } = template;
 
     return (
@@ -115,11 +115,11 @@ export default function TemplateShow({ template }: Props) {
                             <div className="grid gap-4">
                                 <h3 className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                                     <ClipboardListIcon className="h-4 w-4" />
-                                    Daftar Aspek ({aspects.length})
+                                    Daftar Aspek ({aspect_versions.length})
                                 </h3>
-                                {aspects && aspects.length > 0 ? (
+                                {aspect_versions && aspect_versions.length > 0 ? (
                                     <div className="grid gap-6">
-                                        {aspects.map((aspect, index) => (
+                                        {aspect_versions.map((aspect, index) => (
                                             <Card key={aspect.id} className="p-4">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-3">

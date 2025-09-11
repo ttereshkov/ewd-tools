@@ -23,7 +23,7 @@ type TemplateVersion = {
     name: string;
     description: string;
     version_number: number;
-    aspects: Aspect[];
+    aspect_versions: Aspect[];
 };
 
 type Template = {
@@ -110,7 +110,7 @@ export default function TemplateIndex() {
                                         {templateList.map((template) => (
                                             <TableRow key={template.id}>
                                                 <TableCell>{template.latest_template_version.name}</TableCell>
-                                                <TableCell>{template.latest_template_version.aspects.length}</TableCell>
+                                                <TableCell>{template.latest_template_version.aspect_versions.length}</TableCell>
                                                 <TableCell className="flex justify-end space-x-3 text-right">
                                                     <Link
                                                         href={templates.edit(template.id).url}

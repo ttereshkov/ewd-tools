@@ -27,7 +27,7 @@ type TemplateVersion = {
     name: string;
     version_number: number;
     description: string | null;
-    aspects: Aspect[];
+    aspect_versions: Aspect[];
     visibility_rules: VisibilityRule[];
 };
 
@@ -98,7 +98,7 @@ const borrowerFacilityFields = [
 ];
 
 export default function TemplateEdit({ template, aspects }: Props) {
-    const [selectedAspectIds, setSelectedAspectIds] = useState<number[]>(template.latest_template_version.aspects.map((a) => a.id));
+    const [selectedAspectIds, setSelectedAspectIds] = useState<number[]>(template.latest_template_version.aspect_versions.map((a) => a.id));
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -118,7 +118,7 @@ export default function TemplateEdit({ template, aspects }: Props) {
     const defaultValues = {
         name: template.latest_template_version.name || '',
         description: template.latest_template_version.description || '',
-        selected_aspects: template.latest_template_version.aspects.map((a) => ({
+        selected_aspects: template.latest_template_version.aspect_versions.map((a) => ({
             id: a.id,
             weight: a.pivot.weight,
         })),

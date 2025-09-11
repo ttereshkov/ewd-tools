@@ -71,7 +71,7 @@ class TemplateController extends Controller
 
     public function show(Template $template)
     {
-        $template->load(['latestTemplateVersion','latestTemplateVersion.aspects.latestAspectVersion', 'latestTemplateVersion.visibilityRules']);
+        $template->load(['latestTemplateVersion.aspectVersions','latestTemplateVersion.visibilityRules']);
 
         return Inertia::render('template/show', [
             'template' => $template
@@ -81,7 +81,7 @@ class TemplateController extends Controller
     public function edit(Template $template)
     {
         $aspects = Aspect::with('latestAspectVersion')->get();
-        $template->load(['latestTemplateVersion','latestTemplateVersion.aspects', 'latestTemplateVersion.visibilityRules']);
+        $template->load(['latestTemplateVersion.aspectVersions', 'latestTemplateVersion.visibilityRules']);
 
         return Inertia::render('template/edit', [
             'aspects' => $aspects,

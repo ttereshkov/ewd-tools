@@ -27,7 +27,7 @@ type TemplateVersion = {
     name: string;
     version_number: number;
     description: string | null;
-    aspects: Aspect[];
+    aspect_versions: Aspect[];
     visibility_rules: VisibilityRule[];
 };
 
