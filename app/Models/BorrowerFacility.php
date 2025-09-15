@@ -35,4 +35,9 @@ class BorrowerFacility extends Model
     {
         return $this->belongsTo(Borrower::class);
     }
+
+    public function report(): BelongsTo
+    {
+        return $this->belongsTo(Report::class);
+    }
 }

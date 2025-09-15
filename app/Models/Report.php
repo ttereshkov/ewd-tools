@@ -33,6 +33,11 @@ class Report extends Model
         return $this->belongsTo(Borrower::class);
     }
 
+    public function facilities(): HasMany
+    {
+        return $this->hasMany(BorrowerFacility::class);
+    }
+
     public function period(): BelongsTo
     {
         return $this->belongsTo(Period::class);

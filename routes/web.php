@@ -5,6 +5,7 @@ use App\Http\Controllers\BorrowerController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\PeriodController;
+use App\Http\Controllers\SummaryController;
 use App\Http\Controllers\TemplateController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -25,7 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('forms', [FormController::class, 'index'])->name('forms.index');
     Route::post('forms', [FormController::class, 'store'])->name('forms.store');
     Route::post('forms/save-step', [FormController::class, 'saveStepData'])->name('forms.saveStep'); 
-    Route::get('summary/{report}', [FormController::class, 'summary'])->name('forms.summary');
+    Route::get('summary/{report}', [SummaryController::class, 'show'])->name('summary.show');
     Route::get('summary/{report}/watchlist-note', [FormController::class, 'watchlistNote'])->name('forms.summary.watchlist-note');
 });
 

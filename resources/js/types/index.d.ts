@@ -40,3 +40,13 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+export interface Borrower {
+    id: number;
+    name: string;
+    division_id: number;
+    division: Division;
+    detail: BorrowerDetail;
+    created_at: string;
+    updated_at: string;
+}

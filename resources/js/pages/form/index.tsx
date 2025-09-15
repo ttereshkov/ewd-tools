@@ -91,7 +91,6 @@ export default function FormIndex({
 
         router.post('/forms', formData, {
             onStart: () => {
-                console.log(formData);
                 toast.info('Mengirim data...', { autoClose: false, theme: 'colored' });
             },
             onSuccess: () => {
