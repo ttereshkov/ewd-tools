@@ -14,7 +14,7 @@ trait HasVisibilityRules
             return true;
         }
 
-        return false;
+        return $this->evaluateVisibilityRule($visibilityRule, $borrowerData, $facilityData);
     }
 
     protected function evaluateVisibilityRule(Collection $visibilityRules, array $borrowerData, array $facilityData): bool

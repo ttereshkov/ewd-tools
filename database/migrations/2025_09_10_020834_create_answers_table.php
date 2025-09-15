@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('report_id')->constrained('reports')->cascadeOnDelete();
             $table->foreignId('question_version_id')->constrained('question_versions')->cascadeOnDelete();
             $table->foreignId('question_option_id')->constrained('question_options')->cascadeOnDelete();
-            $table->text('notes');
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

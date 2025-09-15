@@ -23,6 +23,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('periods/{period}/stop', [PeriodController::class, 'stop'])->name('periods.stop');
 
     Route::get('forms', [FormController::class, 'index'])->name('forms.index');
+    Route::post('forms', [FormController::class, 'store'])->name('forms.store');
+    Route::post('forms/save-step', [FormController::class, 'saveStepData'])->name('forms.saveStep'); 
+    Route::get('summary/{report}', [FormController::class, 'summary'])->name('forms.summary');
+    Route::get('summary/{report}/watchlist-note', [FormController::class, 'watchlistNote'])->name('forms.summary.watchlist-note');
 });
 
 Route::resource('divisions', DivisionController::class)

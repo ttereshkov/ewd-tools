@@ -2,8 +2,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Stepper } from '@/components/ui/stepper';
 import { useFormStore } from '@/stores/form-store';
+import { router } from '@inertiajs/react';
 import { Building2, Calculator, ListChecks } from 'lucide-react';
-import React from 'react';
+import React, { useEffect } from 'react';
+import { toast } from 'react-toastify';
 import FormAspect from './aspect-form';
 import FormFacility from './facility-form';
 import FormInformation from './information-form';
@@ -36,14 +38,13 @@ export default function FormIndex({
     borrower_data = {},
     facility_data = {},
 }: FormProps) {
-    console.log('Borrower', borrowers);
-    console.log('Period', period);
-    console.log('Aspect Groups', aspect_groups);
-    console.log('Template ID', template_id);
-    console.log('Borrower Data', borrower_data);
-    console.log('Facility Data', facility_data);
+    const { activeStep, totalSteps, nextStep, prevStep, aspectGroups: storeAspectGroups, setAspectGroups } = useFormStore();
 
-    const { activeStep, totalSteps, nextStep, prevStep } = useFormStore();
+    useEffect(() => {
+        setAspectGroups(aspect_groups);
+    }, []);
+
+    console.log(storeAspectGroups);
 
     const steps: StepperStep[] = [
         {
@@ -68,9 +69,43 @@ export default function FormIndex({
             component: FormAspect,
             icon: ListChecks,
             required: true,
-            props: { aspect_groups },
+            props: { aspect_groups: storeAspectGroups },
         },
     ];
+
+    const handleSubmit = () => {
+        const { informationBorrower, facilitiesBorrower, aspectsBorrower, reportMeta } = useFormStore.getState();
+
+        const finalReportMeta = {
+            ...reportMeta,
+            template_id: template_id || reportMeta.template_id,
+            period_id: period.id,
+        };
+
+        const formData = {
+            informationBorrower,
+            facilitiesBorrower,
+            aspectsBorrower,
+            reportMeta: finalReportMeta,
+        };
+
+        router.post('/forms', formData, {
+            onStart: () => {
+                console.log(formData);
+                toast.info('Mengirim data...', { autoClose: false, theme: 'colored' });
+            },
+            onSuccess: () => {
+                toast.dismiss();
+                toast.success('Data berhasil disimpan!');
+            },
+            onError: (errors) => {
+                toast.dismiss();
+                Object.values(errors).forEach((error) => {
+                    toast.error(error, { theme: 'colored' });
+                });
+            },
+        });
+    };
 
     const currentStepData = steps[activeStep - 1];
 
@@ -81,7 +116,6 @@ export default function FormIndex({
             </div>
 
             <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-                {/* Stepper */}
                 <Stepper steps={steps} currentStep={activeStep - 1} />
             </div>
 
@@ -103,7 +137,7 @@ export default function FormIndex({
                     </Button>
                 )}
                 {activeStep === totalSteps && (
-                    <Button className="w-full min-w-24 sm:w-auto lg:min-w-32 lg:px-8 lg:py-3" onClick={() => console.log('Form submitted!')}>
+                    <Button className="w-full min-w-24 sm:w-auto lg:min-w-32 lg:px-8 lg:py-3" onClick={handleSubmit}>
                         Submit
                     </Button>
                 )}
