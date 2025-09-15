@@ -57,7 +57,7 @@ export default function FormInformation({ borrowers, borrower_id }: FormProps) {
         restructuring: informationBorrower.restructuring || false,
     };
 
-    const { data, setData, post, errors } = useForm(initialInformationBorrower);
+    const { data, setData, errors } = useForm(initialInformationBorrower);
 
     useEffect(() => {
         updateInformationBorrower({

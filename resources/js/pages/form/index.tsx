@@ -68,14 +68,14 @@ export default function FormIndex({
             component: FormAspect,
             icon: ListChecks,
             required: true,
-            props: {},
+            props: { aspect_groups },
         },
     ];
 
     const currentStepData = steps[activeStep - 1];
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen bg-white dark:bg-gray-950">
             <div className="bg-[#2E3192] p-4 text-white shadow-md dark:bg-[#1A1D68] dark:text-gray-200">
                 <Label className="pl-2 text-2xl font-bold">Form Penilaian Debitur</Label>
             </div>
