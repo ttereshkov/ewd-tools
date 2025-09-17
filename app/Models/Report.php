@@ -79,6 +79,7 @@ class Report extends Model
 
         $aspectScores = $this->calculateAspectScores();
         $overallSummary = $this->calculateOverallSummary($aspectScores);
+
         $this->storeCalculationResults((array) $aspectScores, (array) $overallSummary);
     }
 
@@ -99,7 +100,8 @@ class Report extends Model
             }
 
             $aspectScores[$aspectVersionId] = [
-                'total_score' => $totalScore
+                'total_score' => $totalScore,
+                'classification' => $this->determineClassification($totalScore),
             ];
         }
 
@@ -133,7 +135,10 @@ class Report extends Model
         foreach ($aspectScores as $aspectVersionId => $scoreData) {
             ReportAspect::updateOrCreate(
                 ['report_id' => $this->id, 'aspect_version_id' => $aspectVersionId],
-                ['total_score' => $scoreData['total_score']]
+                [
+                    'total_score' => $scoreData['total_score'],
+                    'classification' => $scoreData['classification'],
+                ]
             );
         }
 

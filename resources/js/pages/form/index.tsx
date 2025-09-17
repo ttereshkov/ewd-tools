@@ -44,8 +44,6 @@ export default function FormIndex({
         setAspectGroups(aspect_groups);
     }, []);
 
-    console.log(storeAspectGroups);
-
     const steps: StepperStep[] = [
         {
             id: 1,

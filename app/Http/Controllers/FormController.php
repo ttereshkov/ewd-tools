@@ -143,7 +143,7 @@ class FormController extends Controller
 
             Session::forget(['borrower_data', 'facility_data']);
 
-            return Inertia::location(route('summary', ['report' => $report->id]));
+            return Inertia::location(route('summary.show', ['report' => $report->id]));
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Gagal menyimpan data form: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
@@ -151,6 +151,9 @@ class FormController extends Controller
         }
     }
 
+    /**
+     * Melakukan 
+     */
     public function saveStepData(Request $request)
     {
         $borrowerData = $request->input('informationBorrower', []);

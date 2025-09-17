@@ -49,7 +49,7 @@ class TemplateVersion extends Model
         ]);
 
         foreach ($this->aspectVersions as $aspect) {
-            $questions = $aspect->getVisibleQuestions($borrowerData, $facilityData);
+            $questions = $aspect->questionVersions;
             if (!empty($questions)) {
                 $aspectGroups[] = [
                     'id' => $aspect->id,

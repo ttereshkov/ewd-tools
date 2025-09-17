@@ -383,6 +383,7 @@ export default function AspectCreate() {
                                                         </div>
                                                     ))}
                                                 </div>
+
                                                 {/* Visibility Rules */}
                                                 <div className="space-y-3">
                                                     <div className="flex items-center justify-between">
@@ -468,11 +469,21 @@ export default function AspectCreate() {
                                                                                         {field}
                                                                                     </SelectItem>
                                                                                 ))}
-                                                                                {rule.source_type === 'answer' && (
-                                                                                    <SelectItem value={`q${qIndex + 1}`}>
-                                                                                        Pertanyaan {qIndex + 1}
-                                                                                    </SelectItem>
-                                                                                )}
+                                                                                {rule.source_type === 'answer' &&
+                                                                                    data.questions.map((otherQuestion, otherQIndex) => {
+                                                                                        if (qIndex === otherQIndex) {
+                                                                                            return null;
+                                                                                        }
+                                                                                        return (
+                                                                                            <SelectItem
+                                                                                                key={`q-opt-${otherQIndex}`}
+                                                                                                value={`question_${otherQIndex + 1}`}
+                                                                                            >
+                                                                                                Pertanyaan {otherQIndex + 1}:{' '}
+                                                                                                {otherQuestion.question_text || '(Belum diisi)'}
+                                                                                            </SelectItem>
+                                                                                        );
+                                                                                    })}
                                                                             </SelectContent>
                                                                         </Select>
                                                                     </div>

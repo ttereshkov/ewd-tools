@@ -8,6 +8,7 @@ use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\SummaryController;
 use App\Http\Controllers\TemplateController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WatchlistController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -27,7 +28,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('forms', [FormController::class, 'store'])->name('forms.store');
     Route::post('forms/save-step', [FormController::class, 'saveStepData'])->name('forms.saveStep'); 
     Route::get('summary/{report}', [SummaryController::class, 'show'])->name('summary.show');
-    Route::get('summary/{report}/watchlist-note', [FormController::class, 'watchlistNote'])->name('forms.summary.watchlist-note');
+    Route::get('watchlist', [WatchlistController::class, 'show'])->name('forms.summary.watchlist-note');
 });
 
 Route::resource('divisions', DivisionController::class)

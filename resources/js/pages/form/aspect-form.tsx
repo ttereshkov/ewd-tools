@@ -15,7 +15,7 @@ interface QuestionOption {
 interface Question {
     id: number;
     is_mandatory: boolean;
-    options: QuestionOption;
+    question_options: QuestionOption[];
     question_id: number;
     question_text: string;
     version_number: number;
@@ -42,6 +42,7 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
     const { aspectsBorrower, informationBorrower, facilitiesBorrower, updateAspectsBorrower } = useFormStore();
 
     const [localAspectGroups, setLocalAspectGroups] = useState<Aspect[]>([]);
+    const [submissionData, setSubmissionData] = useState<object | null>(null);
     const initializeAspectGroups = useCallback(
         (groups: Aspect[]) => {
             return (groups || []).map((group) => ({
@@ -104,6 +105,25 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
         }
     }, []);
 
+    const getOptionsForQuestion = useCallback((aspect: Question) => {
+        return Array.isArray(aspect.question_options) && aspect.question_options.length > 0
+            ? aspect.question_options
+            : [
+                  { id: 1, option_text: 'Ya', score: 1 },
+                  { id: 0, option_text: 'Tidak', score: 0 },
+              ];
+    }, []);
+
+    const questionMap = useMemo(() => {
+        const map = new Map();
+        (localAspectGroups || []).forEach((group) => {
+            group.aspects.forEach((aspect) => {
+                map.set(aspect.id, aspect);
+            });
+        });
+        return map;
+    }, [localAspectGroups]);
+
     const isVisible = useCallback(
         (entity: any): boolean => {
             if (!entity.visibility_rules || entity.visibility_rules.length === 0) {
@@ -124,15 +144,23 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
                                 0,
                             ) || 0;
                     } else if (rule.source_type === 'answer') {
-                        const sourceAspect = aspectsBorrower.find((a) => a.questionId?.toString() === sourceField);
-                        sourceValue = sourceAspect?.selectedOptionId;
+                        const sourceQuestionId = parseInt(sourceField, 10);
+                        if (!isNaN(sourceQuestionId)) {
+                            const sourceQuestion = questionMap.get(sourceQuestionId);
+                            if (sourceQuestion) {
+                                const answerId = sourceQuestion.value;
+                                const options = getOptionsForQuestion(sourceQuestion);
+                                const selectedOption = options.find((opt) => opt.id === answerId);
+                                sourceValue = selectedOption ? selectedOption.option_text : null;
+                            }
+                        }
                     }
 
                     if (sourceValue === undefined || sourceValue === null) {
                         if (['>', '<', '>=', '<='].includes(rule.operator)) {
                             sourceValue = 0;
                         } else {
-                            console.warn(`Visibility check failed: Source value for '${sourceField}' is undefined/null.`, { rule });
+                            // console.warn(`Visibility check failed: Source value for '${sourceField}' is undefined/null.`, { rule });
                             return false;
                         }
                     }
@@ -143,7 +171,7 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
                 }
             });
         },
-        [informationBorrower, facilitiesBorrower, aspectsBorrower, compareValues],
+        [informationBorrower, facilitiesBorrower, compareValues, questionMap],
     );
 
     const isTemplateVisible = useCallback(
@@ -151,41 +179,9 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
             if (!templateRules || templateRules.length === 0) {
                 return true;
             }
-
-            return templateRules.every((rule: any) => {
-                let sourceValue;
-                const sourceField = rule.source_field;
-
-                try {
-                    if (rule.source_type === 'borrower_detail') {
-                        sourceValue = informationBorrower?.[sourceField as keyof typeof informationBorrower];
-                    } else if (rule.source_type === 'borrower_facility') {
-                        sourceValue =
-                            facilitiesBorrower?.reduce(
-                                (total, facility) => total + (parseFloat(facility[sourceField as keyof typeof facility] as string) || 0),
-                                0,
-                            ) || 0;
-                    } else if (rule.source_type === 'answer') {
-                        const answeredAspect = aspectsBorrower?.find((aspect) => aspect.questionId?.toString() === rule.source_field);
-                        sourceValue = answeredAspect?.selectedOptionId;
-                    }
-
-                    if (sourceValue === undefined || sourceValue === null) {
-                        if (['>', '<', '>=', '<='].includes(rule.operator)) {
-                            sourceValue = 0;
-                        } else {
-                            return false;
-                        }
-                    }
-
-                    return compareValues(sourceValue, rule.operator, rule.value);
-                } catch (error) {
-                    console.error('Error in template visibility check:', error);
-                    return false;
-                }
-            });
+            return isVisible({ visibility_rules: templateRules });
         },
-        [informationBorrower, facilitiesBorrower, aspectsBorrower, compareValues],
+        [isVisible],
     );
 
     const visibleAspectGroups = useMemo(() => {
@@ -194,19 +190,12 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
         }
 
         return localAspectGroups
-            .filter((group) => {
-                if (group.template_visibility_rules && group.template_visibility_rules.length > 0) {
-                    if (!isTemplateVisible(group.template_visibility_rules)) {
-                        return false;
-                    }
-                }
-                const visibleAspects = group.aspects?.filter((aspect) => isVisible(aspect)) || [];
-                return visibleAspects.length > 0;
-            })
+            .filter((group) => isTemplateVisible(group.template_visibility_rules))
             .map((group) => ({
                 ...group,
                 aspects: group.aspects.filter((aspect) => isVisible(aspect)),
-            }));
+            }))
+            .filter((group) => group.aspects.length > 0);
     }, [localAspectGroups, isVisible, isTemplateVisible]);
 
     const completionProgress = useMemo(() => {
@@ -224,15 +213,6 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
         return Math.round((answeredQuestions / totalQuestions) * 100);
     }, [visibleAspectGroups]);
 
-    const getOptionsForQuestion = useCallback((aspect: Question) => {
-        return Array.isArray(aspect.options) && aspect.options.length > 0
-            ? aspect.options
-            : [
-                  { id: 1, option_text: 'Ya', score: 1 },
-                  { id: 0, option_text: 'Tidak', score: 0 },
-              ];
-    }, []);
-
     const updateAspectInStore = useCallback(
         (questionId: number, selectedOptionId: number | null, notes: string) => {
             setLocalAspectGroups((prevGroups) => {
@@ -244,12 +224,14 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
                 }));
 
                 const aspectsData = updatedGroups.flatMap((group) =>
-                    group.aspects.map((aspect) => ({
-                        questionId: aspect.id,
-                        selectedOptionId: aspect.value,
-                        notes: aspect.notes,
-                        aspectName: group.name,
-                    })),
+                    group.aspects
+                        .filter((aspect) => aspect.value !== null && aspect.value !== undefined)
+                        .map((aspect) => ({
+                            questionId: aspect.id,
+                            selectedOptionId: aspect.value,
+                            notes: aspect.notes,
+                            aspectName: group.name,
+                        })),
                 );
                 updateAspectsBorrower(
                     aspectsData.map((aspect) => ({
@@ -264,6 +246,65 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
         },
         [updateAspectsBorrower],
     );
+
+    const prepareSubmissionData = useCallback(() => {
+        const answeredAspects = localAspectGroups
+            .flatMap((group) => group.aspects)
+            .filter((aspect) => aspect.value !== null && aspect.value !== undefined)
+            .map((aspect) => ({
+                questionId: aspect.id,
+                selectedOptionId: aspect.value,
+                notes: aspect.notes || '',
+            }));
+
+        const finalPayload = {
+            borrowerInformation: informationBorrower,
+            borrowerFacilities: facilitiesBorrower,
+            aspectAnswers: answeredAspects,
+        };
+
+        setSubmissionData(finalPayload);
+    }, [localAspectGroups, informationBorrower, facilitiesBorrower]);
+
+    useEffect(() => {
+        const visibleQuestionIds = new Set(visibleAspectGroups.flatMap((group) => group.aspects.map((aspect) => aspect.id)));
+
+        let isChanged = false;
+
+        const cleanedGroups = localAspectGroups.map((group) => ({
+            ...group,
+            aspects: group.aspects.map((aspect) => {
+                if (!visibleQuestionIds.has(aspect.id) && (aspect.value !== null || aspect.notes !== '')) {
+                    isChanged = true;
+                    return { ...aspect, value: null, notes: '' };
+                }
+                return aspect;
+            }),
+        }));
+
+        if (isChanged) {
+            setLocalAspectGroups(cleanedGroups);
+
+            const cleanedAspectsData = cleanedGroups
+                .flatMap((group) => group.aspects)
+                .filter((aspect) => aspect.value !== null && aspect.value !== undefined)
+                .map((aspect) => ({
+                    questionId: aspect.id,
+                    selectedOptionId: aspect.value,
+                    notes: aspect.notes,
+                    aspectName: localAspectGroups.find((g) => g.aspects.some((a) => a.id === aspect.id))?.name || '',
+                }));
+
+            updateAspectsBorrower(
+                cleanedAspectsData.map((aspect) => ({
+                    questionId: aspect.questionId,
+                    selectedOptionId: aspect.selectedOptionId ?? null,
+                    notes: aspect.notes ?? '',
+                    aspectName: aspect.aspectName,
+                })),
+            );
+        }
+    }, [visibleAspectGroups]);
 
     return (
         <>
@@ -367,6 +408,22 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
                         ))}
                     </CardContent>
                 </Card>
+                <div className="mt-6 space-y-4">
+                    <button onClick={prepareSubmissionData} className="rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700">
+                        Ambil dan Tampilkan Jawaban Final
+                    </button>
+
+                    {submissionData && (
+                        <Card>
+                            <CardContent className="p-4">
+                                <h3 className="mb-2 font-semibold">Data Final Siap Kirim</h3>
+                                <pre className="max-h-96 overflow-auto rounded bg-gray-900 p-4 text-xs text-white">
+                                    {JSON.stringify(submissionData, null, 2)}
+                                </pre>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
             </div>
         </>
     );

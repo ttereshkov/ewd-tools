@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Head } from '@inertiajs/react';
+import { watchlistNote } from '@/routes/forms/summary';
+import { Head, router } from '@inertiajs/react';
 
 interface Report {
     id: number;
@@ -63,7 +64,9 @@ export default function Summary({ reportData }: SummaryProps) {
                         <Label className="text-2xl font-bold">Summary Early Warning</Label>
                         <div className="flex items-center space-x-4">
                             <div>
-                                <Button className="bg-orange-600 text-white hover:bg-orange-700">📝 Buka NAW</Button>
+                                <Button className="bg-orange-600 text-white hover:bg-orange-700" onClick={() => router.visit(watchlistNote().url)}>
+                                    📝 Buka NAW
+                                </Button>
                             </div>
                             <div className="text-right">
                                 <p className="text-xs text-blue-100">Dibuat oleh:</p>
@@ -144,7 +147,6 @@ export default function Summary({ reportData }: SummaryProps) {
                         </CardContent>
                     </Card>
                 </div>
-                <h1>Ringkasan Laporan</h1>
             </div>
         </>
     );

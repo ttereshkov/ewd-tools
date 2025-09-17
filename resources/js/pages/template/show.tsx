@@ -124,7 +124,7 @@ export default function TemplateShow({ template }: Props) {
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-3">
                                                         <span className="text-lg font-semibold">
-                                                            ({index + 1}) {aspect.code} - {aspect.latest_aspect_version.name}
+                                                            ({index + 1}) {aspect.code} - {}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-2">

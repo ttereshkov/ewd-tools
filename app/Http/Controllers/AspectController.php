@@ -6,6 +6,7 @@ use App\Http\Requests\StoreAspectRequest;
 use App\Http\Requests\UpdateAspectRequest;
 use App\Models\Aspect;
 use App\Models\Question;
+use App\Models\QuestionVersion;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -41,7 +42,9 @@ class AspectController extends Controller
                     'description' => $validated['description'] ?? null,
                 ]);
 
-                foreach ($validated['questions'] as $q) {
+                $indexToQuestionVersionIdMap = [];
+
+                foreach ($validated['questions'] as $index => $q) {
                     $question = Question::create([]);
 
                     $questionVersion = $question->questionVersions()->create([
@@ -52,6 +55,8 @@ class AspectController extends Controller
                         'is_mandatory' => $q['is_mandatory'],
                     ]);
 
+                    $indexToQuestionVersionIdMap[$index] = $questionVersion->id;
+
                     if (!empty($q['options'])) {
                         foreach ($q['options'] as $opt) {
                             $questionVersion->questionOptions()->create([
@@ -60,9 +65,23 @@ class AspectController extends Controller
                             ]);
                         }
                     }
+                }
 
+                foreach ($validated['questions'] as $index => $q) {
                     if (!empty($q['visibility_rules'])) {
-                        $questionVersion->visibilityRules()->createMany($q['visibility_rules']);
+                        $questionVersionId = $indexToQuestionVersionIdMap[$index];
+                        $questionVersion = QuestionVersion::find($questionVersionId);
+
+                        $translatedRules = [];
+
+                        foreach ($q['visibility_rules'] as $rule) {
+                            if ($rule['source_type'] === 'answer') {
+                                $sourceIndex = (int)$rule['source_field'];
+                                $rule['source_field'] = $indexToQuestionVersionIdMap[$sourceIndex];
+                            }
+                            $translatedRules[] = $rule;
+                        }
+                        $questionVersion->visibilityRules()->createMany($translatedRules);
                     }
                 }
             });
