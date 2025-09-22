@@ -28,6 +28,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('forms', [FormController::class, 'store'])->name('forms.store');
     Route::post('forms/save-step', [FormController::class, 'saveStepData'])->name('forms.saveStep'); 
     Route::get('summary/{report}', [SummaryController::class, 'show'])->name('summary.show');
+    Route::put('summary/{report}', [SummaryController::class, 'update'])->name('summary.update');
     Route::get('watchlist', [WatchlistController::class, 'show'])->name('forms.summary.watchlist-note');
 });
 

@@ -365,12 +365,9 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {group.aspects.map((aspect) => (
+                                            {group.aspects.map((aspect, index) => (
                                                 <TableRow key={aspect.id}>
-                                                    <TableCell className="border border-gray-300 p-2 text-center">
-                                                        {aspect.id}
-                                                        {aspect.is_mandatory && <span className="ml-1 text-red-500">*</span>}
-                                                    </TableCell>
+                                                    <TableCell className="border border-gray-300 p-2 text-center">{index + 1}</TableCell>
                                                     <TableCell className="border border-gray-300 p-2">{aspect.question_text}</TableCell>
                                                     <TableCell className="border border-gray-300 p-2">
                                                         <Select
@@ -408,22 +405,6 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
                         ))}
                     </CardContent>
                 </Card>
-                <div className="mt-6 space-y-4">
-                    <button onClick={prepareSubmissionData} className="rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700">
-                        Ambil dan Tampilkan Jawaban Final
-                    </button>
-
-                    {submissionData && (
-                        <Card>
-                            <CardContent className="p-4">
-                                <h3 className="mb-2 font-semibold">Data Final Siap Kirim</h3>
-                                <pre className="max-h-96 overflow-auto rounded bg-gray-900 p-4 text-xs text-white">
-                                    {JSON.stringify(submissionData, null, 2)}
-                                </pre>
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
             </div>
         </>
     );
