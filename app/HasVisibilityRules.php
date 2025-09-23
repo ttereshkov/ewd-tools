@@ -37,7 +37,7 @@ trait HasVisibilityRules
                     break;
             }
 
-            if (!$this->compareValues($sourceValue, $rule->operator, $rule->value)) {
+            if (! $this->compareValues($sourceValue, $rule->operator, $rule->value)) {
                 return false;
             }
         }
@@ -49,29 +49,33 @@ trait HasVisibilityRules
     {
         if (str_starts_with($field, 'total_') || str_starts_with($field, 'sum_')) {
             $actualField = str_starts_with($field, 'total_') ? substr($field, 6) : substr($field, 4);
+
             return $facilityData[$actualField] ?? 0;
         }
 
         if (str_starts_with($field, 'avg_')) {
             $actualField = substr($field, 4);
+
             return $facilityData[$actualField] ?? 0;
         }
-        
+
         if (str_starts_with($field, 'max_') || str_starts_with($field, 'min_')) {
             $actualField = str_starts_with($field, 'max_') ? substr($field, 4) : substr($field, 4);
+
             return $facilityData[$actualField] ?? 0;
         }
-        
+
         if (str_starts_with($field, 'count_')) {
             $actualField = substr($field, 6);
             $value = $facilityData[$actualField] ?? null;
-            return !empty($value) ? 1 : 0;
+
+            return ! empty($value) ? 1 : 0;
         }
 
         if (str_contains($field, '.')) {
             return data_get($facilityData, $field);
         }
-        
+
         return $facilityData[$field] ?? null;
     }
 
@@ -90,10 +94,12 @@ trait HasVisibilityRules
             case '<=': return is_numeric($sourceValue) && is_numeric($targetValue) && $sourceValue <= $targetValue;
             case 'in':
                 $targetArray = is_array($targetValue) ? $targetValue : explode(',', $targetValue);
+
                 return in_array($sourceValue, array_map('trim', $targetArray));
             case 'not_in':
                 $targetArray = is_array($targetValue) ? $targetValue : explode(',', $targetValue);
-                return !in_array($sourceValue, array_map('trim', $targetArray));
+
+                return ! in_array($sourceValue, array_map('trim', $targetArray));
             case 'contains':
                 return is_string($sourceValue) && is_string($targetValue) && strpos(strtolower($sourceValue), strtolower($targetValue)) !== false;
             case 'not_contains':

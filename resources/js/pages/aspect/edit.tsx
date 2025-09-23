@@ -468,6 +468,7 @@ export default function AspectEdit({ aspect }: Props) {
                                                                             value={rule.source_field}
                                                                             onValueChange={(value) => {
                                                                                 const updated = [...data.questions];
+
                                                                                 updated[qIndex].visibility_rules[rIndex].source_field = value;
                                                                                 setData('questions', updated);
                                                                             }}

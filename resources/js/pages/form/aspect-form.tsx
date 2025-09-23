@@ -60,6 +60,8 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
         [aspectsBorrower],
     );
 
+    console.log(aspect_groups);
+
     useEffect(() => {
         setLocalAspectGroups(initializeAspectGroups(aspect_groups));
     }, [aspect_groups, initializeAspectGroups]);
@@ -144,14 +146,18 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
                                 0,
                             ) || 0;
                     } else if (rule.source_type === 'answer') {
-                        const sourceQuestionId = parseInt(sourceField, 10);
-                        if (!isNaN(sourceQuestionId)) {
-                            const sourceQuestion = questionMap.get(sourceQuestionId);
-                            if (sourceQuestion) {
-                                const answerId = sourceQuestion.value;
-                                const options = getOptionsForQuestion(sourceQuestion);
-                                const selectedOption = options.find((opt) => opt.id === answerId);
-                                sourceValue = selectedOption ? selectedOption.option_text : null;
+                        const match = sourceField.match(/\d+$/);
+                        if (match) {
+                            const sourceQuestionId = parseInt(match[0], 10);
+                            console.log('sourceQuestionId', sourceQuestionId, sourceField);
+                            if (!isNaN(sourceQuestionId)) {
+                                const sourceQuestion = questionMap.get(sourceQuestionId);
+                                if (sourceQuestion) {
+                                    const answerId = sourceQuestion.value;
+                                    const options = getOptionsForQuestion(sourceQuestion);
+                                    const selectedOption = options.find((opt) => opt.id === answerId);
+                                    sourceValue = selectedOption ? selectedOption.option_text : null;
+                                }
                             }
                         }
                     }

@@ -22,6 +22,10 @@ class FormController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->has('borrower_id')) {
+            Session::forget(['borrower_data', 'facility_data']);
+        }
+
         $borrowers = Borrower::all();
         $period = Period::getActivePeriod();
 
@@ -36,7 +40,7 @@ class FormController extends Controller
                 'latestTemplateVersion.aspectVersions.questionVersions.questionOptions',
                 'latestTemplateVersion.aspectVersions.questionVersions.visibilityRules',
                 'latestTemplateVersion.aspectVersions.visibilityRules',
-                'latestTemplateVersion.visibilityRules'
+                'latestTemplateVersion.visibilityRules',
             ])->find($finalTemplateId);
 
             if ($template && $template->latestTemplateVersion) {
@@ -79,9 +83,9 @@ class FormController extends Controller
             'aspectsBorrower' => 'required|array|min:1',
             'aspectsBorrower.*.questionId' => 'required|exists:question_versions,id',
             'aspectsBorrower.*.selectedOptionId' => 'required|exists:question_options,id',
-                
+
             'reportMeta.template_id' => 'required|exists:templates,id',
-            'reportMeta.period_id' => 'required|exists:periods,id'
+            'reportMeta.period_id' => 'required|exists:periods,id',
         ]);
 
         DB::beginTransaction();
@@ -130,7 +134,7 @@ class FormController extends Controller
                     'report_id' => $report->id,
                     'question_version_id' => $aspectAnswer['questionId'],
                     'question_option_id' => $aspectAnswer['selectedOptionId'],
-                    'notes' => $aspectAnswer['notes'] ?? null
+                    'notes' => $aspectAnswer['notes'] ?? null,
                 ]);
             }
 
@@ -146,19 +150,20 @@ class FormController extends Controller
             return Inertia::location(route('summary.show', ['report' => $report->id]));
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Gagal menyimpan data form: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Gagal menyimpan data form: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
             return back()->with('error', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 
     /**
-     * Melakukan 
+     * Melakukan
      */
     public function saveStepData(Request $request)
     {
         $borrowerData = $request->input('informationBorrower', []);
         $facilityData = $request->input('facilitiesBorrower', []);
-    
+
         Session::put('borrower_data', $borrowerData);
         Session::put('facility_data', $facilityData);
 

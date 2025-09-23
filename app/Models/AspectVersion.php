@@ -20,7 +20,7 @@ class AspectVersion extends Model
         'name',
         'description',
     ];
-    
+
     public function aspect(): BelongsTo
     {
         return $this->belongsTo(Aspect::class);
@@ -29,8 +29,8 @@ class AspectVersion extends Model
     public function templateVersions(): BelongsToMany
     {
         return $this->belongsToMany(TemplateVersion::class, 'aspect_template_versions')
-                    ->withPivot('weight')
-                    ->withTimestamps();
+            ->withPivot('weight')
+            ->withTimestamps();
     }
 
     public function questionVersions(): HasMany
@@ -63,7 +63,7 @@ class AspectVersion extends Model
                             'score' => $option->score,
                         ];
                     })->toArray(),
-                    'visibility_rules' => $question->visibilityRules
+                    'visibility_rules' => $question->visibilityRules,
                 ];
             }
         }

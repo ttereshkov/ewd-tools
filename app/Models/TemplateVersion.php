@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class TemplateVersion extends Model
@@ -29,8 +28,9 @@ class TemplateVersion extends Model
     public function aspectVersions(): BelongsToMany
     {
         return $this->belongsToMany(AspectVersion::class, 'aspect_template_versions')
-                    ->withPivot('weight')
-                    ->withTimestamps();
+            ->latest('version_number')
+            ->withPivot('weight')
+            ->withTimestamps();
     }
 
     public function visibilityRules(): MorphMany
@@ -45,12 +45,12 @@ class TemplateVersion extends Model
 
         $this->load([
             'aspectVersions.questionVersions.questionOptions',
-            'aspectVersions.questionVersions.visibilityRules'
+            'aspectVersions.questionVersions.visibilityRules',
         ]);
 
         foreach ($this->aspectVersions as $aspect) {
             $questions = $aspect->questionVersions;
-            if (!empty($questions)) {
+            if (! empty($questions)) {
                 $aspectGroups[] = [
                     'id' => $aspect->id,
                     'aspect_id' => $aspect->aspect_id,
