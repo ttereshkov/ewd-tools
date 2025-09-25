@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Report;
 use App\Models\ReportSummary;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -17,6 +16,7 @@ class SummaryController extends Controller
         $report->load([
             'borrower.division',
             'borrower.detail',
+            'borrower.facilities',
             'summary',
             'aspects.aspectVersion.aspect',
             'creator',
@@ -37,9 +37,9 @@ class SummaryController extends Controller
                 'isOverride' => 'boolean',
                 'overrideReason' => 'nullable|string|required_if:isOverride,true',
                 'indicativeCollectibility' => 'integer|min:1|max:5',
-                'finalClassification' => 'required|string|in:WATCHLIST,SAFE'
+                'finalClassification' => 'required|string|in:WATCHLIST,SAFE',
             ]);
-        
+
             ReportSummary::updateOrCreate(
                 ['report_id' => $reportId],
                 [
@@ -57,7 +57,8 @@ class SummaryController extends Controller
                 'message' => 'Ringkasan laporan berhasil disimpan.',
             ]);
         } catch (Throwable $e) {
-            Log::error('Error updating report summary: ' . $e->getMessage());
+            Log::error('Error updating report summary: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan pada server saat menyimpan ringkasan.',

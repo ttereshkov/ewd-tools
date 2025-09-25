@@ -4,6 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { dashboard } from '@/routes';
 import { watchlistNote } from '@/routes/forms/summary';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
@@ -172,7 +173,7 @@ export default function Summary({ reportData }: SummaryProps) {
         const summary = data.summary;
         const period = data.period;
         const aspects = data.aspects || [];
-        const facilities = data.facilities || [];
+        const facilities = borrower.facilities || [];
 
         const facilitiesTotals = facilities.reduce(
             (acc, facility) => {
@@ -186,8 +187,6 @@ export default function Summary({ reportData }: SummaryProps) {
         );
         return { borrower, creator, period, summary, aspects, facilities, facilitiesTotals };
     }, [reportData]);
-    console.log('REPORT:', reportData);
-    console.log('FACILITIES TOTALS:', facilities);
 
     const [expandedSections, setExpandedSections] = useState({ details: true, facilities: true, aspects: true, summary: true });
 
@@ -228,6 +227,9 @@ export default function Summary({ reportData }: SummaryProps) {
             toast.success('Data ringkasan berhasil disimpan');
             if (finalClassification === 'WATCHLIST') {
                 toast.info('Debitur masuk kategori WATCHLIST. Silakan lengkapi NAW.');
+                router.visit(watchlistNote().url);
+            } else {
+                router.visit(dashboard().url);
             }
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Gagal menyimpan data');
@@ -283,11 +285,11 @@ export default function Summary({ reportData }: SummaryProps) {
                                 </div>
                                 <div>
                                     <Label className="text-sm font-medium text-gray-500">Grup Debitur</Label>
-                                    <div className="text-lg font-semibold text-gray-900">{borrower.detail.borrower_group}</div>
+                                    <div className="text-lg font-semibold text-gray-900">{borrower.detail?.borrower_group || 'N/A'}</div>
                                 </div>
                                 <div>
                                     <Label className="text-sm font-medium text-gray-500">Tujuan Kredit</Label>
-                                    <div className="text-lg font-semibold text-gray-900">{borrower.detail.purpose}</div>
+                                    <div className="text-lg font-semibold text-gray-900">{borrower.detail.purpose.toUpperCase()}</div>
                                 </div>
                                 <div>
                                     <Label className="text-sm font-medium text-gray-500">Sektor Ekonomi</Label>
@@ -461,7 +463,11 @@ export default function Summary({ reportData }: SummaryProps) {
                                 </div>
                                 <div
                                     className={`mb-6 rounded-lg border p-4 ${
-                                        summaryForm.isOverride ? 'border-amber-300 bg-amber-50' : 'border-gray-200'
+                                        summaryForm.isOverride
+                                            ? finalClassification === 'WATCHLIST'
+                                                ? 'border-red-300 bg-red-50'
+                                                : 'border-green-300 bg-green-50'
+                                            : 'border-gray-200'
                                     }`}
                                 >
                                     <h3 className="mb-3 font-semibold text-gray-800">Klasifikasi Final</h3>
@@ -472,7 +478,9 @@ export default function Summary({ reportData }: SummaryProps) {
                                             {finalClassification}
                                         </Badge>
                                         {summaryForm.isOverride && (
-                                            <div className="text-sm font-semibold text-amber-700">
+                                            <div
+                                                className={`text-sm font-semibold ${finalClassification === 'WATCHLIST' ? 'text-red-700' : 'text-green-700'}`}
+                                            >
                                                 Override: {systemClassification} → {finalClassification}
                                             </div>
                                         )}

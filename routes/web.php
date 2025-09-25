@@ -26,7 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('forms', [FormController::class, 'index'])->name('forms.index');
     Route::post('forms', [FormController::class, 'store'])->name('forms.store');
-    Route::post('forms/save-step', [FormController::class, 'saveStepData'])->name('forms.saveStep'); 
+    Route::post('forms/save-step', [FormController::class, 'saveStepData'])->name('forms.saveStep');
     Route::get('summary/{report}', [SummaryController::class, 'show'])->name('summary.show');
     Route::put('summary/{report}', [SummaryController::class, 'update'])->name('summary.update');
     Route::get('watchlist', [WatchlistController::class, 'show'])->name('forms.summary.watchlist-note');
@@ -51,10 +51,10 @@ Route::resource('aspects', AspectController::class)
 Route::resource('templates', TemplateController::class)
     ->middleware(['auth', 'verified'])
     ->names('templates');
-    
+
 Route::resource('periods', PeriodController::class)
-    ->middleware(['auth', 'verified'])
-    ->names('periods');
+        ->middleware(['auth', 'verified'])
+        ->names('periods');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
