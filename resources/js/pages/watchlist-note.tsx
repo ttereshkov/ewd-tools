@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { WatchlistNotePageProps } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Tooltip } from '@radix-ui/react-tooltip';
 import { ArrowLeftIcon, Calendar, FileText, MessageSquare, Pencil, Trash2, User } from 'lucide-react';
@@ -112,11 +113,18 @@ const getItemTypeLabel = (type: ActionItemType) => {
 };
 
 // --- Komponen Utama ---
-export default function WatchlistNote() {
-    const [report] = useState(dummyData.report);
-    const [monitoringNote, setMonitoringNote] = useState(dummyData.monitoringNote);
-    const [actionItems, setActionItems] = useState(dummyData.actionItems);
+export default function WatchlistNote({ report_data, monitoring_note, action_items }: WatchlistNotePageProps) {
+    const [report] = useState(report_data);
+    console.log('Report:', report);
+    const [monitoringNote, setMonitoringNote] = useState(monitoring_note);
+    const [actionItems, setActionItems] = useState(action_items);
     const [editingItemId, setEditingItemId] = useState<number | null>(null);
+
+    // Handler for monitoring note changes
+    const handleMonitoringNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const { id, value } = e.target;
+        setMonitoringNote((prev) => ({ ...prev, [id]: value }));
+    };
 
     const previousPeriodCompletionStatus = useMemo(() => {
         const items = actionItems.previous_period;
@@ -162,6 +170,15 @@ export default function WatchlistNote() {
             }));
             alert('Item berhasil dihapus!');
         }
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const payload = {
+            report_id: report.id,
+            monitoring_note: monitoringNote,
+            action_items: actionItems,
+        };
     };
 
     const returnToSummary = () => window.history.back();
@@ -217,13 +234,25 @@ export default function WatchlistNote() {
                                 <Label>
                                     Alasan Watchlist <span className="text-red-500">*</span>
                                 </Label>
-                                <Textarea value={monitoringNote.watchlist_reason} readOnly className="mt-1 bg-gray-100" />
+                                <Textarea
+                                    id="watchlist_reason"
+                                    value={monitoringNote.watchlist_reason}
+                                    onChange={handleMonitoringNoteChange}
+                                    className="mt-1 bg-gray-100"
+                                    required
+                                />
                             </div>
                             <div>
                                 <Label>
                                     Account Strategy <span className="text-red-500">*</span>
                                 </Label>
-                                <Textarea value={monitoringNote.account_strategy} readOnly className="mt-1 bg-gray-100" />
+                                <Textarea
+                                    id="account_strategy"
+                                    value={monitoringNote.account_strategy}
+                                    onChange={handleMonitoringNoteChange}
+                                    className="mt-1 bg-gray-100"
+                                    required
+                                />
                             </div>
                         </CardContent>
                     </Card>

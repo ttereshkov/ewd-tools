@@ -82,7 +82,7 @@ class Report extends Model
             'answers.questionOption'
         ]);
 
-        $aspectScores = $this->calculateAspectScores();
+        $aspectScores = $this-> calculateAspectScores();
         $overallSummary = $this->calculateOverallSummary($aspectScores);
 
         $this->storeCalculationResults((array) $aspectScores, (array) $overallSummary);
@@ -177,6 +177,33 @@ class Report extends Model
      */
     private function determineClassification(float $totalScore)
     {
-        return ($totalScore >= 80) ? 'safe' : 'watchlist';
+        if ($this->passesScoreRule($totalScore) && $this->passesAspectRule() && $this->passesMandatoryRule()) {
+            return 'safe';
+        }
+
+        return 'watchlist';
     }
-}
+
+    private function passesScoreRule(float $totalScore): bool
+    {
+        return $totalScore > 80;
+    }
+
+    private function passesAspectRule(): bool
+    {
+        return !$this->aspects->contains(fn($aspect) => strtolower($aspect->classification) === 'watchlist');
+    }
+
+    private function passesMandatoryRule(): bool
+    {
+        $mandatoryLimit = 2;
+
+        $failedMandatoryCount = $this->answers
+            ->filter(fn($answer) => $answer->questionVersion->is_mandatory)
+            ->filter(fn($answer) => !$answer->questionOption || $answer->questionOption->score < 0)
+            ->count();
+        
+        return $failedMandatoryCount <= $mandatoryLimit;
+    }
+}   
+

@@ -24,7 +24,7 @@ class WatchlistController extends Controller
         $actionItems = ActionItem::where('monitoring_note_id', $monitoringNote->id)->get()->groupBy('item_type');
 
         return Inertia::render('watchlist-note', [
-            'report' => $report,
+            'report_data' => $report,
             'monitoring_note' => $monitoringNote,
             'action_items' => [
                 'previous_period' => $actionItems->get('previous_period', []),
