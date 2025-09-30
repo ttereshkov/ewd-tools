@@ -68,6 +68,11 @@ class Report extends Model
         return $this->hasMany(ReportAspect::class);
     }
 
+    public function watchlist(): HasOne
+    {
+        return $this->hasOne(Watchlist::class);
+    }
+
     public function calculateAndStoreSummary()
     {
         $this->loadMissing([

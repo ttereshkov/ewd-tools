@@ -11,15 +11,15 @@ class WatchlistController extends Controller
 {
     public function show(Report $report)
     {
-        $report->load(['borrower', 'period', 'creator']);
+        $report->load(['borrower', 'period', 'creator', 'watchlist']);
 
-        $monitoringNote = MonitoringNote::firstOrCreate([
-            ['report_id' => $report->id],
+        $monitoringNote = MonitoringNote::firstOrCreate(
+            ['watchlist_id' => $report->watchlist->id],
             [
                 'watchlist_reason' => 'Alasan watchlist belum diisi',
                 'account_strategy' => '',
             ],
-        ]);
+        );
 
         $actionItems = ActionItem::where('monitoring_note_id', $monitoringNote->id)->get()->groupBy('item_type');
 

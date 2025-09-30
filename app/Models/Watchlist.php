@@ -45,7 +45,7 @@ class Watchlist extends Model
         return $this->belongsTo(User::class, 'resolved_by');
     }
 
-    public function monitoringNote(): HasMany
+    public function monitoringNotes(): HasMany
     {
         return $this->hasMany(MonitoringNote::class);
     }
