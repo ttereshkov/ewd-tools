@@ -101,5 +101,4 @@ export interface WatchlistNotePageProps {
         current_progress: ActionItem[];
         next_period: ActionItem[];
     };
-    is_naw_required: boolean;
 }

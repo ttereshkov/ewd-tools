@@ -43,11 +43,10 @@ class MonitoringNoteService
         ];
 
         return [
-            'watchlist'         => $watchlist,
-            'report_data'            => $report,
+            'watchlist'          => $watchlist,
+            'report_data'        => $report,
             'monitoring_note'    => $monitoringNote,
             'action_items'       => $actionItems,
-            'is_naw_required'     => $this->isNawRequired($reportId)
         ];
     }
 
@@ -132,5 +131,39 @@ class MonitoringNoteService
         } catch (Exception $e) {
             Log::warning('Failed to auto-copy from previous period: ' . $e->getMessage());
         }
+    }
+
+    public function validateCompletion(MonitoringNote $monitoringNote): array
+    {
+        $missingItems = [];
+
+        if (empty($monitoringNote->watchlist_reason) || trim($monitoringNote->watchlist_reason) === '') {
+            $missingItems[] = 'Alasan Watchlist';
+        }
+
+        if (empty($monitoringNote->account_strategy) || trim($monitoringNote->account_strategy) === '') {
+            $missingItems[] = 'Account Strategy';
+        }
+
+        $actionItems = $monitoringNote->actionItems;
+
+        $previousItems = $actionItems->where('item_type', ActionItemType::PREVIOUS_PERIOD->value);
+        $previousItemsWithProgress = $previousItems->filter(function ($item) {
+            return !empty($item->progress_notes) && trim($item->progress_notes) !== '';
+        });
+
+        if ($previousItems->count() > 0 && $previousItemsWithProgress->count() < $previousItems->count()) {
+            $missingItems[] = 'Progress dari periode sebelumnya';
+        }
+
+        $nextItems = $actionItems->where('item_type', ActionItemType::NEXT_PERIOD->value);
+        if ($nextItems->count() === 0) {
+            $missingItems[] = 'Rencana tindak lanjut periode berikutnya';
+        }
+
+        return [
+            'is_complete' => empty($missingItems),
+            'missing_items' => $missingItems,
+        ];
     }
 }

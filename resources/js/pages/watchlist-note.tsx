@@ -113,7 +113,7 @@ const getItemTypeLabel = (type: ActionItemType) => {
 };
 
 // --- Komponen Utama ---
-export default function WatchlistNote({ watchlist, report_data, monitoring_note, action_items, is_naw_required }: WatchlistNotePageProps) {
+export default function WatchlistNote({ watchlist, report_data, monitoring_note, action_items }: WatchlistNotePageProps) {
     const [report] = useState(report_data);
     const [monitoringNote, setMonitoringNote] = useState(monitoring_note);
     const [actionItems, setActionItems] = useState(action_items);
@@ -231,7 +231,7 @@ export default function WatchlistNote({ watchlist, report_data, monitoring_note,
                         <CardContent className="space-y-4">
                             <div>
                                 <Label>
-                                    Alasan Watchlist <span className="text-red-500">*</span>
+                                    Alasan Masuk/Keluar Watchlist <span className="text-red-500">*</span>
                                 </Label>
                                 <Textarea
                                     id="watchlist_reason"
