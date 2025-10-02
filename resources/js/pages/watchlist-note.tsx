@@ -113,9 +113,8 @@ const getItemTypeLabel = (type: ActionItemType) => {
 };
 
 // --- Komponen Utama ---
-export default function WatchlistNote({ report_data, monitoring_note, action_items }: WatchlistNotePageProps) {
+export default function WatchlistNote({ watchlist, report_data, monitoring_note, action_items, is_naw_required }: WatchlistNotePageProps) {
     const [report] = useState(report_data);
-    console.log('Report:', report);
     const [monitoringNote, setMonitoringNote] = useState(monitoring_note);
     const [actionItems, setActionItems] = useState(action_items);
     const [editingItemId, setEditingItemId] = useState<number | null>(null);

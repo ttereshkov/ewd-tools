@@ -20,6 +20,7 @@ import {
     Folder,
     FolderIcon,
     LayoutGrid,
+    PaperclipIcon,
     PlusCircleIcon,
     UserIcon,
 } from 'lucide-react';
@@ -61,6 +62,11 @@ const mainNavItems: NavItem[] = [
         title: 'Periode',
         href: periods.index(),
         icon: ClockIcon,
+    },
+    {
+        title: 'Laporan',
+        href: '#',
+        icon: PaperclipIcon,
     },
 ];
 

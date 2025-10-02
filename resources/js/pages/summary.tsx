@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes';
-import { watchlistNote } from '@/routes/summary';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AlertTriangleIcon, CheckIcon, ChevronDownIcon } from 'lucide-react';
@@ -216,6 +215,10 @@ export default function Summary({ reportData }: SummaryProps) {
 
     const [isSaving, setIsSaving] = useState(false);
 
+    const openMonitoringNote = () => {
+        window.open(`/watchlist?reportId=${reportData.id}`, '_blank');
+    };
+
     const handleSave = useCallback(async () => {
         if (summaryForm.isOverride && !summaryForm.overrideReason.trim()) {
             toast.error('Alasan override wajib diisi.');
@@ -227,7 +230,7 @@ export default function Summary({ reportData }: SummaryProps) {
             toast.success('Data ringkasan berhasil disimpan');
             if (finalClassification === 'WATCHLIST') {
                 toast.info('Debitur masuk kategori WATCHLIST. Silakan lengkapi NAW.');
-                router.visit(watchlistNote(reportData.id).url);
+                // router.visit(watchlistNote(reportData.id).url);
             } else {
                 router.visit(dashboard().url);
             }
@@ -246,10 +249,7 @@ export default function Summary({ reportData }: SummaryProps) {
                         <Label className="text-2xl font-bold">Summary Early Warning</Label>
                         <div className="flex items-center space-x-4">
                             <div>
-                                <Button
-                                    className="bg-orange-600 text-white hover:bg-orange-700"
-                                    onClick={() => router.visit(watchlistNote(reportData.id).url)}
-                                >
+                                <Button className="bg-orange-600 text-white hover:bg-orange-700" onClick={openMonitoringNote}>
                                     📝 Buka NAW
                                 </Button>
                             </div>

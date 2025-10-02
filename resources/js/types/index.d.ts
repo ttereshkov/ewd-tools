@@ -93,10 +93,13 @@ export type ActionItemStatus = 'pending' | 'in_progress' | 'completed' | 'overdu
 export type ActionItemType = 'previous_period' | 'current_progress' | 'next_period';
 
 export interface WatchlistNotePageProps {
+    watchlist: any;
     report_data: Report;
     monitoring_note: MonitoringNote;
     action_items: {
         previous_period: ActionItem[];
+        current_progress: ActionItem[];
         next_period: ActionItem[];
     };
+    is_naw_required: boolean;
 }

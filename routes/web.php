@@ -29,7 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('forms/save-step', [FormController::class, 'saveStepData'])->name('forms.saveStep');
     Route::get('summary/{report}', [SummaryController::class, 'show'])->name('summary.show');
     Route::put('summary/{report}', [SummaryController::class, 'update'])->name('summary.update');
-    Route::get('watchlist/{report}', [WatchlistController::class, 'show'])->name('summary.watchlist-note');
+    Route::get('watchlist', [WatchlistController::class, 'show'])->name('summary.watchlist-note');
 });
 
 Route::resource('divisions', DivisionController::class)
