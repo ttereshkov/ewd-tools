@@ -216,7 +216,7 @@ export default function Summary({ reportData }: SummaryProps) {
     const [isSaving, setIsSaving] = useState(false);
 
     const openMonitoringNote = () => {
-        window.open(`/watchlist?reportId=${reportData.id}`, '_blank');
+        window.open(`/watchlist?reportId=${reportData.id}`, '_self');
     };
 
     const handleSave = useCallback(async () => {

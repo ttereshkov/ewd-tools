@@ -6,11 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { destroy, store, update } from '@/routes/action-items';
+import watchlist from '@/routes/watchlist';
 import { WatchlistNotePageProps } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { Tooltip } from '@radix-ui/react-tooltip';
 import { ArrowLeftIcon, Calendar, FileText, MessageSquare, Pencil, Trash2, User } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
 
 type ActionItemStatus = 'pending' | 'in_progress' | 'completed' | 'overdue';
 type ActionItemType = 'previous_period' | 'current_progress' | 'next_period';
@@ -26,59 +29,6 @@ interface ActionItem {
     item_type: ActionItemType;
 }
 
-const dummyData = {
-    report: {
-        id: 101,
-        borrower: { name: 'PT. Sejahtera Abadi' },
-        period: { name: 'Q3 2025' },
-        creator: { name: 'Rhaditya Bwo' },
-    },
-    monitoringNote: {
-        id: 202,
-        watchlist_reason: 'Adanya penurunan penjualan kuartalan yang signifikan sebesar 20% akibat kondisi pasar yang melemah.',
-        account_strategy:
-            'Melakukan restrukturisasi kredit dengan perpanjangan tenor dan memberikan grace period selama 3 bulan untuk memulihkan cash flow.',
-    },
-    actionItems: {
-        previous_period: [
-            {
-                id: 1,
-                action_description: 'Follow up pembayaran invoice #123',
-                progress_notes: 'Sudah dibayar lunas pada 1 September 2025.',
-                people_in_charge: 'Andi',
-                notes: '',
-                due_date: '2025-09-01',
-                status: 'completed',
-                item_type: 'previous_period',
-            },
-            {
-                id: 2,
-                action_description: 'Negosiasi ulang kontrak dengan supplier B',
-                progress_notes: '',
-                people_in_charge: 'Budi',
-                notes: 'Masih dalam tahap diskusi alot.',
-                due_date: '2025-08-25',
-                status: 'overdue',
-                item_type: 'previous_period',
-            },
-        ],
-        current_progress: [],
-        next_period: [
-            {
-                id: 3,
-                action_description: 'Evaluasi performa penjualan setiap 2 minggu',
-                progress_notes: '',
-                people_in_charge: 'Citra',
-                notes: '',
-                due_date: '2025-10-15',
-                status: 'pending',
-                item_type: 'next_period',
-            },
-        ],
-    },
-};
-
-// --- Helper Functions ---
 const formatDate = (date: string) => {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -112,8 +62,7 @@ const getItemTypeLabel = (type: ActionItemType) => {
     }
 };
 
-// --- Komponen Utama ---
-export default function WatchlistNote({ watchlist, report_data, monitoring_note, action_items }: WatchlistNotePageProps) {
+export default function WatchlistNote({ report_data, monitoring_note, action_items }: WatchlistNotePageProps) {
     const [report] = useState(report_data);
     const [monitoringNote, setMonitoringNote] = useState(monitoring_note);
     const [actionItems, setActionItems] = useState(action_items);
@@ -144,40 +93,169 @@ export default function WatchlistNote({ watchlist, report_data, monitoring_note,
         return { percentage, completedItems, totalItems, isComplete: percentage === 100 };
     }, [monitoringNote, previousPeriodCompletionStatus, actionItems.next_period]);
 
-    const handleSaveOrAddActionItem = (itemToSave: ActionItem) => {
-        const list = actionItems[itemToSave.item_type] as ActionItem[];
-        const itemIndex = list.findIndex((i) => i.id === itemToSave.id);
-        if (itemIndex > -1) {
-            const updatedList = [...list];
-            updatedList[itemIndex] = itemToSave;
-            setActionItems((prev) => ({ ...prev, [itemToSave.item_type]: updatedList }));
-            alert('Action Item berhasil diperbarui!');
-        } else {
-            const newItem = { ...itemToSave, id: Date.now() };
-            setActionItems((prev) => ({ ...prev, [itemToSave.item_type]: [...list, newItem] }));
-            alert('Action Item berhasil ditambahkan!');
+    const { processing } = useForm();
+
+    const [errors, setErrors] = useState<{
+        note?: { watchlist_reason?: string; account_strategy?: string };
+        actionItem?: Partial<Record<keyof ActionItem, string>>;
+    }>({});
+
+    // Handle untuk mengubah monitoring note
+    const handleUpdateNote = () => {
+        const newErrors: typeof errors.note = {};
+        if (!monitoringNote.watchlist_reason?.trim()) {
+            newErrors.watchlist_reason = 'Alasan Masuk/Keluar Watchlist tidak boleh kosong!';
         }
-        setEditingItemId(null);
+
+        if (!monitoringNote.account_strategy?.trim()) {
+            newErrors.account_strategy = 'Account Strategy tidak boleh kosong!';
+        }
+
+        setErrors((prev) => ({ ...prev, note: newErrors }));
+
+        if (Object.keys(newErrors).length > 0) return;
+
+        router.put(
+            watchlist.update(monitoringNote.id).url,
+            {
+                watchlist_reason: monitoringNote.watchlist_reason,
+                account_strategy: monitoringNote.account_strategy,
+            },
+            {
+                onSuccess: () => {
+                    toast.success('Nota Analisa Watchlist berhasil diperbarui.');
+                    setErrors((prev) => ({ ...prev, note: {} }));
+                },
+                onError: (errs) => {
+                    toast.error('Gagal memperbarui Nota Analisa Watchlist.');
+                    setErrors((prev) => ({ ...prev, note: errs }));
+                },
+            },
+        );
     };
 
-    const handleDeleteActionItem = (itemToDelete: ActionItem) => {
-        if (window.confirm('Apakah Anda yakin ingin menghapus item ini?')) {
-            const list = actionItems[itemToDelete.item_type] as ActionItem[];
-            setActionItems((prev) => ({
-                ...prev,
-                [itemToDelete.item_type]: list.filter((item) => item.id !== itemToDelete.id),
-            }));
-            alert('Item berhasil dihapus!');
+    const handleAddActionItem = (item: ActionItem) => {
+        const newErrors: typeof errors.actionItem = {};
+
+        if (!item.action_description?.trim()) {
+            newErrors.action_description = 'Deskripsi Action tidak boleh kosong!';
         }
+
+        if (!item.due_date?.trim()) {
+            newErrors.due_date = 'Batas Waktu tidak boleh kosong!';
+        }
+
+        setErrors((prev) => ({ ...prev, actionItem: newErrors }));
+
+        if (Object.keys(newErrors).length > 0) return;
+
+        router.post(
+            store(monitoringNote.id).url,
+            {
+                action_description: item.action_description,
+                progress_notes: item.progress_notes,
+                people_in_charge: item.people_in_charge,
+                notes: item.notes,
+                due_date: item.due_date,
+                status: item.status,
+                item_type: item.item_type,
+            },
+            {
+                onSuccess: (page) => {
+                    toast.success('Action Item berhasil ditambahkan.');
+                    if (page.props.action_items) {
+                        setActionItems(
+                            page.props.action_items as {
+                                previous_period: ActionItem[];
+                                current_progress: ActionItem[];
+                                next_period: ActionItem[];
+                            },
+                        );
+                    }
+                    setErrors((prev) => ({ ...prev, actionItem: {} }));
+                },
+                onError: (errs) => {
+                    toast.error('Gagal menambahkan Action Item.');
+                    setErrors((prev) => ({ ...prev, actionItem: errs }));
+                },
+            },
+        );
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const payload = {
-            report_id: report.id,
-            monitoring_note: monitoringNote,
-            action_items: actionItems,
-        };
+    const handleUpdateActionItem = (item: ActionItem) => {
+        const newErrors: typeof errors.actionItem = {};
+
+        if (!item.action_description?.trim()) {
+            newErrors.action_description = 'Deskripsi Action tidak boleh kosong!';
+        }
+
+        if (!item.due_date?.trim()) {
+            newErrors.due_date = 'Batas Waktu tidak boleh kosong!';
+        }
+
+        setErrors((prev) => ({ ...prev, actionItem: newErrors }));
+
+        if (Object.keys(newErrors).length > 0) return;
+
+        router.put(
+            update(item.id).url,
+            {
+                action_description: item.action_description,
+                progress_notes: item.progress_notes,
+                people_in_charge: item.people_in_charge,
+                notes: item.notes,
+                due_date: item.due_date,
+                status: item.status,
+                item_type: item.item_type,
+            },
+            {
+                onSuccess: (page) => {
+                    toast.success('Action Item berhasil diperbarui.');
+                    if (page.props.action_items) {
+                        setActionItems(
+                            page.props.action_items as {
+                                previous_period: ActionItem[];
+                                current_progress: ActionItem[];
+                                next_period: ActionItem[];
+                            },
+                        );
+                    }
+                    setErrors((prev) => ({ ...prev, actionItem: {} }));
+                    setEditingItemId(null);
+                },
+                onError: (errs) => {
+                    toast.error('Gagal memperbarui Action Item.');
+                    setErrors((prev) => ({ ...prev, actionItem: errs }));
+                },
+            },
+        );
+    };
+
+    const handleDeleteActionItem = (item: ActionItem) => {
+        if (!window.confirm('Apakah Anda yakin ingin menghapus Action Item ini?')) return;
+
+        router.delete(destroy(item.id).url, {
+            onSuccess: (page) => {
+                toast.success('Action Item berhasil dihapus.');
+                if (page.props.action_items) {
+                    setActionItems(
+                        page.props.action_items as {
+                            previous_period: ActionItem[];
+                            current_progress: ActionItem[];
+                            next_period: ActionItem[];
+                        },
+                    );
+                } else {
+                    setActionItems((prev) => ({
+                        ...prev,
+                        [item.item_type]: prev[item.item_type].filter((x) => x.id !== item.id),
+                    }));
+                }
+            },
+            onError: () => {
+                toast.error('Gagal menghapus Action Item.');
+            },
+        });
     };
 
     const returnToSummary = () => window.history.back();
@@ -237,9 +315,10 @@ export default function WatchlistNote({ watchlist, report_data, monitoring_note,
                                     id="watchlist_reason"
                                     value={monitoringNote.watchlist_reason}
                                     onChange={handleMonitoringNoteChange}
-                                    className="mt-1 bg-gray-100"
+                                    className="mt-1 bg-gray-50"
                                     required
                                 />
+                                {errors.note?.watchlist_reason && <p className="mt-1 text-xs text-red-600">{errors.note?.watchlist_reason}</p>}
                             </div>
                             <div>
                                 <Label>
@@ -249,9 +328,15 @@ export default function WatchlistNote({ watchlist, report_data, monitoring_note,
                                     id="account_strategy"
                                     value={monitoringNote.account_strategy}
                                     onChange={handleMonitoringNoteChange}
-                                    className="mt-1 bg-gray-100"
+                                    className="mt-1 bg-gray-50"
                                     required
                                 />
+                                {errors.note?.account_strategy && <p className="mt-1 text-xs text-red-600">{errors.note?.account_strategy}</p>}
+                            </div>
+                            <div className="flex items-center justify-end gap-2 border-t pt-4">
+                                <Button onClick={handleUpdateNote} disabled={processing} className="bg-orange-500 text-white hover:bg-orange-600">
+                                    Simpan
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -269,7 +354,7 @@ export default function WatchlistNote({ watchlist, report_data, monitoring_note,
                                             <ActionItemForm
                                                 key={item.id}
                                                 item={item}
-                                                onSave={handleSaveOrAddActionItem}
+                                                onSave={handleUpdateActionItem}
                                                 onCancel={() => setEditingItemId(null)}
                                             />
                                         ) : (
@@ -287,7 +372,7 @@ export default function WatchlistNote({ watchlist, report_data, monitoring_note,
                             <section>
                                 <h3 className="text-lg font-semibold">{getItemTypeLabel('next_period')}</h3>
                                 <div className="mt-4">
-                                    <ActionItemForm itemType="next_period" onSave={handleSaveOrAddActionItem} />
+                                    <ActionItemForm itemType="next_period" onSave={handleAddActionItem} />
                                 </div>
                                 <div className="mt-4 space-y-4">
                                     {actionItems.next_period.map((item) =>
@@ -295,7 +380,8 @@ export default function WatchlistNote({ watchlist, report_data, monitoring_note,
                                             <ActionItemForm
                                                 key={item.id}
                                                 item={item}
-                                                onSave={handleSaveOrAddActionItem}
+                                                errors={errors?.actionItem}
+                                                onSave={handleUpdateActionItem}
                                                 onCancel={() => setEditingItemId(null)}
                                             />
                                         ) : (
@@ -411,11 +497,13 @@ function ActionItemForm({
     itemType,
     onSave,
     onCancel,
+    errors,
 }: {
     item?: ActionItem;
     itemType?: ActionItemType;
     onSave: (item: ActionItem) => void;
     onCancel?: () => void;
+    errors?: Partial<Record<keyof ActionItem, string>>;
 }) {
     const initialFormState: ActionItem = item || {
         id: 0,
@@ -465,6 +553,7 @@ function ActionItemForm({
                         disabled={isPreviousPeriod && isEditing}
                         className="mt-1"
                     />
+                    {errors?.action_description && <p className="mt-1 text-xs text-red-600">{errors.action_description}</p>}
                 </div>
 
                 {isPreviousPeriod && (
@@ -504,6 +593,7 @@ function ActionItemForm({
                             disabled={isPreviousPeriod && isEditing}
                             className="mt-1"
                         />
+                        {errors?.due_date && <p className="mt-1 text-xs text-red-600">{errors.due_date}</p>}
                     </div>
                     <div>
                         <Label htmlFor="status">Status</Label>

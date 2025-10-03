@@ -193,8 +193,8 @@ class Period extends Model
     public static function getActivePeriod()
     {
         return static::where('status', PeriodStatus::ACTIVE)
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
+            ->whereDate('start_date', '<=', now())
+            ->whereDate('end_date', '>=', now())
             ->first();
     }
 }

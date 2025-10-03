@@ -73,7 +73,7 @@ class ActionItemService
                 'item_type'                 => ActionItemType::PREVIOUS_PERIOD->value,
                 'progress_notes'            => '', // Reset progress_notes untuk diisi ulang
                 'people_in_charge'          => $item->people_in_charge,
-                'notes'                     => ($item->notes ?? '') . '(Auto-copied from previous period)',
+                'notes'                     => $item->notes ?? '',
                 'due_date'                  => $item->due_date,
                 'status'                    => ActionItemStatus::PENDING->value, // Reset status
                 'previous_action_item_id'   => $item->id

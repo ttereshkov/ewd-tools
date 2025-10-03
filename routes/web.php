@@ -8,7 +8,6 @@ use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\SummaryController;
 use App\Http\Controllers\TemplateController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\WatchlistController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -29,15 +28,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('forms/save-step', [FormController::class, 'saveStepData'])->name('forms.saveStep');
     Route::get('summary/{report}', [SummaryController::class, 'show'])->name('summary.show');
     Route::put('summary/{report}', [SummaryController::class, 'update'])->name('summary.update');
-
-    Route::prefix('watchlist')->name('watchlist-note')->group(function () {
-        Route::get('/', [WatchlistController::class, 'show'])->name('show');
-        Route::put('/{monitoringNote}', [WatchlistController::class, 'update'])->name('update');
-        Route::post('/{monitoringNote}/action-items', [WatchlistController::class, 'storeActionItem'])->name('action-items.store');
-        Route::put('/action-items/{actionItem}', [WatchlistController::class, 'updateActionItem'])->name('action-items.update');
-        Route::delete('/action-items/{actionItem}', [WatchlistController::class, 'deleteActionItem'])->name('action-items.destroy');
-        Route::post('/{monitoringNote}/submit', [WatchlistController::class, 'submit'])->name('submit');
-    });
 });
 
 Route::resource('divisions', DivisionController::class)
@@ -66,3 +56,4 @@ Route::resource('periods', PeriodController::class)
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
+require __DIR__.'/watchlist.php';
