@@ -7,6 +7,7 @@ import borrowers from '@/routes/borrowers';
 import divisions from '@/routes/divisions';
 import forms from '@/routes/forms';
 import periods from '@/routes/periods';
+import reports from '@/routes/reports';
 import templates from '@/routes/templates';
 import users from '@/routes/users';
 import { type NavItem } from '@/types';
@@ -65,7 +66,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Laporan',
-        href: '#',
+        href: reports.index(),
         icon: PaperclipIcon,
     },
 ];

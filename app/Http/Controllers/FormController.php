@@ -10,6 +10,7 @@ use App\Models\Period;
 use App\Models\Report;
 use App\Models\Template;
 use App\ReportStatus;
+use App\Services\FormService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,14 @@ use Inertia\Inertia;
 
 class FormController extends Controller
 {
+    protected FormService $formService;
+
+    public function __construct(
+        FormService $formService,
+    ) {
+        $this->formService = $formService;
+    }
+
     public function index(Request $request)
     {
         if ($request->has('borrower_id')) {
@@ -88,70 +97,14 @@ class FormController extends Controller
             'reportMeta.period_id' => 'required|exists:periods,id',
         ]);
 
-        DB::beginTransaction();
         try {
-            $borrowerId = $validated['informationBorrower']['borrowerId'];
-            $informationData = $validated['informationBorrower'];
+            $report = $this->formService->submit($validated);
 
-            BorrowerDetail::updateOrCreate(
-                ['borrower_id' => $borrowerId],
-                [
-                    'borrower_group' => $informationData['borrowerGroup'],
-                    'purpose' => $informationData['purpose'],
-                    'economic_sector' => $informationData['economicSector'],
-                    'business_field' => $informationData['businessField'],
-                    'borrower_business' => $informationData['borrowerBusiness'],
-                    'collectibility' => $informationData['collectibility'],
-                    'restructuring' => $informationData['restructuring'],
-                ]
-            );
-
-            BorrowerFacility::where('borrower_id', $borrowerId)->delete();
-            foreach ($validated['facilitiesBorrower'] as $facility) {
-                BorrowerFacility::create([
-                    'borrower_id' => $borrowerId,
-                    'facility_name' => $facility['name'],
-                    'limit' => $facility['limit'],
-                    'outstanding' => $facility['outstanding'],
-                    'interest_rate' => $facility['interestRate'],
-                    'principal_arrears' => $facility['principalArrears'],
-                    'interest_arrears' => $facility['interestArrears'],
-                    'pdo_days' => $facility['pdo'],
-                    'maturity_date' => $facility['maturityDate'],
-                ]);
-            }
-
-            $report = Report::create([
-                'borrower_id' => $borrowerId,
-                'template_id' => $validated['reportMeta']['template_id'],
-                'period_id' => $validated['reportMeta']['period_id'],
-                'status' => ReportStatus::SUBMITTED->value,
-                'created_by' => Auth::id(),
-            ]);
-
-            foreach ($validated['aspectsBorrower'] as $aspectAnswer) {
-                Answer::create([
-                    'report_id' => $report->id,
-                    'question_version_id' => $aspectAnswer['questionId'],
-                    'question_option_id' => $aspectAnswer['selectedOptionId'],
-                    'notes' => $aspectAnswer['notes'] ?? null,
-                ]);
-            }
-
-            $report->calculateAndStoreSummary();
-            $report->submitted_at = now();
-            $report->created_by = Auth::id();
-            $report->save();
-
-            DB::commit();
-
-            Session::forget(['borrower_data', 'facility_data']);
+            session()->forget(['borrower_data', 'facility_data']);
 
             return Inertia::location(route('summary.show', ['report' => $report->id]));
         } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Gagal menyimpan data form: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-
+            report($e);
             return back()->with('error', 'Terjadi kesalahan saat menyimpan data.');
         }
     }

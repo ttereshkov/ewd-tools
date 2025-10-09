@@ -5,6 +5,7 @@ use App\Http\Controllers\BorrowerController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\PeriodController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SummaryController;
 use App\Http\Controllers\TemplateController;
 use App\Http\Controllers\UserController;
@@ -51,8 +52,12 @@ Route::resource('templates', TemplateController::class)
     ->names('templates');
 
 Route::resource('periods', PeriodController::class)
-        ->middleware(['auth', 'verified'])
-        ->names('periods');
+    ->middleware(['auth', 'verified'])
+    ->names('periods');
+
+Route::resource('reports', ReportController::class)
+    ->middleware(['auth', 'verified'])
+    ->names('reports');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

@@ -2,19 +2,37 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DivisionRequest;
 use App\Models\Division;
+use App\Services\DivisionService;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class DivisionController extends Controller
 {
+    protected DivisionService $divisionService;
+
+    public function __construct(
+        DivisionService $divisionService,
+    ) {
+        $this->divisionService = $divisionService;
+    }
+
     public function index()
     {
-        $divisions = Division::latest()->get();
+        try {
+            $divisions = $this->divisionService->getAllDivisions();
 
-        return Inertia::render('division/index', [
-            'divisions' => $divisions,
-        ]);
+            return Inertia::render('division/index', [
+                'divisions' => $divisions,
+            ]);
+        } catch (Exception $e) {
+            Log::error('Gagal memuat divisions: ' . $e->getMessage());
+
+            return back()->with('error', 'Gagal memuat daftar division.');
+        }
     }
 
     public function create()
@@ -22,20 +40,25 @@ class DivisionController extends Controller
         return Inertia::render('division/create');
     }
 
-    public function store(Request $request)
+    public function store(DivisionRequest $request)
     {
-        $validated = $request->validate([
-            'code' => 'required|string|max:3|unique:divisions,code',
-            'name' => 'required|string|max:255',
-        ]);
-
-        Division::create($validated);
+        try {
+            $this->divisionService->store($request->validated());
+            
+            return redirect()->route('divisions.index')->with('success', 'Division berhasil ditambahkan.');
+        } catch (Exception $e) {
+            Log::error('Gagal menambahkan division: ' . $e->getMessage());
+            
+            return back()->with('error', 'Terjadi kesalahan saat menyimpan division.');
+        }
     }
 
     public function show(Division $division)
     {
+        $data = $this->divisionService->getDivisionById($division->id);
+        
         return Inertia::render('division/show', [
-            'division' => $division,        
+            'division' => $data,
         ]);
     }
 
@@ -46,19 +69,30 @@ class DivisionController extends Controller
         ]);
     }
 
-    public function update(Request $request, Division $division)
+    public function update(DivisionRequest $request, Division $division)
     {
-        $validated = $request->validate([
-            'code' => 'required|string|max:10|unique:divisions,code,' . $division->id,
-            'name' => 'required|string|max:100',
-        ]);
+        try {
+            $this->divisionService->update($division, $request->validated());
 
-        $division->update($validated);
+            return redirect()->route('divisions.index')->with('success', 'Division berhasil diperbarui.');
+        } catch (Exception $e) {
+            Log::error('Gagal memperbarui division: ' . $e->getMessage());
+
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui division.');
+        }
     }
 
     public function destroy(Division $division)
     {
-        $division->delete();
+        try {
+            $this->divisionService->destroy($division);
+
+            return redirect()->route('divisions.index')->with('success', 'Division berhasil dihapus.');
+        } catch (Exception $e) {
+            Log::error('Gagal menghapus division: ' . $e->getMessage());
+
+            return back()->with('error', 'Terjadi kesalahan saat menghapus division.');
+        }
     }
 
 }

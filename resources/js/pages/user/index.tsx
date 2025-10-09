@@ -1,14 +1,14 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import AppLayout from "@/layouts/app-layout";
-import { dashboard } from "@/routes";
-import users from "@/routes/users";
-import { BreadcrumbItem } from "@/types";
-import { Head, Link, router, usePage } from "@inertiajs/react";
-import { EditIcon, EyeIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import { useState } from "react";
-import { toast } from "react-toastify";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
+import { dashboard } from '@/routes';
+import users from '@/routes/users';
+import { BreadcrumbItem } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { EditIcon, EyeIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
 
 type User = {
     id: number;
@@ -18,7 +18,7 @@ type User = {
     division: Division;
     created_at: string;
     updated_at: string;
-}
+};
 
 type Division = {
     id: number;
@@ -34,13 +34,13 @@ type PageProps = {
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: "Dashboard",
+        title: 'Dashboard',
         href: dashboard().url,
     },
     {
-        title: "User",
+        title: 'User',
         href: users.index().url,
-    }
+    },
 ];
 
 export default function UserIndex() {
@@ -61,7 +61,7 @@ export default function UserIndex() {
     const handleDelete = (id: number) => {
         router.delete(users.destroy(divisionToDelete!).url, {
             onSuccess: () => {
-                toast.success("User berhasil dihapus");
+                toast.success('User berhasil dihapus');
             },
             onError: (errs) => {
                 Object.values(errs).forEach((error) => {
@@ -91,9 +91,7 @@ export default function UserIndex() {
                         </CardHeader>
                         <CardContent>
                             {userList.length === 0 ? (
-                                <div className="py-8 text-center text-gray-500">
-                                    Belum ada user yang terdaftar. Silahkan tambahkan user baru.
-                                </div>
+                                <div className="py-8 text-center text-gray-500">Belum ada user yang terdaftar. Silahkan tambahkan user baru.</div>
                             ) : (
                                 <Table className="w-full overflow-x-auto">
                                     <TableHeader>
@@ -109,16 +107,16 @@ export default function UserIndex() {
                                             <TableRow key={user.id}>
                                                 <TableCell>{user.name}</TableCell>
                                                 <TableCell>{user.email}</TableCell>
-                                                <TableCell>{user.division?.name ?? "-"}</TableCell>
+                                                <TableCell>{user.division?.name ?? '-'}</TableCell>
                                                 <TableCell className="flex justify-end space-x-3 text-right">
-                                                    <Link 
+                                                    <Link
                                                         href={users.edit(user.id).url}
                                                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                                                         title="Edit User"
                                                     >
                                                         <EditIcon className="h-5 w-5" />
                                                     </Link>
-                                                    <Link 
+                                                    <Link
                                                         href={users.show(user.id).url}
                                                         className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
                                                         title="Show User"
@@ -147,7 +145,7 @@ export default function UserIndex() {
                     <Card className="w-full max-w-sm animate-in fade-in zoom-in">
                         <CardHeader className="items-center text-center">
                             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
-                                <Trash2Icon className="h-6 w-6 text-red-600 dark:text-red-400"/>
+                                <Trash2Icon className="h-6 w-6 text-red-600 dark:text-red-400" />
                             </div>
                         </CardHeader>
                         <CardContent className="text-center">
@@ -161,10 +159,7 @@ export default function UserIndex() {
                             <Button variant="outline" onClick={closeDeleteModal}>
                                 Batal
                             </Button>
-                            <Button
-                                variant="destructive"
-                                onClick={() => divisionToDelete && handleDelete(divisionToDelete)}
-                            >
+                            <Button variant="destructive" onClick={() => divisionToDelete && handleDelete(divisionToDelete)}>
                                 Ya, Hapus
                             </Button>
                         </CardFooter>
@@ -172,5 +167,5 @@ export default function UserIndex() {
                 </div>
             )}
         </AppLayout>
-    )
+    );
 }

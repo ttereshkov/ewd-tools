@@ -38,7 +38,16 @@ export interface User {
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
+    division_id?: number;
     [key: string]: unknown; // This allows for additional properties...
+}
+
+export interface Division {
+    id: number;
+    code: string;
+    name: string;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Borrower {
@@ -47,28 +56,128 @@ export interface Borrower {
     division_id: number;
     division: Division;
     detail: BorrowerDetail;
+    facilities: BorrowerFacility[];
     created_at: string;
     updated_at: string;
 }
 
-export interface BorrowerFacility {}
+export interface BorrowerFacility {
+    id: number;
+    borrower_id: number;
+    facility_name: string;
+    limit: number;
+    outstanding: number;
+    interest_rate: number;
+    principal_arrears: number;
+    interest_arrears: number;
+    pdo_days: number;
+    maturity_date: string;
+}
 
-export interface BorrowerDetail {}
+export interface BorrowerDetail {
+    id: number;
+    borrower_id: number;
+    borrower_group: string;
+    borrower_business: string;
+    business_field: string;
+    collectibility: number;
+    economic_sector: string;
+    purpose: 'kie' | 'kmke' | 'both';
+    restructuring: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Period {
+    id: number;
+    name: string;
+    start_date: string;
+    end_date: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Template {
+    id: number;
+    name: string;
+    description?: string;
+    created_at: string;
+    updated_at: string;
+    latestTemplateVersion?: TemplateVersion;
+}
+
+export interface TemplateVersion {
+    id: number;
+    template_id: number;
+    version_number: number;
+    aspectVersions?: AspectVersion[];
+    created_at: string;
+    updated_at: string;
+}
+
+export interface AspectVersion {
+    id: number;
+    aspect: {
+        id: number;
+        code: string;
+    };
+    name: string;
+    version_number: number;
+    description?: string;
+    created_at: string;
+    updated_at: string;
+}
 
 export interface Report {
     id: number;
     borrower: Borrower;
     period: Period;
     template: Template;
+    creator: User;
     status: string;
     submitted_at: string;
     rejection_reason: string;
-    created_by: User;
+    created_by: number;
+    summary: ReportSummary;
+    aspects: ReportAspect[];
+    watchlist?: Watchlist;
+    created_at: string;
+    updated_at: string;
 }
 
-export interface ReportAspect {}
+export interface ReportAspect {
+    id: number;
+    report_id: number;
+    aspect_version_id: number;
+    aspect_version: AspectVersion;
+    total_score: number;
+    classification: string;
+    created_at: string;
+    updated_at: string;
+}
 
-export interface ReportSummary {}
+export interface ReportSummary {
+    id: number;
+    report_id: number;
+    business_notes?: string;
+    final_classification: string;
+    indicative_collectibility: number;
+    is_override: boolean;
+    override_reason?: string;
+    override_by?: string;
+    reviewer_notes?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Watchlist {
+    id: number;
+    report_id: number;
+    status: string;
+    created_at: string;
+    updated_at: string;
+}
 
 export interface MonitoringNote {
     id: number;
