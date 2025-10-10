@@ -1,38 +1,30 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import AppLayout from "@/layouts/app-layout";
-import { dashboard } from "@/routes";
-import divisions from "@/routes/divisions";
-import { BreadcrumbItem } from "@/types";
-import { Head, Link } from "@inertiajs/react";
-import { ArrowLeftIcon } from "lucide-react";
-
-type Division = {
-    id: number;
-    code: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-};
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import AppLayout from '@/layouts/app-layout';
+import { dashboard } from '@/routes';
+import divisions from '@/routes/divisions';
+import { BreadcrumbItem, Division } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeftIcon } from 'lucide-react';
 
 interface Props {
-    division: Division
+    division: Division;
 }
 
 export default function DivisionShow({ division }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: "Dashboard",
-            href: dashboard().url
+            title: 'Dashboard',
+            href: dashboard().url,
         },
         {
-            title: "Divisi",
-            href: divisions.index().url
+            title: 'Divisi',
+            href: divisions.index().url,
         },
         {
             title: `${division.name}`,
-            href: divisions.show(division.id).url
-        }
+            href: divisions.show(division.id).url,
+        },
     ];
 
     return (
@@ -46,7 +38,7 @@ export default function DivisionShow({ division }: Props) {
 
                             </CardTitle> */}
                             <Link href={divisions.index().url}>
-                                <Button variant={"outline"}>
+                                <Button variant={'outline'}>
                                     <ArrowLeftIcon className="h-4 w-4" />
                                     Kembali
                                 </Button>
@@ -56,15 +48,11 @@ export default function DivisionShow({ division }: Props) {
                             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <div className="text-sm text-gray-500">Kode Divisi</div>
-                                    <div className="flex items-center font-medium">
-                                        { division.code }
-                                    </div>
+                                    <div className="flex items-center font-medium">{division.code}</div>
                                 </div>
                                 <div className="space-y-2">
                                     <div className="text-sm text-gray-500">Nama Divisi</div>
-                                    <div className="flex items-center font-medium">
-                                        { division.name }
-                                    </div>
+                                    <div className="flex items-center font-medium">{division.name}</div>
                                 </div>
                             </div>
                         </CardContent>
@@ -72,5 +60,5 @@ export default function DivisionShow({ division }: Props) {
                 </div>
             </div>
         </AppLayout>
-    )
+    );
 }

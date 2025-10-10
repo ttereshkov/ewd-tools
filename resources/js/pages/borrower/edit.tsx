@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import borrowers from '@/routes/borrowers';
@@ -41,6 +42,7 @@ export default function BorrowerEdit({ borrower, divisions }: Props) {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+
         put(borrowers.update(borrower.id).url, {
             onSuccess: () => {
                 toast.success('Borrower berhasil diperbarui.');
@@ -84,20 +86,21 @@ export default function BorrowerEdit({ borrower, divisions }: Props) {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="division_id">Divisi</Label>
-                                    <select
-                                        id="division_id"
-                                        value={data.division_id}
-                                        onChange={(e) => setData('division_id', e.target.value)}
-                                        className="w-full rounded-md border px-3 py-2 text-sm"
+                                    <Select
+                                        value={data.division_id ? String(data.division_id) : ''}
+                                        onValueChange={(value) => setData('division_id', Number(value))}
                                     >
-                                        <option value="">Pilih Divisi</option>
-                                        {divisions.map((div) => (
-                                            <option key={div.id} value={div.id}>
-                                                {div.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <InputError message={errors.division_id} />
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Pilih divisi" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {divisions.map((division) => (
+                                                <SelectItem key={division.id} value={String(division.id)}>
+                                                    {division.code} - {division.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </CardContent>
                             <CardFooter className="flex items-center justify-end gap-4">

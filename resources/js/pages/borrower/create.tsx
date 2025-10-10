@@ -1,49 +1,41 @@
-import InputError from "@/components/input-error";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import AppLayout from "@/layouts/app-layout";
-import { dashboard } from "@/routes";
-import borrowers from "@/routes/borrowers";
-import { BreadcrumbItem } from "@/types";
-import { Head, Link, router, useForm } from "@inertiajs/react";
-import { ArrowLeftIcon } from "lucide-react";
-import { toast } from "react-toastify";
-
-type Division = {
-    id: number;
-    code: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-};
+import InputError from '@/components/input-error';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import AppLayout from '@/layouts/app-layout';
+import { dashboard } from '@/routes';
+import borrowers from '@/routes/borrowers';
+import { BreadcrumbItem, Division } from '@/types';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { ArrowLeftIcon } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 interface Props {
-    divisions: Division[]
+    divisions: Division[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: "Dashboard",
-        href: dashboard().url
+        title: 'Dashboard',
+        href: dashboard().url,
     },
     {
-        title: "Debitur",
-        href: borrowers.index().url
+        title: 'Debitur',
+        href: borrowers.index().url,
     },
     {
-        title: "Tambah Debitur",
-        href: borrowers.create().url
-    }
+        title: 'Tambah Debitur',
+        href: borrowers.create().url,
+    },
 ];
 
 export default function BorrowerCreate({ divisions }: Props) {
     const defaultValues = {
-        name: "",
+        name: '',
         division_id: 0,
-    }
+    };
 
     const { data, setData, post, reset, processing, errors, isDirty } = useForm(defaultValues);
 
@@ -52,7 +44,7 @@ export default function BorrowerCreate({ divisions }: Props) {
 
         post(borrowers.store().url, {
             onSuccess: () => {
-                toast.success("Debitur berhasil ditambahkan.");
+                toast.success('Debitur berhasil ditambahkan.');
                 router.visit(borrowers.index().url, {
                     preserveScroll: true,
                 });
@@ -60,22 +52,22 @@ export default function BorrowerCreate({ divisions }: Props) {
             onError: (errs) => {
                 Object.values(errs).forEach((error) => {
                     toast.error(error as string);
-                })
+                });
             },
-        })
+        });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Tambah Debitur"/>
+            <Head title="Tambah Debitur" />
             <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                     <Card>
-                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:items-center sm:justify-between">
+                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <CardTitle className="text-lg font-bold md:text-2xl">Tambah Debitur</CardTitle>
                             <Link href={borrowers.index().url}>
-                                <Button variant={"outline"}>
-                                    <ArrowLeftIcon className="h-4 w-4"/>
+                                <Button variant={'outline'}>
+                                    <ArrowLeftIcon className="h-4 w-4" />
                                     Kembali
                                 </Button>
                             </Link>
@@ -87,16 +79,16 @@ export default function BorrowerCreate({ divisions }: Props) {
                                     <Input
                                         id="name"
                                         value={data.name}
-                                        onChange={(e) => setData("name", e.target.value)}
+                                        onChange={(e) => setData('name', e.target.value)}
                                         placeholder="Masukkan nama debitur"
                                     />
                                     <InputError message={errors.name} />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="name">Nama</Label>
+                                    <Label htmlFor="name">Divisi</Label>
                                     <Select
-                                        value={data.division_id ? String(data.division_id) : ""}
-                                        onValueChange={(value) => setData("division_id", Number(value))}
+                                        value={data.division_id ? String(data.division_id) : ''}
+                                        onValueChange={(value) => setData('division_id', Number(value))}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Pilih divisi" />
@@ -113,18 +105,11 @@ export default function BorrowerCreate({ divisions }: Props) {
                             </CardContent>
                             <CardFooter className="flex items-center justify-end gap-4">
                                 {isDirty && (
-                                    <Button
-                                        type="button"
-                                        variant={"outline"}
-                                        onClick={() => reset()}
-                                    >
+                                    <Button type="button" variant={'outline'} onClick={() => reset()}>
                                         Reset
                                     </Button>
                                 )}
-                                <Button
-                                    type="submit"
-                                    disabled={!isDirty || processing}
-                                >
+                                <Button type="submit" disabled={!isDirty || processing}>
                                     Simpan
                                 </Button>
                             </CardFooter>
