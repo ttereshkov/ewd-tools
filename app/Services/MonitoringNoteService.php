@@ -7,11 +7,11 @@ use App\Classification;
 use App\Models\MonitoringNote;
 use App\Models\Report;
 use App\Models\Watchlist;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Exception;
-use Illuminate\Support\Facades\Auth;
 
-class MonitoringNoteService
+class MonitoringNoteService extends BaseService
 {
     protected ReportService $reportService;
     protected WatchlistService $watchlistService;
@@ -27,109 +27,117 @@ class MonitoringNoteService
         $this->actionItemService = $actionItemService;
     }
 
-    public function getMonitoringNoteData(int $reportId)
+    public function getMonitoringNoteData(int $reportId): array
     {
+        $this->authorize('view monitoring_notes');
+
         $report = $this->reportService->getReportById($reportId);
         $watchlist = $this->getOrCreateWatchlistByReportId($reportId);
         $monitoringNote = $this->getOrCreateMonitoringNoteByWatchlist($watchlist->id, $report->borrower_id);
 
         $actionItems = [
-            'previous_period'   =>
-                $monitoringNote->actionItems->where('item_type', ActionItemType::PREVIOUS_PERIOD->value)->values(),
-            'current_progress'  =>
-                $monitoringNote->actionItems->where('item_type', ActionItemType::CURRENT_PROGRESS->value)->values(),
-            'next_period'       =>
-                $monitoringNote->actionItems->where('item_type', ActionItemType::NEXT_PERIOD->value)->values(),
+            'previous_period'  => $monitoringNote->actionItems
+                ->where('item_type', ActionItemType::PREVIOUS_PERIOD->value)
+                ->values(),
+            'current_progress' => $monitoringNote->actionItems
+                ->where('item_type', ActionItemType::CURRENT_PROGRESS->value)
+                ->values(),
+            'next_period'      => $monitoringNote->actionItems
+                ->where('item_type', ActionItemType::NEXT_PERIOD->value)
+                ->values(),
         ];
 
-        return [
-            'watchlist'          => $watchlist,
-            'report_data'        => $report,
-            'monitoring_note'    => $monitoringNote,
-            'action_items'       => $actionItems,
-        ];
+        $this->audit('MonitoringNote', $monitoringNote->id, 'fetched', [
+            'report_id' => $reportId,
+            'watchlist_id' => $watchlist->id,
+            'action_item_counts' => [
+                'previous' => $actionItems['previous_period']->count(),
+                'current'  => $actionItems['current_progress']->count(),
+                'next'     => $actionItems['next_period']->count(),
+            ],
+        ]);
+
+        return compact('watchlist', 'report', 'monitoringNote', 'actionItems');
     }
 
-    public function getOrCreateWatchlistByReportId(int $reportId)
+    public function getOrCreateWatchlistByReportId(int $reportId): Watchlist
     {
-        // Mencari watchlist yang sudah ada
-        $watchlist = Watchlist::with([
-            'borrower',
-            'report',
-            'addedBy',
-            'resolvedBy',
-        ])->where('report_id', $reportId)->first();
+        return $this->tx(function () use ($reportId) {
+            $watchlist = Watchlist::with(['borrower', 'report', 'addedBy', 'resolvedBy'])
+                ->where('report_id', $reportId)
+                ->first();
 
-        // Jika tidak ada, buat baru menggunakan WatchlistService
-        if (!$watchlist) {
-            $report = Report::findOrFail($reportId);
-            $watchlist = $this->watchlistService->getOrCreateWatchlist($report);
+            if (!$watchlist) {
+                $report = Report::findOrFail($reportId);
+                $watchlist = $this->watchlistService->getOrCreateWatchlist($report);
+                $this->audit('Watchlist', $watchlist->id, 'auto_created', [
+                    'report_id' => $reportId,
+                    'borrower_id' => $report->borrower_id,
+                ]);
+            }
 
-            $watchlist->load([
-                'borrower',
-                'report',
-                'addedBy',
-                'resolvedBy'
-            ]);
-        }
-
-        return $watchlist;
+            return $watchlist->fresh(['borrower', 'report', 'addedBy', 'resolvedBy']);
+        });
     }
 
-    public function getOrCreateMonitoringNoteByWatchlist(int $watchlistId, int $borrowerId = null)
+    public function getOrCreateMonitoringNoteByWatchlist(int $watchlistId, ?int $borrowerId = null): MonitoringNote
     {
-        // Mencari monitoring note yang sudah ada
-        $monitoringNote = MonitoringNote::with('actionItems')
-            ->where('watchlist_id', $watchlistId)
-            ->first();
+        return $this->tx(function () use ($watchlistId, $borrowerId) {
+            $monitoringNote = MonitoringNote::with('actionItems')
+                ->where('watchlist_id', $watchlistId)
+                ->first();
 
-        // Jika tidak ada, buat baru
-        if (!$monitoringNote) {
-            $monitoringNote = MonitoringNote::create([
-                'watchlist_id'      => $watchlistId,
-                'watchlist_reason'  => '',
-                'account_strategy'  => '',
-                'created_by'        => Auth::id(),
-                'updated_by'        => Auth::id(),
-            ]);
+            if (!$monitoringNote) {
+                $monitoringNote = MonitoringNote::create([
+                    'watchlist_id'     => $watchlistId,
+                    'watchlist_reason' => '',
+                    'account_strategy' => '',
+                    'created_by'       => Auth::id(),
+                    'updated_by'       => Auth::id(),
+                ]);
 
-            // Load relationships yang telah dibuat
-            $monitoringNote->load('actionItems');
+                $this->audit('MonitoringNote', $monitoringNote->id, 'created', [
+                    'watchlist_id' => $watchlistId,
+                    'borrower_id'  => $borrowerId,
+                ]);
 
-            // Auto-copy dari periode sebelumnya jika ada borrowerId
-            if ($borrowerId) {
-                $this->autoCopyFromPreviousPeriod($monitoringNote->id, $borrowerId);
-                $monitoringNote->load('actionItems');
+                if ($borrowerId) {
+                    $this->autoCopyFromPreviousPeriod($monitoringNote->id, $borrowerId);
+                }
+            } else {
+                $hasPrevious = $monitoringNote->actionItems
+                    ->where('item_type', ActionItemType::PREVIOUS_PERIOD->value)
+                    ->count() > 0;
+
+                if (!$hasPrevious && $borrowerId) {
+                    $this->autoCopyFromPreviousPeriod($monitoringNote->id, $borrowerId);
+                }
             }
-        } else {
-            // Jika monitoring note sudah ada tapi belum ada previous period items, auto-copy
-            $hasPreviousItems = $monitoringNote->actionItems->where('item_type', ActionItemType::PREVIOUS_PERIOD->value)->count() > 0;
-            if (!$hasPreviousItems && $borrowerId) {
-                $this->autoCopyFromPreviousPeriod($monitoringNote->id, $borrowerId);
-                $monitoringNote->load('actionItems');
-            }
-        }
 
-        return $monitoringNote;
+            return $monitoringNote->fresh(['actionItems']);
+        });
     }
 
     public function isNawRequired(int $reportId): bool
     {
         $report = Report::with('summary')->findOrFail($reportId);
-
-        // NAW diperlukan jika klasifikasi final adalah 'watchlist'
-        return $report->summary && $report->summary->final_classification === Classification::WATCHLIST->value;
+        return $report->summary &&
+            $report->summary->final_classification === Classification::WATCHLIST->value;
     }
 
-    /**
-     * Auto-copy action items from previous period
-     */
-    private function autoCopyFromPreviousPeriod(int $monitoringNoteId, int $borrowerId)
+    private function autoCopyFromPreviousPeriod(int $monitoringNoteId, int $borrowerId): void
     {
         try {
             $this->actionItemService->copyFromPreviousPeriod($monitoringNoteId, $borrowerId);
+            $this->audit('MonitoringNote', $monitoringNoteId, 'auto_copy_previous_period', [
+                'borrower_id' => $borrowerId,
+            ]);
         } catch (Exception $e) {
             Log::warning('Failed to auto-copy from previous period: ' . $e->getMessage());
+            $this->audit('MonitoringNote', $monitoringNoteId, 'auto_copy_failed', [
+                'borrower_id' => $borrowerId,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -137,33 +145,37 @@ class MonitoringNoteService
     {
         $missingItems = [];
 
-        if (empty($monitoringNote->watchlist_reason) || trim($monitoringNote->watchlist_reason) === '') {
+        if (empty(trim($monitoringNote->watchlist_reason ?? ''))) {
             $missingItems[] = 'Alasan Watchlist';
         }
 
-        if (empty($monitoringNote->account_strategy) || trim($monitoringNote->account_strategy) === '') {
+        if (empty(trim($monitoringNote->account_strategy ?? ''))) {
             $missingItems[] = 'Account Strategy';
         }
 
         $actionItems = $monitoringNote->actionItems;
 
         $previousItems = $actionItems->where('item_type', ActionItemType::PREVIOUS_PERIOD->value);
-        $previousItemsWithProgress = $previousItems->filter(function ($item) {
-            return !empty($item->progress_notes) && trim($item->progress_notes) !== '';
-        });
+        $previousItemsWithProgress = $previousItems->filter(
+            fn($item) => !empty(trim($item->progress_notes ?? ''))
+        );
 
         if ($previousItems->count() > 0 && $previousItemsWithProgress->count() < $previousItems->count()) {
-            $missingItems[] = 'Progress dari periode sebelumnya';
+            $missingItems[] = 'Progress dari periode sebelumnya belum lengkap';
         }
 
         $nextItems = $actionItems->where('item_type', ActionItemType::NEXT_PERIOD->value);
         if ($nextItems->count() === 0) {
-            $missingItems[] = 'Rencana tindak lanjut periode berikutnya';
+            $missingItems[] = 'Rencana tindak lanjut periode berikutnya belum diisi';
         }
 
-        return [
-            'is_complete' => empty($missingItems),
+        $isComplete = empty($missingItems);
+
+        $this->audit('MonitoringNote', $monitoringNote->id, 'validated', [
+            'is_complete' => $isComplete,
             'missing_items' => $missingItems,
-        ];
+        ]);
+
+        return compact('isComplete', 'missingItems');
     }
 }

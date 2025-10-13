@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Borrower;
 use App\Http\Requests\BorrowerRequest;
+use App\Models\Borrower;
 use App\Services\BorrowerService;
 use App\Services\DivisionService;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
-use Exception;
+use Throwable;
 
 class BorrowerController extends Controller
 {
@@ -30,9 +30,9 @@ class BorrowerController extends Controller
             return Inertia::render('borrower/index', [
                 'borrowers' => $borrowers
             ]);
-        } catch (Exception $e) {
-            Log::error('Gagal memuat borrower: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat memuat borrower.');
+        } catch (Throwable $e) {
+            Log::error('Gagal memuat debitur: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat memuat debitur.');
         }
     }
 
@@ -43,7 +43,7 @@ class BorrowerController extends Controller
             return Inertia::render('borrower/create', [
                 'divisions' => $divisions
             ]);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::error('Gagal memuat form borrower: ' . $e->getMessage());
             return back()->with('error', 'Terjadi kesalahan saat memuat form.');
         }
@@ -53,10 +53,10 @@ class BorrowerController extends Controller
     {
         try {
             $this->borrowerService->store($request->validated());
-            return redirect()->route('borrower.index')->with('success', 'Borrower berhasil ditambahkan.');
-        } catch (Exception $e) {
+            return redirect()->route('borrowers.index')->with('success', 'Debitur berhasil ditambahkan.');
+        } catch (Throwable $e) {
             Log::error('Gagal menyimpan borrower: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat menyimpan borrower.');
+            return back()->with('error', 'Terjadi kesalahan saat menyimpan debitur.');
         }
     }
 
@@ -67,9 +67,9 @@ class BorrowerController extends Controller
             return Inertia::render('borrower/show', [
                 'borrower' => $data,
             ]);
-        } catch (Exception $e) {
-            Log::error('Gagal menampilkan borrower: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat memuat borrower.');
+        } catch (Throwable $e) {
+            Log::error('Gagal menampilkan debitur: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat memuat debitur.');
         }
     }
 
@@ -81,9 +81,9 @@ class BorrowerController extends Controller
                 'borrower' => $borrower->load('division'),
                 'divisions' => $divisions,
             ]);
-        } catch (Exception $e) {
-            Log::error('Gagal memuat form edit borrower: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat memuat form edit borrower.');
+        } catch (Throwable $e) {
+            Log::error('Gagal memuat form edit debitur: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat memuat form.');
         };
     }
 
@@ -91,10 +91,10 @@ class BorrowerController extends Controller
     {
         try {
             $this->borrowerService->update($borrower, $request->validated());
-            return redirect()->route('borrowers.index')->with('success', 'Borrower berhasil diperbarui.');
-        } catch (Exception $e) {
-            Log::error('Gagal memperbarui borrower: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat memperbarui borrower.');
+            return redirect()->route('borrowers.index')->with('success', 'Debitur berhasil diperbarui.');
+        } catch (Throwable $e) {
+            Log::error('Gagal memperbarui debitur: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui debitur.');
         }
     }
 
@@ -102,10 +102,10 @@ class BorrowerController extends Controller
     {
         try {
             $this->borrowerService->destroy($borrower);
-            return redirect()->route('borrowers.index')->with('success', 'Borrower berhasil dihapus.');
-        } catch (Exception $e) {
-            Log::error('Gagal menghapus borrower: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat menghapus borrower.');
+            return redirect()->route('borrowers.index')->with('success', 'Debitur berhasil dihapus.');
+        } catch (Throwable $e) {
+            Log::error('Gagal menghapus debitur: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat menghapus debitur.');
         }
     }
 }

@@ -5,11 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAspectRequest;
 use App\Http\Requests\UpdateAspectRequest;
 use App\Models\Aspect;
-use App\Models\Question;
-use App\Models\QuestionVersion;
 use App\Services\AspectService;
-use Exception;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Throwable;
@@ -26,8 +22,15 @@ class AspectController extends Controller
 
     public function index()
     {
-        $aspects = $this->aspectService->getAllAspects();
-        return Inertia::render('aspect/index', ['aspects' => $aspects]);
+        try {
+            $aspects = $this->aspectService->getAllAspects();
+            return Inertia::render('aspect/index', [
+                'aspects' => $aspects
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Gagal memuat aspek pertanyaan: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat memuat aspek pertanyaan.');
+        }
     }
 
     public function create()
@@ -71,7 +74,12 @@ class AspectController extends Controller
 
     public function destroy(Aspect $aspect)
     {
-        $this->aspectService->destroy($aspect);
-        return redirect()->route('aspects.index')->with('success', 'Aspek berhasil dihapus.');
+        try {
+            $this->aspectService->destroy($aspect);
+            return redirect()->route('aspects.index')->with('success', 'Aspek berhasil dihapus.');
+        } catch (Throwable $e) {
+            Log::error('Gagal menghapus aspek: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat menghapus aspek.');
+        }
     }
 }

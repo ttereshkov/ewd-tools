@@ -5,20 +5,20 @@ namespace App;
 enum WatchlistStatus: string
 {
     case ACTIVE = 'active';
-    case RESOLVED = 'resolved';
-    case ARCHIVED = 'archived';
+    case INACTIVE = 'inactive';
+    case CLOSED = 'closed';
 
     public static function values(): array
     {
         return array_column(self::cases(), 'value');
     }
 
-    public static function labels(): array
+    public function label(): string
     {
-        return [
-            self::ACTIVE->value => 'Aktif',
-            self::RESOLVED->value => 'Diselesaikan',
-            self::ARCHIVED->value => 'Diarsipkan',
-        ];
+        return match ($this) {
+            self::ACTIVE => 'Active',
+            self::INACTIVE => 'Inactive',
+            self::CLOSED => 'Closed',
+        };
     }
 }

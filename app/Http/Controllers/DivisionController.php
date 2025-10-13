@@ -5,10 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DivisionRequest;
 use App\Models\Division;
 use App\Services\DivisionService;
-use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Throwable;
 
 class DivisionController extends Controller
 {
@@ -24,13 +23,11 @@ class DivisionController extends Controller
     {
         try {
             $divisions = $this->divisionService->getAllDivisions();
-
             return Inertia::render('division/index', [
                 'divisions' => $divisions,
             ]);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::error('Gagal memuat divisions: ' . $e->getMessage());
-
             return back()->with('error', 'Gagal memuat daftar division.');
         }
     }
@@ -44,11 +41,9 @@ class DivisionController extends Controller
     {
         try {
             $this->divisionService->store($request->validated());
-            
             return redirect()->route('divisions.index')->with('success', 'Division berhasil ditambahkan.');
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::error('Gagal menambahkan division: ' . $e->getMessage());
-            
             return back()->with('error', 'Terjadi kesalahan saat menyimpan division.');
         }
     }
@@ -56,7 +51,6 @@ class DivisionController extends Controller
     public function show(Division $division)
     {
         $data = $this->divisionService->getDivisionById($division->id);
-        
         return Inertia::render('division/show', [
             'division' => $data,
         ]);
@@ -73,11 +67,9 @@ class DivisionController extends Controller
     {
         try {
             $this->divisionService->update($division, $request->validated());
-
             return redirect()->route('divisions.index')->with('success', 'Division berhasil diperbarui.');
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::error('Gagal memperbarui division: ' . $e->getMessage());
-
             return back()->with('error', 'Terjadi kesalahan saat memperbarui division.');
         }
     }
@@ -86,11 +78,9 @@ class DivisionController extends Controller
     {
         try {
             $this->divisionService->destroy($division);
-
             return redirect()->route('divisions.index')->with('success', 'Division berhasil dihapus.');
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::error('Gagal menghapus division: ' . $e->getMessage());
-
             return back()->with('error', 'Terjadi kesalahan saat menghapus division.');
         }
     }

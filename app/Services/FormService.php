@@ -12,16 +12,19 @@ use Illuminate\Support\Facades\Auth;
 class FormService extends BaseService
 {
     protected ReportCalculationService $reportCalculationService;
+    protected ApprovalService $approvalService;
 
     public function __construct(
         ReportCalculationService $reportCalculationService,
+        ApprovalService $approvalService
     ) {
         $this->reportCalculationService = $reportCalculationService;
+        $this->approvalService = $approvalService;
     }
 
     public function submit(array $validated): Report
     {
-        $this->authorize('create reports');
+        $this->authorize('create report');
 
         return $this->tx(function () use ($validated) {
             $borrowerId = $validated['informationBorrower']['borrowerId'];
@@ -76,10 +79,14 @@ class FormService extends BaseService
 
             $this->reportCalculationService->calculateAndStoreSummary($report);
 
-            $this->audit('report', $report->id, 'form_submitted', [
-                'borrower_id' => $borrowerId,
-                'template_id' => $validated['reportMeta']['template_id'],
-                'period_id'   => $validated['reportMeta']['period_id'],
+            $this->approvalService->resetApprovals($report);
+
+            $this->audit('Report', $report->id, 'form_submitted', [
+                'borrower_id'   => $borrowerId,
+                'borrower_name' => $info['borrowerName'] ?? null,
+                'template_id'   => $validated['reportMeta']['template_id'],
+                'period_id'     => $validated['reportMeta']['period_id'],
+                'created_by'    => Auth::id(),
             ]);
 
             return $report->fresh(['summary', 'aspects']);

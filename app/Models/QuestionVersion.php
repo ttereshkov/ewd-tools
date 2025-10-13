@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\HasVisibilityRules;
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class QuestionVersion extends Model
 {
-    use HasFactory, HasVisibilityRules;
+    use HasFactory, HasVisibilityRules, Auditable;
 
     protected $fillable = [
         'question_id',

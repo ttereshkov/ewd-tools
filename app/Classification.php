@@ -15,8 +15,8 @@ enum Classification: string
     public static function labels(): array
     {
         return [
-            self::SAFE->value       => 'Safe',
-            self::WATCHLIST->value  => 'Watchlist'
+            self::SAFE->value       => 'safe',
+            self::WATCHLIST->value  => 'watchlist'
         ];
     }
 }

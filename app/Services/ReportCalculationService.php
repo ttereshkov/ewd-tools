@@ -75,7 +75,7 @@ class ReportCalculationService extends BaseService
 
         return [
             'total_score' => round($totalWeightedScore, 2),
-            'final_classification' => $this->getAspectWeightFromTemplate($report, $aspectVersionId),
+            'final_classification' => $this->determineClassification($report, $aspectVersionId),
             'collectibility' => $report->borrower->detail->collectibility ?? null,
         ];
     }

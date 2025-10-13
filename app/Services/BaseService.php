@@ -5,6 +5,7 @@ namespace App\Services;
 use Closure;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BaseService
 {
@@ -27,12 +28,16 @@ class BaseService
     protected function audit(string $subjectType, int|string $subjectId, string $action, array $meta = []): void
     {
         $user = Auth::user();
-        
-        logger()->info('[AUDIT]', [
-            'subject' => "{$subjectType}#{$subjectId}",
-            'action' => $action,
-            'user_id' => $user->id,
-            'meta' => $meta,
+        $userId = $user?->id ?? null;
+        $username = $user?->name ?? 'system';
+
+        Log::info('[AUDIT]', [
+            'subject'  => "{$subjectType}#{$subjectId}",
+            'action'   => $action,
+            'user_id'  => $userId,
+            'username' => $username,
+            'meta'     => $meta,
+            'source'   => app()->runningInConsole() ? 'CLI' : 'HTTP',
         ]);
     }
 }
