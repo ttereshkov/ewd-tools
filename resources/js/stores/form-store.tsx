@@ -5,7 +5,7 @@ import { create } from 'zustand';
 interface InformationBorrower {
     borrowerId: number | null;
     borrowerGroup: string;
-    purpose: string;
+    purpose: number;
     economicSector: string;
     businessField: string;
     borrowerBusiness: string;
@@ -69,7 +69,7 @@ const initialFormState = {
     informationBorrower: {
         borrowerId: null,
         borrowerGroup: '',
-        purpose: '',
+        purpose: 1,
         economicSector: '',
         businessField: '',
         borrowerBusiness: '',

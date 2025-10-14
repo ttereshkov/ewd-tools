@@ -21,9 +21,9 @@ interface Facility {
 export default function FormFacility() {
     const { informationBorrower, facilitiesBorrower, updateFacilitiesBorrower } = useFormStore();
 
-    const purpose = informationBorrower.purpose as 'kie' | 'kmke' | 'both';
-    const showKieTable = purpose === 'kie' || purpose === 'both';
-    const showKmkeTable = purpose === 'kmke' || purpose === 'both';
+    const purpose = informationBorrower.purpose;
+    const showKieTable = purpose !== 2;
+    const showKmkeTable = purpose === 3;
 
     const [kieRows, setKieRows] = useState<Facility[]>(() => {
         const kie = facilitiesBorrower.filter((facility, index) => {
@@ -184,7 +184,7 @@ export default function FormFacility() {
                             <h3 className="mb-2 text-lg font-semibold text-gray-900">Tujuan Kredit</h3>
                             <p className="text-sm text-gray-600">
                                 <span className="font-medium">Dipilih:</span>{' '}
-                                <span className="capitalize">{purpose === 'both' ? 'KIE dan KMKE' : purpose?.toUpperCase()}</span>
+                                <span className="capitalize">{purpose === 1 ? 'KIE' : purpose === 2 ? 'KMKE' : 'KIE dan KMKE'}</span>
                             </p>
                         </div>
                         <div className="w-full overflow-x-auto">

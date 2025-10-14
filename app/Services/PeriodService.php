@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Period;
-use App\PeriodStatus;
+use App\Enums\PeriodStatus;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -13,6 +13,19 @@ use Illuminate\Validation\ValidationException;
 
 class PeriodService
 {
+    /**
+     * Get all periods with created_by relation
+     */
+    public function getAllPeriods()
+    {
+        return Period::with('createdBy')->orderBy('start_date', 'desc')->get();
+    }
+
+    public function getPeriodById(int $id): Period
+    {
+        return Period::findOrFail($id);
+    }
+
     /**
      * Create a new period
      */
@@ -143,7 +156,7 @@ class PeriodService
     /**
      * Get currently active period (cached)
      */
-    public function getActive(): ?Period
+    public function getActivePeriod(): ?Period
     {
         return Cache::remember('periods:active', now()->addMinutes(5), function () {
             return Period::where('status', PeriodStatus::ACTIVE)

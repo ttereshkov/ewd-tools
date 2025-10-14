@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\FacilityType;
 use App\Models\Answer;
 use App\Models\Borrower;
 use App\Models\BorrowerDetail;
@@ -11,22 +12,27 @@ use App\Models\Report;
 use App\Models\Template;
 use App\ReportStatus;
 use App\Services\FormService;
+use App\Services\PeriodService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class FormController extends Controller
 {
     protected FormService $formService;
+    protected PeriodService $periodService;
 
     public function __construct(
         FormService $formService,
+        PeriodService $periodService
     ) {
         $this->formService = $formService;
+        $this->periodService = $periodService;
     }
 
     public function index(Request $request)
@@ -36,7 +42,7 @@ class FormController extends Controller
         }
 
         $borrowers = Borrower::all();
-        $period = Period::getActivePeriod();
+        $period = $this->periodService->getActivePeriod();
 
         $borrowerData = session('borrower_data', $request->input('borrower_data', []));
         $facilityData = session('facility_data', $request->input('facility_data', []));
@@ -64,6 +70,7 @@ class FormController extends Controller
             'aspect_groups' => $aspectGroups,
             'borrower_data' => $borrowerData,
             'facility_data' => $facilityData,
+            'purpose_options' => FacilityType::options(),
         ]);
     }
 
@@ -72,7 +79,7 @@ class FormController extends Controller
         $validated = $request->validate([
             'informationBorrower.borrowerId' => 'required|exists:borrowers,id',
             'informationBorrower.borrowerGroup' => 'nullable|string',
-            'informationBorrower.purpose' => 'required|in:both,kie,kmke',
+            'informationBorrower.purpose' => ['required', Rule::in(FacilityType::values())],
             'informationBorrower.economicSector' => 'required|string',
             'informationBorrower.businessField' => 'required|string',
             'informationBorrower.borrowerBusiness' => 'required|string',

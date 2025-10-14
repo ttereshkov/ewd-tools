@@ -5,10 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePeriodRequest;
 use App\Http\Requests\UpdatePeriodRequest;
 use App\Models\Period;
-use App\PeriodStatus;
+use App\Enums\PeriodStatus;
 use App\Services\PeriodService;
 use Exception;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PeriodController extends Controller
@@ -23,16 +22,19 @@ class PeriodController extends Controller
 
     public function index()
     {
-        $periods = Period::getAllPeriods();
+        $periods = $this->periodService->getAllPeriods();
 
         return Inertia::render('period/index', [
             'periods' => $periods,
+            'status_options' => PeriodStatus::options(),
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('period/create');
+        return Inertia::render('period/create', [
+            'status_options' => PeriodStatus::options(),
+        ]);
     }
 
     public function store(StorePeriodRequest $request)
@@ -60,7 +62,8 @@ class PeriodController extends Controller
         $period->load('createdBy');
 
         return Inertia::render('period/edit', [
-            'period' => $period
+            'period' => $period,
+            'status_options' => PeriodStatus::options(),
         ]);
     }
 

@@ -368,7 +368,6 @@ export default function AspectCreate() {
                                                                     setData('questions', updated);
                                                                 }}
                                                                 max={100}
-                                                                min={-100}
                                                             />
                                                             {question.options.length > 1 && (
                                                                 <Button

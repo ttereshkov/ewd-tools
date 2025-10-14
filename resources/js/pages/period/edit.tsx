@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import periods from '@/routes/periods';
 import { Head, router, useForm } from '@inertiajs/react';
@@ -19,9 +20,13 @@ type Period = {
 
 type Props = {
     period: Period;
+    status_options: {
+        value: number;
+        label: string;
+    }[];
 };
 
-export default function PeriodEdit({ period }: Props) {
+export default function PeriodEdit({ period, status_options }: Props) {
     console.log(period);
 
     const getDate = (iso: string) => (iso ? iso.split('T')[0] : '');
@@ -110,7 +115,18 @@ export default function PeriodEdit({ period }: Props) {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="status">Status</Label>
-                                    <Input id="status" value={data.status} placeholder="draft" disabled />
+                                    <Select value={String(data.status)} onValueChange={(val) => setData('status', val)}>
+                                        <SelectTrigger id="status" className="w-full">
+                                            <SelectValue placeholder="Pilih status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {status_options.map((opt) => (
+                                                <SelectItem key={opt.value} value={String(opt.value)}>
+                                                    {opt.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     <InputError message={errors.status} />
                                 </div>
                             </CardContent>

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enum\PeriodStatus;
+use App\Enums\PeriodStatus;
 use App\PeriodStatus as AppPeriodStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -30,7 +30,7 @@ class UpdatePeriodRequest extends FormRequest
             'start_time' => 'nullable|string|date_format:H:i',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'end_time' => 'nullable|string|date_format:H:i',
-            'status' => ['sometimes', 'required', 'string', Rule::in(AppPeriodStatus::values())],
+            'status' => ['sometimes', 'required', 'integer', Rule::in(PeriodStatus::values())],
         ];
     }
 

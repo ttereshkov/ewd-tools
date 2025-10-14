@@ -16,12 +16,13 @@ interface Borrower {
 interface FormProps {
     borrowers: Borrower[];
     borrower_id: number | null;
+    purpose_options: any[];
 }
 
 interface BorrowerData {
     borrower_id: number | null;
     borrower_group: string;
-    purpose: string;
+    purpose: number;
     economic_sector: string;
     business_field: string;
     borrower_business: string;
@@ -30,9 +31,9 @@ interface BorrowerData {
 }
 
 const purposeOptions = [
-    { value: 'kie', label: 'KIE' },
-    { value: 'kmke', label: 'KMKE' },
-    { value: 'both', label: 'KIE & KMKE' },
+    { value: 1, label: 'KIE' },
+    { value: 2, label: 'KMKE' },
+    { value: 3, label: 'KIE & KMKE' },
 ];
 
 const collectibilityOptions = [
@@ -43,13 +44,13 @@ const collectibilityOptions = [
     { value: 5, label: '5 - Macet' },
 ];
 
-export default function FormInformation({ borrowers, borrower_id }: FormProps) {
+export default function FormInformation({ borrowers, purpose_options, borrower_id }: FormProps) {
     const { informationBorrower, updateInformationBorrower } = useFormStore();
 
     const initialInformationBorrower: BorrowerData = {
         borrower_id: informationBorrower.borrowerId || null,
         borrower_group: informationBorrower.borrowerGroup || '',
-        purpose: informationBorrower.purpose || '',
+        purpose: informationBorrower.purpose || 1,
         economic_sector: informationBorrower.economicSector || '',
         business_field: informationBorrower.businessField || '',
         borrower_business: informationBorrower.borrowerBusiness || '',
@@ -122,13 +123,13 @@ export default function FormInformation({ borrowers, borrower_id }: FormProps) {
                             <Label htmlFor="purpose" className="text-sm font-medium text-gray-700">
                                 Tujuan Kredit <span className="text-red-500">*</span>
                             </Label>
-                            <Select onValueChange={(value) => setData('purpose', value)} value={data.purpose}>
+                            <Select onValueChange={(value) => setData('purpose', Number(value))} value={data.purpose?.toString()}>
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Pilih tujuan kredit..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {purposeOptions.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
+                                        <SelectItem key={option.value} value={option.value.toString()}>
                                             {option.label}
                                         </SelectItem>
                                     ))}

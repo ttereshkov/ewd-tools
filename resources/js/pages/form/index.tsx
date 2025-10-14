@@ -18,6 +18,7 @@ interface FormProps {
     template_id?: number | null;
     borrower_data?: any;
     facility_data?: any;
+    purpose_options?: any[];
 }
 
 interface StepperStep {
@@ -37,6 +38,7 @@ export default function FormIndex({
     template_id = null,
     borrower_data = {},
     facility_data = {},
+    purpose_options = [],
 }: FormProps) {
     const { activeStep, totalSteps, nextStep, prevStep, aspectGroups: storeAspectGroups, setAspectGroups } = useFormStore();
 
@@ -51,7 +53,7 @@ export default function FormIndex({
             component: FormInformation,
             icon: Building2,
             required: true,
-            props: { borrowers },
+            props: { borrowers, purpose_options },
         },
         {
             id: 2,

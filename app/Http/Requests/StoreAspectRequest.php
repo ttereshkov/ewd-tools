@@ -31,7 +31,7 @@ class StoreAspectRequest extends FormRequest
             'questions.*.is_mandatory' => 'required|boolean',
             'questions.*.options' => 'nullable|array',
             'questions.*.options.*.option_text' => 'required_with:questions.*.options|string|max:255',
-            'questions.*.options.*.score' => 'required_with:questions.*.options|numeric|min:-100|max:100',
+            'questions.*.options.*.score' => 'required_with:questions.*.options|numeric|min:-500|max:100',
             'questions.*.visibility_rules' => 'nullable|array',
             'questions.*.visibility_rules.*.description' => 'nullable|string',
             'questions.*.visibility_rules.*.source_type' => 'required_with:questions.*.visibility_rules|in:borrower_detail,borrower_facility,answer',

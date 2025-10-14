@@ -25,14 +25,21 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function PeriodCreate() {
+type Props = {
+    status_options: {
+        value: number;
+        label: string;
+    }[];
+};
+
+export default function PeriodCreate({ status_options }: Props) {
     const defaultValues = {
         name: '',
         start_date: '',
         start_time: '',
         end_date: '',
         end_time: '',
-        status: 'draft',
+        status: status_options[0].value,
     };
 
     const { data, setData, post, processing, errors, reset, isDirty } = useForm(defaultValues);
@@ -105,7 +112,12 @@ export default function PeriodCreate() {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="status">Status</Label>
-                                    <Input id="status" value={data.status} placeholder="draft" disabled />
+                                    <Input
+                                        id="status"
+                                        value={status_options.find((item) => item.value === data.status)?.label || 'draft'}
+                                        placeholder="draft"
+                                        disabled
+                                    />
                                     <InputError message={errors.status} />
                                 </div>
                             </CardContent>

@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
@@ -16,33 +16,28 @@ type Period = {
     name: string;
     start_date: string | null;
     end_date: string | null;
-    status: string;
+    status: number;
 };
 
 type PageProps = {
     periods: Period[];
+    status_options: { value: number; label: string }[];
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard().url,
-    },
-    {
-        title: 'Periode',
-        href: periods.index().url,
-    },
+    { title: 'Dashboard', href: dashboard().url },
+    { title: 'Periode', href: periods.index().url },
 ];
 
-const getStatusBadgeClass = (status: string) => {
+const getStatusBadgeClass = (status: number) => {
     switch (status) {
-        case 'draft':
+        case 0:
             return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-        case 'active':
+        case 1:
             return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-        case 'ended':
+        case 2:
             return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-        case 'expired':
+        case 3:
             return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
         default:
             return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
@@ -51,94 +46,46 @@ const getStatusBadgeClass = (status: string) => {
 
 const formatDate = (dateString: string | null): string => {
     if (!dateString) return '-';
-
     const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
 export default function PeriodIndex() {
-    const { periods: periodList } = usePage<PageProps>().props;
+    const { periods: periodList, status_options } = usePage<PageProps>().props;
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [periodToDelete, setPeriodToDelete] = useState<number | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [isStatusUpdateLoading, setIsStatusUpdateLoading] = useState(false);
 
     useEffect(() => {
-        const timerInterval = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 1000);
-
-        return () => {
-            clearInterval(timerInterval);
-        };
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
     }, []);
 
     const latestPeriod = useMemo(() => {
-        if (!periodList || periodList.length === 0) return null;
-
-        const activePeriod = periodList.find((period) => period.status === 'active');
-        if (activePeriod) {
-            return activePeriod;
-        }
-
-        return [...periodList].sort((a, b) => {
-            const dateA = new Date(a.start_date as string);
-            const dateB = new Date(b.start_date as string);
-            return dateB.getTime() - dateA.getTime();
-        })[0];
+        if (!periodList.length) return null;
+        const active = periodList.find((p) => p.status === 1);
+        if (active) return active;
+        return [...periodList].sort((a, b) => new Date(b.start_date ?? '').getTime() - new Date(a.start_date ?? '').getTime())[0];
     }, [periodList]);
 
     const remainingTime = useMemo(() => {
         if (!latestPeriod || !latestPeriod.end_date) return null;
 
-        const endDate = new Date(latestPeriod.end_date);
+        const end = new Date(latestPeriod.end_date);
         const now = currentTime;
+        const diff = end.getTime() - now.getTime();
 
-        const diffMs = endDate.getTime() - now.getTime();
-        const diffSeconds = Math.floor(diffMs / 1000);
-        const diffMinutes = Math.floor(diffSeconds / 60);
-        const diffHours = Math.floor(diffMinutes / 60);
-        const diffDays = Math.floor(diffHours / 24);
+        if (Number(latestPeriod.status) === 0) return { status: 'draft', message: 'Periode masih dalam tahap draft' };
+        if (Number(latestPeriod.status) === 2) return { status: 'ended', message: 'Waktu telah dihentikan admin' };
+        if (diff < 0) return { status: 'expired', message: 'Periode telah selesai' };
 
-        if (latestPeriod.status === 'draft') {
-            return {
-                status: 'draft',
-                message: 'Periode masih dalam tahap draft',
-            };
-        }
+        const s = Math.floor(diff / 1000);
+        const m = Math.floor(s / 60);
+        const h = Math.floor(m / 60);
+        const d = Math.floor(h / 24);
 
-        if (latestPeriod.status === 'ended') {
-            return {
-                status: 'ended',
-                message: 'Waktu telah dihentikan admin',
-            };
-        }
-
-        if (isNaN(endDate.getTime()) || isNaN(now.getTime())) {
-            return {
-                status: 'invalid',
-                message: 'Tanggal periode tidak valid',
-            };
-        }
-
-        if (diffMs < 0) {
-            return {
-                status: 'expired',
-                message: `Periode telah selesai`,
-            };
-        }
-
-        return {
-            status: 'active',
-            days: diffDays,
-            hours: diffHours % 24,
-            minutes: diffMinutes % 60,
-            seconds: diffSeconds % 60,
-        };
+        return { status: 'active', days: d, hours: h % 24, minutes: m % 60, seconds: s % 60 };
     }, [latestPeriod, currentTime]);
 
     const openDeleteModal = (id: number) => {
@@ -146,27 +93,13 @@ export default function PeriodIndex() {
         setIsDeleteModalOpen(true);
     };
 
-    const closeDeleteModal = () => {
-        setIsDeleteModalOpen(false);
-        setPeriodToDelete(null);
-    };
-
-    const handleDelete = (id: number) => {
-        if (periodToDelete) {
-            router.delete(periods.destroy(periodToDelete!).url, {
-                onSuccess: () => {
-                    toast.success('Periode berhasil dihapus');
-                },
-                onError: (errs) => {
-                    Object.values(errs).forEach((error) => {
-                        toast.error(error as string);
-                    });
-                },
-                onFinish: () => {
-                    closeDeleteModal();
-                },
-            });
-        }
+    const handleDelete = () => {
+        if (!periodToDelete) return;
+        router.delete(periods.destroy(periodToDelete).url, {
+            onSuccess: () => toast.success('Periode berhasil dihapus'),
+            onError: (errs) => Object.values(errs).forEach((e) => toast.error(e as string)),
+            onFinish: () => setIsDeleteModalOpen(false),
+        });
     };
 
     const startPeriod = (id: number) => {
@@ -175,14 +108,9 @@ export default function PeriodIndex() {
             periods.start(id).url,
             {},
             {
-                onSuccess: () => {
-                    toast.success('Periode berhasil dimulai');
-                    setIsStatusUpdateLoading(false);
-                },
-                onError: () => {
-                    toast.error('Gagal memulai periode. Silahkan coba lagi.');
-                    setIsStatusUpdateLoading(false);
-                },
+                onSuccess: () => toast.success('Periode berhasil dimulai'),
+                onError: () => toast.error('Gagal memulai periode'),
+                onFinish: () => setIsStatusUpdateLoading(false),
             },
         );
     };
@@ -193,14 +121,9 @@ export default function PeriodIndex() {
             periods.stop(id).url,
             {},
             {
-                onSuccess: () => {
-                    toast.success('Periode berhasil diakhiri');
-                    setIsStatusUpdateLoading(false);
-                },
-                onError: () => {
-                    toast.error('Gagal mengakhiri periode. Silakan coba lagi.');
-                    setIsStatusUpdateLoading(false);
-                },
+                onSuccess: () => toast.success('Periode berhasil diakhiri'),
+                onError: () => toast.error('Gagal mengakhiri periode'),
+                onFinish: () => setIsStatusUpdateLoading(false),
             },
         );
     };
@@ -217,48 +140,41 @@ export default function PeriodIndex() {
                                     <div className="flex items-center">
                                         <ClockIcon className="mr-6 h-10 w-10 text-blue-500" />
                                         <div>
-                                            <div className="font-regular text-xl">
-                                                Periode Aktif:
-                                                <h3 className="text-lg font-semibold">{latestPeriod.name}</h3>
-                                            </div>
+                                            <h3 className="text-lg font-semibold">{latestPeriod.name}</h3>
                                             <p className="text-sm text-gray-500 dark:text-gray-400">
                                                 {formatDate(latestPeriod.start_date)} - {formatDate(latestPeriod.end_date)}
                                             </p>
-                                            <div className="mt-1">
-                                                <Badge className={getStatusBadgeClass(latestPeriod.status)}>{latestPeriod.status}</Badge>
-                                            </div>
+                                            <Badge className={getStatusBadgeClass(Number(latestPeriod.status))}>
+                                                {status_options.find((s) => s.value === Number(latestPeriod.status))?.label ?? '-'}
+                                            </Badge>
                                         </div>
                                     </div>
+
                                     {remainingTime && (
                                         <div className="flex flex-col space-y-4">
                                             {remainingTime.status === 'active' ? (
-                                                <div className="flex justify-center space-x-4 md:justify-end">
-                                                    <div className="text-center">
-                                                        <div className="text-2xl font-bold">{remainingTime.days}</div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Hari</div>
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <div className="text-2xl font-bold">{remainingTime.hours}</div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Jam</div>
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <div className="text-2xl font-bold">{remainingTime.minutes}</div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Menit</div>
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <div className="text-2xl font-bold">{remainingTime.seconds}</div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Detik</div>
-                                                    </div>
+                                                <div className="flex justify-center space-x-4">
+                                                    {['Hari', 'Jam', 'Menit', 'Detik'].map((unit, i) => {
+                                                        const val = [
+                                                            remainingTime.days,
+                                                            remainingTime.hours,
+                                                            remainingTime.minutes,
+                                                            remainingTime.seconds,
+                                                        ][i];
+                                                        return (
+                                                            <div className="text-center" key={unit}>
+                                                                <div className="text-2xl font-bold">{val}</div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">{unit}</div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             ) : (
-                                                <div className="text-center">
-                                                    <div className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                                                        {remainingTime.message}
-                                                    </div>
-                                                </div>
+                                                <p className="text-center text-gray-700 dark:text-gray-300">{remainingTime.message}</p>
                                             )}
-                                            <div className="flex justify-center space-x-2 md:justify-end">
-                                                {latestPeriod.status === 'draft' && (
+
+                                            <div className="flex justify-end space-x-2">
+                                                {Number(latestPeriod.status) === 0 && (
                                                     <Button
                                                         className="bg-green-600 hover:bg-green-700"
                                                         onClick={() => startPeriod(latestPeriod.id)}
@@ -268,7 +184,7 @@ export default function PeriodIndex() {
                                                         Mulai
                                                     </Button>
                                                 )}
-                                                {latestPeriod.status === 'active' && (
+                                                {Number(latestPeriod.status) === 1 && (
                                                     <Button
                                                         variant="destructive"
                                                         onClick={() => endPeriod(latestPeriod.id)}
@@ -278,7 +194,7 @@ export default function PeriodIndex() {
                                                         Akhiri
                                                     </Button>
                                                 )}
-                                                {['ended', 'expired'].includes(latestPeriod.status) && (
+                                                {[2, 3].includes(Number(latestPeriod.status)) && (
                                                     <Button variant="outline" disabled>
                                                         Periode Selesai
                                                     </Button>
@@ -292,8 +208,8 @@ export default function PeriodIndex() {
                     )}
 
                     <Card>
-                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="text-xl font-bold md:text-2xl">Periode</CardTitle>
+                        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                            <CardTitle className="text-xl font-bold">Periode</CardTitle>
                             <Link href={periods.create().url}>
                                 <Button>
                                     <PlusCircleIcon className="mr-2 h-4 w-4" />
@@ -303,7 +219,7 @@ export default function PeriodIndex() {
                         </CardHeader>
                         <CardContent>
                             {periodList.length === 0 ? (
-                                <div className="py-8 text-center text-gray-500">Belum ada periode yang terdaftar. Silakan mulai periode baru.</div>
+                                <div className="py-8 text-center text-gray-500">Belum ada periode yang terdaftar.</div>
                             ) : (
                                 <Table>
                                     <TableHeader>
@@ -316,33 +232,27 @@ export default function PeriodIndex() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {periodList.map((period) => (
-                                            <TableRow key={period.id}>
-                                                <TableCell>{period.name}</TableCell>
-                                                <TableCell>{formatDate(period.start_date)}</TableCell>
-                                                <TableCell>{formatDate(period.end_date)}</TableCell>
+                                        {periodList.map((p) => (
+                                            <TableRow key={p.id}>
+                                                <TableCell>{p.name}</TableCell>
+                                                <TableCell>{formatDate(p.start_date)}</TableCell>
+                                                <TableCell>{formatDate(p.end_date)}</TableCell>
                                                 <TableCell>
-                                                    <Badge className={getStatusBadgeClass(period.status)}>{period.status}</Badge>
+                                                    <Badge className={getStatusBadgeClass(Number(p.status))}>
+                                                        {status_options.find((s) => s.value === Number(p.status))?.label ?? '-'}
+                                                    </Badge>
                                                 </TableCell>
-                                                <TableCell className="flex justify-end space-x-3 text-right">
-                                                    <Link
-                                                        href={periods.edit(period.id).url}
-                                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                        title="Edit"
-                                                    >
+                                                <TableCell className="flex justify-end space-x-3">
+                                                    <Link href={periods.edit(p.id).url} title="Edit" className="text-blue-600 hover:text-blue-800">
                                                         <EditIcon className="h-5 w-5" />
                                                     </Link>
-                                                    <Link
-                                                        href={periods.show(period.id).url}
-                                                        className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                                                        title="View"
-                                                    >
+                                                    <Link href={periods.show(p.id).url} title="View" className="text-green-600 hover:text-green-800">
                                                         <EyeIcon className="h-5 w-5" />
                                                     </Link>
                                                     <button
-                                                        onClick={() => openDeleteModal(period.id)}
-                                                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                                                        onClick={() => openDeleteModal(p.id)}
                                                         title="Delete"
+                                                        className="text-red-600 hover:text-red-800"
                                                     >
                                                         <Trash2Icon className="h-5 w-5" />
                                                     </button>
@@ -356,32 +266,6 @@ export default function PeriodIndex() {
                     </Card>
                 </div>
             </div>
-            {isDeleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-                    <Card className="w-full max-w-sm animate-in fade-in zoom-in">
-                        <CardHeader className="items-center text-center">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
-                                <Trash2Icon className="h-6 w-6 text-red-600 dark:text-red-400" />
-                            </div>
-                        </CardHeader>
-                        <CardContent className="text-center">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Apakah anda yakin ingin menghapus data ini?
-                                <br />
-                                Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
-                            </p>
-                        </CardContent>
-                        <CardFooter className="flex flex-col-reverse gap-3 px-6 sm:flex-row sm:justify-end">
-                            <Button variant="outline" onClick={closeDeleteModal}>
-                                Batal
-                            </Button>
-                            <Button variant="destructive" onClick={() => periodToDelete && handleDelete(periodToDelete)}>
-                                Ya, Hapus
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                </div>
-            )}
         </AppLayout>
     );
 }

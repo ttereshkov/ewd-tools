@@ -8,7 +8,7 @@ class ReportService
 {
     public function getAllReports()
     {
-    $reports = Report::with(['borrower', 'borrower.division', 'period', 'creator'])->latest()->get();
+        $reports = Report::with(['borrower', 'borrower.division', 'period', 'creator'])->latest()->get();
         return $reports;
     }
 

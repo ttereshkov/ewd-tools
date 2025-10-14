@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Enums;
 
 enum PeriodStatus: int
 {
@@ -14,8 +14,16 @@ enum PeriodStatus: int
         return ucfirst(strtolower($this->name));
     }
 
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
+
     public static function options(): array
     {
-        return array_column(self::cases(), 'label', 'value');
+        return collect(self::cases())->map(fn ($case) => [
+            'value' => $case->value,
+            'label' => strtolower($case->name),
+        ])->all();
     }
 }
