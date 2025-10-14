@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\ActionItemType;
-use App\Classification;
+use App\Enums\ActionItemType;
+use App\Enums\Classification;
 use App\Models\MonitoringNote;
 use App\Models\Report;
 use App\Models\Watchlist;

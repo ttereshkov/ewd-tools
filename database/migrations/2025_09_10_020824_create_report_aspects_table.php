@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('report_aspects', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('report_id')->constrained('reports')->cascadeOnDelete();
-            $table->foreignId('aspect_version_id')->constrained('aspect_versions')->cascadeOnDelete();
-            $table->decimal('total_score', 5, 2);
-            $table->enum('classification', ['safe', 'watchlist']);
-            $table->timestamps();
+            $table->foreignId('report_id')->constrained('reports')->restrictOnDelete();
+            $table->foreignId('aspect_version_id')->constrained('aspect_versions')->restrictOnDelete();
+            $table->decimal('total_score', 5, 2)->default(0);
+            $table->unsignedTinyInteger('classification')->default(0);
+            $table->timestampsTz();
+            $table->unique(['report_id', 'aspect_version_id']);
         });
     }
 

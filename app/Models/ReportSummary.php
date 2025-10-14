@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Classification;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,7 @@ class ReportSummary extends Model
     ];
 
     protected $casts = [
+        'final_classification' => Classification::class,
         'is_override' => 'boolean',
         'indicative_collectibility' => 'integer',
     ];

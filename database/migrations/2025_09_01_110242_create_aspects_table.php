@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('aspects', function (Blueprint $table) {
             $table->id();
             $table->string('code');
-            $table->timestamps();
+            $table->timestampsTz();
         });
     }
 

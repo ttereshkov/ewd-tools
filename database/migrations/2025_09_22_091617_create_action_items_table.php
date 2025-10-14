@@ -15,13 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('monitoring_note_id')->constrained('monitoring_notes')->cascadeOnDelete();
             $table->text('action_description');
-            $table->enum('item_type', ['previous_period', 'current_progress', 'next_period']);
+            $table->unsignedTinyInteger('item_type');
             $table->text('progress_notes')->nullable();
             $table->string('people_in_charge')->nullable();
             $table->text('notes')->nullable();
             $table->date('due_date')->nullable();
             $table->date('completion_date')->nullable();
-            $table->enum('status', ['pending', 'in_progress', 'completed', 'overdue'])->default('pending');
+            $table->unsignedTinyInteger('status')->default(0);
             $table->foreignId('previous_action_item_id')->nullable()->constrained('action_items');
             $table->timestamps();
         });

@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('template_id')->constrained('templates')->cascadeOnDelete();
             $table->string('name');
-            $table->integer('version_number');
+            $table->unsignedTinyInteger('version_number');
             $table->string('description')->nullable();
-            $table->timestamps();
+            $table->timestampsTz();
 
             $table->unique(['template_id', 'version_number']);
         });

@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('borrowers', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->foreignId('division_id')->constrained('divisions');
-            $table->timestamps();
+            $table->string('name', 150);
+            $table->foreignId('division_id')->nullable()->constrained()->nullOnDelete();
+            $table->timestampsTz();
+            $table->softDeletesTz();
+
+            $table->index(['division_id', 'name']);
         });
     }
 

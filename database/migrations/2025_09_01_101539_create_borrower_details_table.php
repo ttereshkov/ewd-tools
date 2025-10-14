@@ -13,15 +13,16 @@ return new class extends Migration
     {
         Schema::create('borrower_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('borrower_id')->constrained('borrowers');
-            $table->string('borrower_group')->nullable();
-            $table->string('purpose');
-            $table->string('economic_sector');
-            $table->string('business_field');
-            $table->string('borrower_business');
-            $table->integer('collectibility');
-            $table->boolean('restructuring');
-            $table->timestamps();
+            $table->foreignId('borrower_id')->constrained('borrowers')->cascadeOnDelete();
+            $table->string('borrower_group', 100)->nullable();
+            $table->unsignedTinyInteger('purpose')->default(1);
+            $table->string('economic_sector', 100);
+            $table->string('business_field', 100);
+            $table->string('borrower_business', 100);
+            $table->unsignedTinyInteger('collectibility')->default(1);
+            $table->boolean('restructuring')->default(false);
+            $table->timestampsTz();
+            $table->softDeletesTz();
         });
     }
 

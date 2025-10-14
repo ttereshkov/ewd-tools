@@ -9,32 +9,35 @@ use Illuminate\Support\Facades\Auth;
 
 class WatchlistService extends BaseService
 {
+    /**
+     * Get or create active watchlist for borrower based on report.
+     */
     public function getOrCreateWatchlist(Report $report): Watchlist
     {
         $this->authorize('create watchlist');
 
         return $this->tx(function () use ($report) {
             $watchlist = Watchlist::where('borrower_id', $report->borrower_id)
-                ->where('status', WatchlistStatus::ACTIVE->value)
+                ->where('status', WatchlistStatus::ACTIVE)
                 ->first();
 
             if (!$watchlist) {
                 $watchlist = Watchlist::create([
                     'borrower_id' => $report->borrower_id,
                     'report_id' => $report->id,
-                    'status' => WatchlistStatus::ACTIVE->value,
+                    'status' => WatchlistStatus::ACTIVE,
                     'added_by' => Auth::id(),
                 ]);
 
                 $this->audit('Watchlist', $watchlist->id, 'created', [
                     'borrower_id' => $report->borrower_id,
                     'report_id'   => $report->id,
-                    'status'      => WatchlistStatus::ACTIVE->value,
+                    'status'      => WatchlistStatus::ACTIVE,
                 ]);
             } else {
                 $this->audit('Watchlist', $watchlist->id, 'retrieved', [
                     'borrower_id' => $report->borrower_id,
-                    'status'      => $watchlist->status,
+                    'status'      => $watchlist->status->label(),
                 ]);
             }
 
@@ -42,7 +45,7 @@ class WatchlistService extends BaseService
         });
     }
 
-    public function closeWatchlist(Watchlist $watchlist, ?string $reason = null): Watchlist
+    public function resolve(Watchlist $watchlist, ?string $reason = null): Watchlist
     {
         $this->authorize('update watchlist');
 
@@ -50,13 +53,13 @@ class WatchlistService extends BaseService
             $before = $watchlist->toArray();
 
             $watchlist->update([
-                'status'       => WatchlistStatus::CLOSED->value,
-                'closed_at'    => now(),
-                'closed_by'    => Auth::id(),
-                'close_reason' => $reason,
+                'status'       => WatchlistStatus::RESOLVED,
+                'resolved_at'    => now(),
+                'resolved_by'    => Auth::id(),
+                'resolved_notes' => $reason,
             ]);
 
-            $this->audit('Watchlist', $watchlist->id, 'closed', [
+            $this->audit('Watchlist', $watchlist->id, 'resolved', [
                 'before' => $before,
                 'after'  => $watchlist->toArray(),
                 'reason' => $reason,
@@ -66,7 +69,7 @@ class WatchlistService extends BaseService
         });
     }
 
-    public function deactivate(Watchlist $watchlist): Watchlist
+    public function archive(Watchlist $watchlist): Watchlist
     {
         $this->authorize('update watchlist');
 
@@ -74,11 +77,10 @@ class WatchlistService extends BaseService
             $before = $watchlist->toArray();
 
             $watchlist->update([
-                'status' => WatchlistStatus::INACTIVE->value,
-                'updated_by' => Auth::id(),
+                'status' => WatchlistStatus::ARCHIVED,
             ]);
 
-            $this->audit('Watchlist', $watchlist->id, 'deactivated', [
+            $this->audit('Watchlist', $watchlist->id, 'archived', [
                 'before' => $before,
                 'after'  => $watchlist->toArray(),
             ]);

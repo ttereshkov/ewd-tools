@@ -13,12 +13,15 @@ return new class extends Migration
     {
         Schema::create('periods', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
-            $table->foreignId('created_by')->constrained('users');
-            $table->enum('status', ['draft', 'active', 'ended', 'expired']);
-            $table->timestamps();
+            $table->string('name', 100);
+            $table->timestampTz('start_date');
+            $table->timestampTz('end_date');
+            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
+            $table->unsignedTinyInteger('status')->default(0);
+            $table->timestampsTz();
+            $table->softDeletesTz();
+
+            $table->index(['status', 'start_date', 'end_date']);
         });
     }
 

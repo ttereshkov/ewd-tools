@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('monitoring_notes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('watchlist_id')->constrained('watchlists')->cascadeOnDelete();
+            $table->foreignId('watchlist_id')->constrained('watchlists')->restrictOnDelete();
             $table->text('watchlist_reason');
             $table->text('account_strategy');
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('updated_by')->nullable()->constrained('users');
-            $table->timestamps();
+            $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestampsTz();
         });
     }
 

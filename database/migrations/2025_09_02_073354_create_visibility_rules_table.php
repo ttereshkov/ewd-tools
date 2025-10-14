@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('source_field');
             $table->string('operator');
             $table->text('value');
-            $table->timestamps();
+            $table->timestampsTz();
         });
     }
 

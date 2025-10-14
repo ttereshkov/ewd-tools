@@ -5,12 +5,22 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePeriodRequest;
 use App\Http\Requests\UpdatePeriodRequest;
 use App\Models\Period;
+use App\PeriodStatus;
+use App\Services\PeriodService;
 use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PeriodController extends Controller
 {
+    protected PeriodService $periodService;
+
+    public function __construct(
+        PeriodService $periodService,
+    ) {
+        $this->periodService = $periodService;
+    }
+
     public function index()
     {
         $periods = Period::getAllPeriods();
@@ -27,10 +37,7 @@ class PeriodController extends Controller
 
     public function store(StorePeriodRequest $request)
     {
-        $validated = $request->validated();
-
-        $period = new Period();
-        $period->createPeriod($validated);
+        $this->periodService->create($request->validated());
 
         return redirect()->route('periods.index')->with('success', 'Periode berhasil dibuat.');
     }
@@ -41,8 +48,10 @@ class PeriodController extends Controller
 
         return Inertia::render('period/show', [
             'period' => $period,
-            'is_active' => $period->isActive(),
-            'remaining_time' =>$period->getRemainingTime()
+            'is_active' => $period->status == PeriodStatus::ACTIVE,
+            'remaining_time' =>$period->end_date
+                ? now()->diff($period->end_date)->format('%a hari, %h jam, %i menit')
+                : null,
         ]);
     }
 
@@ -57,16 +66,14 @@ class PeriodController extends Controller
 
     public function update(UpdatePeriodRequest $request, Period $period)
     {
-        $validated = $request->validated();
-        
-        $period->updatePeriod($validated);
+        $this->periodService->update($period, $request->validated());
 
         return redirect()->route('periods.index')->with('success', 'Periode berhasil diperbarui.');
     }
 
     public function destroy(Period $period)
     {
-        $period->deletePeriod();
+        $period->delete();
 
         return redirect()->route('periods.index')->with('success', 'Periode berhasil dihapus.');
     }
@@ -74,7 +81,7 @@ class PeriodController extends Controller
     public function start(Period $period)
     {
         try {
-            $period->markAsActive();
+            $this->periodService->markAsActive($period);
             return redirect()->back()->with('success', 'Periode berhasil dimulai.');
         } catch (Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
@@ -84,10 +91,10 @@ class PeriodController extends Controller
     public function stop(Period $period)
     {
         try {
-            $period->markAsEnded();
+            $this->periodService->markAsEnded($period);
             return redirect()->back()->with('success', 'Periode berhasil diakhiri.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengakhiri periode.');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 }

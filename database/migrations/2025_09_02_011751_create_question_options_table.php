@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('question_version_id')->constrained('question_versions')->cascadeOnDelete();
             $table->string('option_text');
             $table->decimal('score', 5, 2);
-            $table->timestamps();
+            $table->timestampsTz();
         });
     }
 

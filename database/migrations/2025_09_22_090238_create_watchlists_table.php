@@ -13,14 +13,16 @@ return new class extends Migration
     {
         Schema::create('watchlists', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('borrower_id')->constrained('borrowers')->cascadeOnDelete();
-            $table->foreignId('report_id')->nullable()->constrained('reports');
-            $table->enum('status', ['active', 'resolved', 'archived'])->default('active');
-            $table->foreignId('added_by')->constrained('users');
-            $table->foreignId('resolved_by')->nullable()->constrained('users');
-            $table->text('resolver_notes')->nullable();
-            $table->timestamp('resolved_at')->nullable();
-            $table->timestamps();
+            $table->foreignId('borrower_id')->constrained('borrowers')->restrictOnDelete();
+            $table->foreignId('report_id')->nullable()->constrained('reports')->restrictOnDelete();
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->foreignId('added_by')->constrained('users')->restrictOnDelete();
+            $table->foreignId('resolved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('resolved_notes')->nullable();
+            $table->timestampTz('resolved_at')->nullable();
+            $table->timestampsTz();
+
+            $table->index(['borrower_id', 'status']);
         });
     }
 

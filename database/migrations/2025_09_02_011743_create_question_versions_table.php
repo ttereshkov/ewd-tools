@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('question_id')->constrained('questions')->cascadeOnDelete();
             $table->foreignId('aspect_version_id')->constrained('aspect_versions')->cascadeOnDelete();
-            $table->integer('version_number');
+            $table->unsignedTinyInteger('version_number');
             $table->text('question_text');
-            $table->decimal('weight');
+            $table->decimal('weight', 5, 2);
             $table->boolean('is_mandatory')->default(false);
-            $table->timestamps();
+            $table->timestampsTz();
         });
     }
 

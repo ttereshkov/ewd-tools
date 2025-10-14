@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('aspect_template_versions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('template_version_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('aspect_version_id')->constrained()->cascadeOnDelete();
-            $table->integer('weight');
-            $table->timestamps();
+            $table->foreignId('template_version_id')->constrained('template_versions')->cascadeOnDelete();
+            $table->foreignId('aspect_version_id')->constrained('aspect_versions')->cascadeOnDelete();
+            $table->decimal('weight', 5, 2);
+            $table->timestampsTz();
 
             $table->unique(['template_version_id', 'aspect_version_id'],'template_aspect_unique');
         });

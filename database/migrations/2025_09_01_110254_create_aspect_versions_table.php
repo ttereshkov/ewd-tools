@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('aspect_versions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('aspect_id')->constrained('aspects')->cascadeOnDelete();
-            $table->integer('version_number');
+            $table->unsignedTinyInteger('version_number');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->timestamps();
+            $table->timestampsTz();
 
             $table->unique(['aspect_id', 'version_number']);
         });

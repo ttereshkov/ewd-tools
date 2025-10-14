@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Classification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +19,7 @@ class ReportAspect extends Model
     ];
 
     protected $casts = [
+        'classification' => Classification::class,
         'total_score' => 'decimal:2',
     ];
 

@@ -13,14 +13,16 @@ return new class extends Migration
     {
         Schema::create('reports', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('borrower_id')->constrained('borrowers');
-            $table->foreignId('template_id')->constrained('templates');
-            $table->foreignId('period_id')->constrained('periods');
-            $table->foreignId('created_by')->constrained('users');
-            $table->enum('status', ['submitted', 'approved', 'rejected', 'done']);
-            $table->timestamp('submitted_at')->nullable();
+            $table->foreignId('borrower_id')->constrained('borrowers')->restrictOnDelete();
+            $table->foreignId('template_id')->constrained('templates')->restrictOnDelete();
+            $table->foreignId('period_id')->constrained('periods')->restrictOnDelete();
+            $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
+            $table->unsignedTinyInteger('status')->default(0);
+            $table->timestampTz('submitted_at')->nullable();
             $table->text('rejection_reason')->nullable();
-            $table->timestamps();
+            $table->timestampsTz();
+
+            $table->index(['borrower_id', 'period_id'], 'idx_report_borrower_period');
         });
     }
 

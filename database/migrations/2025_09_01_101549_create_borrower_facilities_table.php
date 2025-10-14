@@ -13,16 +13,19 @@ return new class extends Migration
     {
         Schema::create('borrower_facilities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('borrower_id')->constrained('borrowers'); // Perlu diperbaiki
-            $table->string('facility_name');
-            $table->decimal('limit', 12, 2);
-            $table->decimal('outstanding', 12, 2);
+            $table->foreignId('borrower_id')->constrained('borrowers')->cascadeOnDelete();
+            $table->string('facility_name', 100);
+            $table->decimal('limit', 15, 2);
+            $table->decimal('outstanding', 15, 2);
             $table->decimal('interest_rate', 5, 2);
-            $table->decimal('principal_arrears', 12, 2);
-            $table->decimal('interest_arrears', 12, 2);
-            $table->integer('pdo_days');
+            $table->decimal('principal_arrears', 15, 2);
+            $table->decimal('interest_arrears', 15, 2);
+            $table->smallInteger('pdo_days')->default(0);
             $table->date('maturity_date');
-            $table->timestamps();
+            $table->timestampsTz();
+            $table->softDeletesTz();
+
+            $table->index(['borrower_id', 'maturity_date']);
         });
     }
 
