@@ -2,8 +2,12 @@
 
 namespace App\Enums;
 
+use App\Traits\HasEnumHelpers;
+
 enum FacilityType: int
 {
+    use HasEnumHelpers;
+    
     case KIE = 1;
     case KMKE = 2;
     case BOTH = 3;
@@ -15,18 +19,5 @@ enum FacilityType: int
             self::KMKE => 'KMKE',
             self::BOTH => 'KIE & KMKE',
         };
-    }
-
-    public static function values(): array
-    {
-        return array_column(self::cases(), 'value');
-    }
-
-    public static function options(): array
-    {
-        return collect(self::cases())->map(fn($case) => [
-            'value' => $case->value,
-            'label' => $case->label(),
-        ])->all();
     }
 }

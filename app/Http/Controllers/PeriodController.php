@@ -26,14 +26,14 @@ class PeriodController extends Controller
 
         return Inertia::render('period/index', [
             'periods' => $periods,
-            'status_options' => PeriodStatus::options(),
+            'status_options' => PeriodStatus::toSelectOptions(),
         ]);
     }
 
     public function create()
     {
         return Inertia::render('period/create', [
-            'status_options' => PeriodStatus::options(),
+            'status_options' => PeriodStatus::toSelectOptions(),
         ]);
     }
 
@@ -63,7 +63,7 @@ class PeriodController extends Controller
 
         return Inertia::render('period/edit', [
             'period' => $period,
-            'status_options' => PeriodStatus::options(),
+            'status_options' => PeriodStatus::toSelectOptions(),
         ]);
     }
 

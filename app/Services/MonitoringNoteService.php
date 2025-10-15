@@ -29,7 +29,7 @@ class MonitoringNoteService extends BaseService
 
     public function getMonitoringNoteData(int $reportId): array
     {
-        $this->authorize('view monitoring_notes');
+        $this->authorize('view monitoring note');
 
         $report = $this->reportService->getReportById($reportId);
         $watchlist = $this->getOrCreateWatchlistByReportId($reportId);
@@ -122,7 +122,7 @@ class MonitoringNoteService extends BaseService
     {
         $report = Report::with('summary')->findOrFail($reportId);
         return $report->summary &&
-            $report->summary->final_classification === Classification::WATCHLIST->value;
+            $report->summary->final_classification === Classification::WATCHLIST;
     }
 
     private function autoCopyFromPreviousPeriod(int $monitoringNoteId, int $borrowerId): void

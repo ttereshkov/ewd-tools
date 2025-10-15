@@ -39,7 +39,7 @@ export interface User {
     created_at: string;
     updated_at: string;
     division_id?: number;
-    [key: string]: unknown; // This allows for additional properties...
+    [key: string]: unknown;
 }
 
 export interface Division {
@@ -82,7 +82,7 @@ export interface BorrowerDetail {
     business_field: string;
     collectibility: number;
     economic_sector: string;
-    purpose: 'kie' | 'kmke' | 'both';
+    purpose: number;
     restructuring: boolean;
     created_at: string;
     updated_at: string;
@@ -93,7 +93,7 @@ export interface Period {
     name: string;
     start_date: string;
     end_date: string;
-    status: string;
+    status: number;
     created_at: string;
     updated_at: string;
 }

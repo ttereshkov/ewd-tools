@@ -31,13 +31,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const getStatusBadgeClass = (status: number) => {
     switch (status) {
-        case 0:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
         case 1:
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
         case 2:
-            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
         case 3:
+            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        case 4:
             return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
         default:
             return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
@@ -76,8 +76,8 @@ export default function PeriodIndex() {
         const now = currentTime;
         const diff = end.getTime() - now.getTime();
 
-        if (Number(latestPeriod.status) === 0) return { status: 'draft', message: 'Periode masih dalam tahap draft' };
-        if (Number(latestPeriod.status) === 2) return { status: 'ended', message: 'Waktu telah dihentikan admin' };
+        if (Number(latestPeriod.status) === 1) return { status: 'draft', message: 'Periode masih dalam tahap draft' };
+        if (Number(latestPeriod.status) === 3) return { status: 'ended', message: 'Waktu telah dihentikan admin' };
         if (diff < 0) return { status: 'expired', message: 'Periode telah selesai' };
 
         const s = Math.floor(diff / 1000);

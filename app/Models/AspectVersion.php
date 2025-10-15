@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\HasVisibilityRules;
+use App\Traits\HasVisibilityRules;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

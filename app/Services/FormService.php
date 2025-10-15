@@ -6,7 +6,7 @@ use App\Models\Answer;
 use App\Models\BorrowerDetail;
 use App\Models\BorrowerFacility;
 use App\Models\Report;
-use App\ReportStatus;
+use App\Enums\ReportStatus;
 use Illuminate\Support\Facades\Auth;
 
 class FormService extends BaseService
@@ -63,7 +63,7 @@ class FormService extends BaseService
                 'borrower_id'   => $borrowerId,
                 'template_id'   => $validated['reportMeta']['template_id'],
                 'period_id'     => $validated['reportMeta']['period_id'],
-                'status'        => ReportStatus::SUBMITTED->value,
+                'status'        => ReportStatus::SUBMITTED,
                 'created_by'    => Auth::id(),
                 'submitted_at'  => now(),
             ]);

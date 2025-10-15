@@ -70,7 +70,7 @@ class FormController extends Controller
             'aspect_groups' => $aspectGroups,
             'borrower_data' => $borrowerData,
             'facility_data' => $facilityData,
-            'purpose_options' => FacilityType::options(),
+            'purpose_options' => FacilityType::toSelectOptions(),
         ]);
     }
 

@@ -57,7 +57,7 @@ interface BorrowerDetail {
     business_field: string;
     collectibility: number;
     economic_sector: string;
-    purpose: 'kie' | 'kmke' | 'both';
+    purpose: number;
     restructuring: boolean;
     created_at: string;
     updated_at: string;
@@ -78,7 +78,7 @@ interface BorrowerFacility {
 interface Aspect {
     id: number;
     aspect_version: AspectVersion;
-    classification: string;
+    classification: number;
     total_score: number;
     created_at: string;
     updated_at: string;
@@ -99,7 +99,7 @@ interface AspectVersion {
 interface Summary {
     id: number;
     business_notes?: string;
-    final_classification: string;
+    final_classification: number;
     indicative_collectibility: number;
     is_override: boolean;
     override_reason?: string;
@@ -146,9 +146,44 @@ const getCollectibilityInfo = (coll?: number) => {
     }
 };
 
-const getClassificationColor = (c?: string) => (c?.toUpperCase() === 'WATCHLIST' ? 'text-red-800' : 'text-green-800');
-const getClassificationBg = (c?: string) => (c?.toUpperCase() === 'WATCHLIST' ? 'bg-red-100' : 'bg-green-100');
-const getClassificationIcon = (c?: string) => (c?.toUpperCase() === 'WATCHLIST' ? AlertTriangleIcon : CheckIcon);
+const getClassificationLabel = (value?: number): string => {
+    switch (value) {
+        case 1:
+            return 'SAFE';
+        case 0:
+            return 'WATCHLIST';
+        default:
+            return 'UNKNOWN';
+    }
+};
+
+const getClassificationColor = (value?: number | string) => {
+    if (value === 0 || value === 'WATCHLIST') return 'text-red-800';
+    return 'text-green-800';
+};
+
+const getClassificationBg = (value?: number | string) => {
+    if (value === 0 || value === 'WATCHLIST') return 'bg-red-100';
+    return 'bg-green-100';
+};
+
+const getClassificationIcon = (value?: number | string) => {
+    if (value === 0 || value === 'WATCHLIST') return AlertTriangleIcon;
+    return CheckIcon;
+};
+
+const getPurposeLabel = (value?: number): string => {
+    switch (value) {
+        case 1:
+            return 'KIE';
+        case 2:
+            return 'KMKE';
+        case 3:
+            return 'KIE & KMKE';
+        default:
+            return '-';
+    }
+};
 
 const formatCurrency = (value: number | string | undefined | null) => {
     const num = Number(value);
@@ -165,6 +200,7 @@ const formatDate = (dateString: string | undefined | null) => {
 };
 
 export default function Summary({ reportData }: SummaryProps) {
+    console.log('REPORT: ', reportData);
     const { borrower, creator, period, summary, aspects, facilities, facilitiesTotals } = useMemo(() => {
         const data = reportData;
         const borrower = data.borrower;
@@ -201,7 +237,7 @@ export default function Summary({ reportData }: SummaryProps) {
         overrideReason: summary?.override_reason || '',
     });
 
-    const normalizeClassification = (c?: string): 'SAFE' | 'WATCHLIST' => (c?.toUpperCase() === 'WATCHLIST' ? 'WATCHLIST' : 'SAFE');
+    const normalizeClassification = (c?: number): string => (c === 0 ? 'WATCHLIST' : 'SAFE');
 
     const systemClassification = useMemo(() => normalizeClassification(summary?.final_classification), [summary]);
 
@@ -292,7 +328,7 @@ export default function Summary({ reportData }: SummaryProps) {
                                 </div>
                                 <div>
                                     <Label className="text-sm font-medium text-gray-500">Tujuan Kredit</Label>
-                                    <div className="text-lg font-semibold text-gray-900">{borrower.detail.purpose.toUpperCase()}</div>
+                                    <div className="text-lg font-semibold text-gray-900">{getPurposeLabel(borrower.detail.purpose)}</div>
                                 </div>
                                 <div>
                                     <Label className="text-sm font-medium text-gray-500">Sektor Ekonomi</Label>
@@ -406,6 +442,7 @@ export default function Summary({ reportData }: SummaryProps) {
                                     <TableBody>
                                         {aspects.map((aspect, index) => {
                                             const Icon = getClassificationIcon(aspect.classification);
+                                            const label = getClassificationLabel(aspect.classification);
                                             return (
                                                 <TableRow key={aspect.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                                     <TableCell>{aspect.aspect_version.aspect.code}</TableCell>
@@ -416,7 +453,7 @@ export default function Summary({ reportData }: SummaryProps) {
                                                             className={`border-2 font-bold ${getClassificationColor(aspect.classification)} ${getClassificationBg(aspect.classification)}`}
                                                         >
                                                             {Icon && <Icon className="h-4 w-4" />}
-                                                            {aspect.classification.toUpperCase()}
+                                                            {label}
                                                         </Badge>
                                                     </TableCell>
                                                 </TableRow>

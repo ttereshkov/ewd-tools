@@ -2,6 +2,9 @@
 
 namespace App\Observers;
 
+use App\Enums\Classification;
+use App\Enums\ReportStatus;
+use App\Enums\WatchlistStatus;
 use App\Models\MonitoringNote;
 use App\Models\ReportSummary;
 use App\Models\Watchlist;
@@ -17,12 +20,12 @@ class SummaryObserver
             return;
         }
 
-        if (strtolower($summary->final_classification) === 'watchlist') {
+        if ($summary->final_classification === Classification::WATCHLIST) {
             $watchlist = Watchlist::firstOrCreate(
                 [
                     'borrower_id' => $report->borrower_id,
                     'report_id' => $report->id,
-                    'status' => 'active'
+                    'status' => WatchlistStatus::ACTIVE,
                 ],
                 [
                     'added_by' => Auth::id()
@@ -41,9 +44,9 @@ class SummaryObserver
             );
         } else {
             Watchlist::where('borrower_id', $report->borrower_id)
-                ->where('status', 'active')
+                ->where('status', WatchlistStatus::ACTIVE)
                 ->update([
-                    'status' => 'archived',
+                    'status' => WatchlistStatus::ARCHIVED,
                     'resolved_by' => Auth::id(),
                     'resolved_at' => now(),
                 ]);

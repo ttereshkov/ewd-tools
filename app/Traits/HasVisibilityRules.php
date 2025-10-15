@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Traits;
 
 use Illuminate\Support\Collection;
 
@@ -37,7 +37,7 @@ trait HasVisibilityRules
                     break;
             }
 
-            if (! $this->compareValues($sourceValue, $rule->operator, $rule->value)) {
+            if (!$this->compareValues($sourceValue, $rule->operator, $rule->value)) {
                 return false;
             }
         }

@@ -2,28 +2,24 @@
 
 namespace App\Enums;
 
+use App\Traits\HasEnumHelpers;
+
 enum PeriodStatus: int
 {
-    case DRAFT = 0;
-    case ACTIVE = 1;
-    case ENDED = 2;
-    case EXPIRED = 3;
+    use HasEnumHelpers;
+
+    case DRAFT = 1;
+    case ACTIVE = 2;
+    case ENDED = 3;
+    case EXPIRED = 4;
 
     public function label(): string
     {
-        return ucfirst(strtolower($this->name));
-    }
-
-    public static function values(): array
-    {
-        return array_column(self::cases(), 'value');
-    }
-
-    public static function options(): array
-    {
-        return collect(self::cases())->map(fn ($case) => [
-            'value' => $case->value,
-            'label' => strtolower($case->name),
-        ])->all();
+        return match($this) {
+            self::DRAFT => 'Draft',
+            self::ACTIVE => 'Aktif',
+            self::ENDED => 'Selesai',
+            self::EXPIRED => 'Expired',
+        };
     }
 }

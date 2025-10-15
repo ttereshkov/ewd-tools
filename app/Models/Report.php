@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\ReportStatus;
+use App\Enums\ReportStatus;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

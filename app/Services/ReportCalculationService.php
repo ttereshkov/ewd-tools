@@ -2,11 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\Classification;
+use App\Enums\WatchlistStatus;
 use App\Models\Report;
 use App\Models\ReportAspect;
 use App\Models\ReportSummary;
 use App\Models\Watchlist;
-use App\WatchlistStatus;
 use Illuminate\Support\Facades\Auth;
 
 class ReportCalculationService extends BaseService
@@ -30,10 +31,10 @@ class ReportCalculationService extends BaseService
 
             $this->audit('report', $report->id, 'recalculated', [
                 'total_score' => $overallSummary['total_score'],
-                'classification' => $overallSummary['final_classification']
+                'classification' => $overallSummary['final_classification']->name,
             ]);
 
-            if ($overallSummary['final_classification'] === 'watchlist') {
+            if ($overallSummary['final_classification'] === Classification::WATCHLIST) {
                 $this->createOrAttachWatchlist($report);
             }
 
@@ -57,7 +58,7 @@ class ReportCalculationService extends BaseService
 
             $aspectScores[$aspectVersionId] = [
                 'total_score' => round($totalScore, 2),
-                'classification' => $this->determineClassification($report, $totalScore)
+                'classification' => $this->determineClassification($report, $totalScore),
             ];
         }
 
@@ -75,7 +76,7 @@ class ReportCalculationService extends BaseService
 
         return [
             'total_score' => round($totalWeightedScore, 2),
-            'final_classification' => $this->determineClassification($report, $aspectVersionId),
+            'final_classification' => $this->determineClassification($report, $totalWeightedScore),
             'collectibility' => $report->borrower->detail->collectibility ?? null,
         ];
     }
@@ -87,7 +88,7 @@ class ReportCalculationService extends BaseService
                 ['report_id' => $report->id, 'aspect_version_id' => $aspectVersionId],
                 [
                     'total_score' => $scoreData['total_score'],
-                    'classification' => $scoreData['classification']
+                    'classification' => $scoreData['classification'],
                 ]
             );
         }
@@ -97,7 +98,7 @@ class ReportCalculationService extends BaseService
             [
                 'total_score' => $overallSummary['total_score'],
                 'final_classification' => $overallSummary['final_classification'],
-                'indicative_collectibility' => $overallSummary['collectibility']
+                'indicative_collectibility' => $overallSummary['collectibility'],
             ]
         );
     }
@@ -109,16 +110,18 @@ class ReportCalculationService extends BaseService
             ->aspectVersions
             ->firstWhere('id', $aspectVersionId);
 
-        return $aspectVersionPivot ? ($aspectVersionPivot->pivot->weight ?? 0): 0;
+        return $aspectVersionPivot ? ($aspectVersionPivot->pivot->weight ?? 0) : 0;
     }
 
-    private function determineClassification(Report $report, float $totalScore): string
+    private function determineClassification(Report $report, float $totalScore): Classification
     {
-        if ($this->passesScoreRule($totalScore) && $this->passesAspectRule($report) && $this->passesMandatoryRule($report)) {
-            return 'safe';
+        if ($this->passesScoreRule($totalScore)
+            && $this->passesAspectRule($report)
+            && $this->passesMandatoryRule($report)) {
+            return Classification::SAFE;
         }
 
-        return 'watchlist';
+        return Classification::WATCHLIST;
     }
 
     private function passesScoreRule(float $totalScore): bool
@@ -129,7 +132,7 @@ class ReportCalculationService extends BaseService
     private function passesAspectRule(Report $report): bool
     {
         return !$report->aspects->contains(
-            fn($aspect) => strtolower($aspect->classification ?? '') === 'watchlist'
+            fn($aspect) => $aspect->classification === Classification::WATCHLIST
         );
     }
 
@@ -141,7 +144,7 @@ class ReportCalculationService extends BaseService
             ->filter(fn($answer) => $answer->questionVersion->is_mandatory)
             ->filter(fn($answer) => !$answer->questionOption || $answer->questionOption->score < 0)
             ->count();
-        
+
         return $failedMandatoryCount <= $mandatoryLimit;
     }
 
@@ -165,7 +168,7 @@ class ReportCalculationService extends BaseService
         ]);
 
         $this->audit('watchlist', $watchlist->id, 'created-from-calculation', [
-            'report_id' => $report->id
+            'report_id' => $report->id,
         ]);
 
         return $watchlist;

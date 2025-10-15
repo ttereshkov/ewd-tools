@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Enums\ApprovalStatus;
 use App\Models\Approval;
 use App\Models\Report;
-use App\ReportStatus;
+use App\Enums\ReportStatus;
 use Illuminate\Support\Facades\Auth;
 
 class ApprovalService extends BaseService
