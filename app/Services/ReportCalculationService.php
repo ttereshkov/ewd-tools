@@ -138,7 +138,7 @@ class ReportCalculationService extends BaseService
 
     private function passesMandatoryRule(Report $report): bool
     {
-        $mandatoryLimit = 2;
+        $mandatoryLimit = 1;
 
         $failedMandatoryCount = $report->answers
             ->filter(fn($answer) => $answer->questionVersion->is_mandatory)

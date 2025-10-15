@@ -14,8 +14,8 @@ type User = {
     id: number;
     name: string;
     email: string;
-    division_id: number;
     division: Division;
+    role: Role;
     created_at: string;
     updated_at: string;
 };
@@ -26,6 +26,11 @@ type Division = {
     name: string;
     created_at: string;
     updated_at: string;
+};
+
+type Role = {
+    id: number;
+    name: string;
 };
 
 type PageProps = {
@@ -45,6 +50,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function UserIndex() {
     const { users: userList } = usePage<PageProps>().props;
+    console.log(userList);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [divisionToDelete, setDivisionToDelete] = useState<number | null>(null);
 
@@ -98,6 +104,7 @@ export default function UserIndex() {
                                         <TableRow>
                                             <TableHead>Nama</TableHead>
                                             <TableHead>Email</TableHead>
+                                            <TableHead>Role</TableHead>
                                             <TableHead>Divisi</TableHead>
                                             <TableHead className="text-right">Aksi</TableHead>
                                         </TableRow>
@@ -107,6 +114,7 @@ export default function UserIndex() {
                                             <TableRow key={user.id}>
                                                 <TableCell>{user.name}</TableCell>
                                                 <TableCell>{user.email}</TableCell>
+                                                <TableCell>{user.role.name}</TableCell>
                                                 <TableCell>{user.division?.name ?? '-'}</TableCell>
                                                 <TableCell className="flex justify-end space-x-3 text-right">
                                                     <Link

@@ -39,6 +39,7 @@ export interface User {
     created_at: string;
     updated_at: string;
     division_id?: number;
+    role_id: number;
     [key: string]: unknown;
 }
 

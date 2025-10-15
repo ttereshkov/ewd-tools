@@ -3,26 +3,44 @@ namespace App\Http\Controllers;
 
 use App\Models\Division;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
+use Throwable;
 
 class UserController extends Controller
 {
+    protected UserService $userService;
+
+    public function __construct(
+        UserService $userService,
+    ) {
+        $this->userService = $userService;
+    }
+
     public function index()
     {
-        $users = User::with('division')->latest()->get();
-
-        return Inertia::render('user/index', [
-            'users' => $users,
-        ]);
+        try {
+            $users = $this->userService->getAllUsers();
+            return Inertia::render('user/index', [
+                'users' => $users
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Gagal memuat pengguna: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memuat daftar pengguna.');
+        }
     }
 
     public function create()
     {
         $divisions = Division::latest()->get();
+        $roles = Role::all();
 
         return Inertia::render('user/create', [
             'divisions' => $divisions,
+            'roles' => $roles,
         ]);
     }
 
@@ -32,10 +50,17 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
+            'role_id' => 'required|exists:roles,id',
             'division_id' => 'nullable|exists:divisions,id',
         ]);
 
-        User::create($validated);
+        try {
+            $this->userService->store($validated);
+            return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan.');
+        } catch (Throwable $e) {
+            Log::error('Gagal menambahkan pengguna: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat menyimpan pengguna');
+        }
     }
 
     public function show(User $user)
