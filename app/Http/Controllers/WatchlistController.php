@@ -7,7 +7,7 @@ use App\Models\MonitoringNote;
 use App\Models\Report;
 use App\Services\ActionItemService;
 use App\Services\MonitoringNoteService;
-use App\WatchlistStatus;
+use App\Enums\WatchlistStatus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Exception;

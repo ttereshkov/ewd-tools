@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Report;
 use App\Models\Watchlist;
-use App\WatchlistStatus;
+use App\Enums\WatchlistStatus;
 use Illuminate\Support\Facades\Auth;
 
 class WatchlistService extends BaseService

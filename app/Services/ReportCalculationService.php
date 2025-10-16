@@ -45,7 +45,7 @@ class ReportCalculationService extends BaseService
     private function calculateAspectScores(Report $report): array
     {
         $aspectScores = [];
-        $answersByAspect = $report->answers->groupBy('questionVersion.aspectVersion.aspect.id');
+        $answersByAspect = $report->answers->groupBy('questionVersion.aspectVersion.id');
 
         foreach ($answersByAspect as $aspectVersionId => $answers) {
             $totalScore = 0;
@@ -153,7 +153,7 @@ class ReportCalculationService extends BaseService
         $this->authorize('create watchlist');
 
         $existing = Watchlist::where('borrower_id', $report->borrower_id)
-            ->where('status', WatchlistStatus::ACTIVE->value)
+            ->where('status', WatchlistStatus::ACTIVE)
             ->first();
 
         if ($existing) {
@@ -163,7 +163,7 @@ class ReportCalculationService extends BaseService
         $watchlist = Watchlist::create([
             'borrower_id' => $report->borrower_id,
             'report_id' => $report->id,
-            'status' => WatchlistStatus::ACTIVE->value,
+            'status' => WatchlistStatus::ACTIVE,
             'added_by' => Auth::id(),
         ]);
 
