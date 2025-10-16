@@ -42,6 +42,7 @@ class AspectService extends BaseService
                 'description' => $validated['description'] ?? null,
             ]);
 
+            $indexToQuestionIdMap = [];
             $indexToQuestionVersionIdMap = [];
 
             foreach ($validated['questions'] as $index => $q) {
@@ -55,6 +56,7 @@ class AspectService extends BaseService
                     'is_mandatory' => $q['is_mandatory'],
                 ]);
 
+                $indexToQuestionIdMap[$index] = $question->id;
                 $indexToQuestionVersionIdMap[$index] = $questionVersion->id;
 
                 if (!empty($q['options'])) {
@@ -77,7 +79,7 @@ class AspectService extends BaseService
                     foreach ($q['visibility_rules'] as $rule) {
                         if ($rule['source_type'] === 'answer') {
                             $sourceIndex = (int)$rule['source_field'];
-                            $rule['source_field'] = $indexToQuestionVersionIdMap[$sourceIndex];
+                            $rule['source_field'] = $indexToQuestionIdMap[$sourceIndex];
                         }
                         $translatedRules[] = $rule;
                     }
@@ -101,7 +103,10 @@ class AspectService extends BaseService
                 'description' => $validated['description'] ?? null,
             ]);
 
-            foreach ($validated['questions'] as $q) {
+            $indexToQuestionIdMap = [];
+            $indexToQuestionVersionIdMap = [];
+
+            foreach ($validated['questions'] as $index => $q) {
                 $question = Question::create([]);
 
                 $questionVersion = $question->questionVersions()->create([
@@ -112,6 +117,9 @@ class AspectService extends BaseService
                     'is_mandatory' => $q['is_mandatory'],
                 ]);
 
+                $indexToQuestionIdMap[$index] = $question->id;
+                $indexToQuestionVersionIdMap[$index] = $questionVersion->id;
+
                 if (!empty($q['options'])) {
                     foreach ($q['options'] as $opt) {
                         $questionVersion->questionOptions()->create([
@@ -120,9 +128,41 @@ class AspectService extends BaseService
                         ]);
                     }
                 }
+            }
 
+            foreach ($validated['questions'] as $index => $q) {
                 if (!empty($q['visibility_rules'])) {
-                    $questionVersion->visibilityRules()->createMany($q['visibility_rules']);
+                    $questionVersionId = $indexToQuestionVersionIdMap[$index];
+                    $questionVersion = QuestionVersion::find($questionVersionId);
+
+                    $translatedRules = [];
+
+                    foreach ($q['visibility_rules'] as $rule) {
+                        if (is_string($rule['source_field'])) {
+                            if (preg_match('/(\d+)/', $rule['source_field'], $matches)) {
+                                $rule['source_field'] = ((int) $matches[1] - 1);
+                            } else {
+                                $rule['source_field'] = 0;
+                            }
+                        }
+                        
+                        if ($rule['source_type'] === 'answer') {
+                            $sourceIndex = (int)$rule['source_field'];
+                            if ($sourceIndex === $index) {
+                                logger()->warning("Question {$index} references itself, skipping rule.");
+                                continue;
+                            }
+                            if (isset($indexToQuestionIdMap[$sourceIndex])) {
+                                $rule['source_field'] = $indexToQuestionIdMap[$sourceIndex];
+                            } else {
+                                logger()->warning("Invalid source index {$sourceIndex} for visibility rule", [
+                                    'available' => $indexToQuestionIdMap,
+                                ]);
+                            }
+                        }
+                        $translatedRules[] = $rule;
+                    }
+                    $questionVersion->visibilityRules()->createMany($translatedRules);
                 }
             }
         });

@@ -174,7 +174,7 @@ export default function PeriodIndex() {
                                             )}
 
                                             <div className="flex justify-end space-x-2">
-                                                {Number(latestPeriod.status) === 0 && (
+                                                {Number(latestPeriod.status) === 1 && (
                                                     <Button
                                                         className="bg-green-600 hover:bg-green-700"
                                                         onClick={() => startPeriod(latestPeriod.id)}
@@ -184,7 +184,7 @@ export default function PeriodIndex() {
                                                         Mulai
                                                     </Button>
                                                 )}
-                                                {Number(latestPeriod.status) === 1 && (
+                                                {Number(latestPeriod.status) === 2 && (
                                                     <Button
                                                         variant="destructive"
                                                         onClick={() => endPeriod(latestPeriod.id)}
@@ -194,7 +194,7 @@ export default function PeriodIndex() {
                                                         Akhiri
                                                     </Button>
                                                 )}
-                                                {[2, 3].includes(Number(latestPeriod.status)) && (
+                                                {[3, 4].includes(Number(latestPeriod.status)) && (
                                                     <Button variant="outline" disabled>
                                                         Periode Selesai
                                                     </Button>

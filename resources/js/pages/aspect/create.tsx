@@ -185,6 +185,7 @@ export default function AspectCreate() {
             return;
         }
 
+        console.log(data);
         post(aspects.store().url, {
             onSuccess: () => {
                 toast.success('Aspek berhasil ditambahkan.');

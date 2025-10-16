@@ -40,6 +40,7 @@ interface FormAspectProps {
 
 export default function FormAspect({ aspect_groups }: FormAspectProps) {
     const { aspectsBorrower, informationBorrower, facilitiesBorrower, updateAspectsBorrower } = useFormStore();
+    console.log(aspect_groups);
 
     const [localAspectGroups, setLocalAspectGroups] = useState<Aspect[]>([]);
     const [submissionData, setSubmissionData] = useState<object | null>(null);
@@ -59,8 +60,6 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
         },
         [aspectsBorrower],
     );
-
-    console.log(aspect_groups);
 
     useEffect(() => {
         setLocalAspectGroups(initializeAspectGroups(aspect_groups));

@@ -203,6 +203,7 @@ export default function AspectEdit({ aspect }: Props) {
 
         put(aspects.update(aspect.id).url, {
             onSuccess: () => {
+                console.log(data);
                 toast.success('Aspek berhasil diperbarui.');
                 router.visit(aspects.index().url, {
                     preserveScroll: true,
@@ -468,7 +469,6 @@ export default function AspectEdit({ aspect }: Props) {
                                                                             value={rule.source_field}
                                                                             onValueChange={(value) => {
                                                                                 const updated = [...data.questions];
-
                                                                                 updated[qIndex].visibility_rules[rIndex].source_field = value;
                                                                                 setData('questions', updated);
                                                                             }}
