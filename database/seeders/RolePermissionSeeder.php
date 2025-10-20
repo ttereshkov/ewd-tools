@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
@@ -229,13 +230,6 @@ class RolePermissionSeeder extends Seeder
             'view user',
         ]);
 
-        // Membuat user admin default
-        $user = \App\Models\User::factory()->create([
-            'name' => 'Admin',
-            'email' => 'admin@ewd.test',
-            'password' => bcrypt('password'),
-        ]);
-        
-        $user->assignRole('admin');
+        // User admin akan dibuat di UserSeeder, tidak perlu dibuat di sini
     }
 }

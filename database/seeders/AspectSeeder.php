@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Aspect;
+use App\Models\AspectVersion;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -16,41 +17,100 @@ class AspectSeeder extends Seeder
         $aspects = [
             [
                 'code' => 'A',
-                'name' => 'Aspek Hukum',
-                'description' => 'Menilai kepatuhan hukum, perizinan, dan masalah legalitas nasabah.'
+                'versions' => [
+                    [
+                        'version_number' => 1,
+                        'name' => 'Aspek Hukum',
+                        'description' => 'Menilai kinerja keuangan, profitabilitas, leverage, dan likuiditas perusahaan.',
+                    ]
+                ]
             ],
             [
                 'code' => 'B',
-                'name' => 'Aspek Manajemen',
-                'description' => 'Menilai struktur organisasi, kompetensi, dan pengalaman manajemen.'
+                'versions' => [
+                    [
+                        'version_number' => 1,
+                        'name' => 'Aspek Manajemen',
+                        'description' => 'Menilai struktur organisasi, kompetensi, dan pengalaman manajemen perusahaan.',
+                    ]
+                ]
             ],
             [
                 'code' => 'C',
-                'name' => 'Aspek Keuangan',
-                'description' => 'Menilai kinerja keuangan, profitabilitas, leverage, dan likuiditas.'
+                'versions' => [
+                    [
+                        'version_number' => 1,
+                        'name' => 'Aspek Teknis Produksi',
+                        'description' => 'Menilai prospek usaha, kondisi pasar, dan daya saing perusahaan.',
+                    ]
+                ]
             ],
             [
                 'code' => 'D',
-                'name' => 'Aspek Usaha',
-                'description' => 'Menilai prospek usaha dan kondisi pasar debitur.'
+                'versions' => [
+                    [
+                        'version_number' => 1,
+                        'name' => 'Aspek Agunan/Jaminan',
+                        'description' => 'Menilai kepatuhan hukum, perizinan, dan masalah legalitas perusahaan.',
+                    ]
+                ]
             ],
             [
                 'code' => 'E',
-                'name' => 'Aspek Agunan',
-                'description' => 'Menilai kondisi, nilai, dan kecukupan agunan yang dimiliki.'
+                'versions' => [
+                    [
+                        'version_number' => 1,
+                        'name' => 'Aspek Keuangan',
+                        'description' => 'Menilai kepatuhan hukum, perizinan, dan masalah legalitas perusahaan.',
+                    ]
+                ]
             ],
             [
                 'code' => 'F',
-                'name' => 'Aspek Covenant',
-                'description' => 'Menilai kepatuhan debitur terhadap covenant pembiayaan.'
+                'versions' => [
+                    [
+                        'version_number' => 1,
+                        'name' => 'Aspek Pemasaran',
+                        'description' => 'Menilai kepatuhan hukum, perizinan, dan masalah legalitas perusahaan.',
+                    ]
+                ]
+            ],
+            [
+                'code' => 'G',
+                'versions' => [
+                    [
+                        'version_number' => 1,
+                        'name' => 'Aspek Amdal',
+                        'description' => 'Menilai kepatuhan hukum, perizinan, dan masalah legalitas perusahaan.',
+                    ]
+                ]
+            ],
+            [
+                'code' => 'H',
+                'versions' => [
+                    [
+                        'version_number' => 1,
+                        'name' => 'Aspek Lainnya',
+                        'description' => 'Menilai kepatuhan hukum, perizinan, dan masalah legalitas perusahaan.',
+                    ]
+                ]
             ],
         ];
 
-        foreach ($aspects as $aspect) {
-            Aspect::updateOrCreate(
-                ['code' => $aspect['code']],
-                $aspect
-            );
+        foreach ($aspects as $aspectData) {
+            $aspect = Aspect::firstOrCreate(['code' => $aspectData['code']]);
+            
+            foreach ($aspectData['versions'] as $versionData) {
+                $aspect->aspectVersions()->firstOrCreate(
+                    ['version_number' => $versionData['version_number']],
+                    [
+                        'name' => $versionData['name'],
+                        'description' => $versionData['description'],
+                    ]
+                );
+            }
         }
+
+        $this->command->info('4 aspek dengan versi berhasil dibuat.');
     }
 }

@@ -51,9 +51,7 @@ class User extends Authenticatable
 
     protected static function booted(): void
     {
-        static::created(function ($user) {
-            $user->assignRole('admin');
-        });
+        // Hapus auto-assign role admin karena akan diatur di seeder
     }
 
     public function division()
