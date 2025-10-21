@@ -25,10 +25,9 @@ class TemplateVersion extends Model
         return $this->belongsTo(Template::class);
     }
 
-    public function aspectVersions(): BelongsToMany
+    public function aspects(): BelongsToMany
     {
-        return $this->belongsToMany(AspectVersion::class, 'aspect_template_versions')
-            ->latest('version_number')
+        return $this->belongsToMany(Aspect::class, 'aspect_template_versions')
             ->withPivot('weight')
             ->withTimestamps();
     }
@@ -44,12 +43,12 @@ class TemplateVersion extends Model
         $aspectGroups = [];
 
         $this->load([
-            'aspectVersions.questionVersions.questionOptions',
-            'aspectVersions.questionVersions.visibilityRules',
+            'aspects.latestAspectVersion.questionVersions.questionOptions',
+            'aspects.latestAspectVersion.questionVersions.visibilityRules',
         ]);
 
-        foreach ($this->aspectVersions as $aspect) {
-            $questions = $aspect->questionVersions;
+        foreach ($this->aspects as $aspect) {
+            $questions = $aspect->latestAspectVersion->questionVersions;
             if (! empty($questions)) {
                 $aspectGroups[] = [
                     'id' => $aspect->id,

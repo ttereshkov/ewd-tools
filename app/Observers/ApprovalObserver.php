@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Enums\ApprovalStatus;
 use App\Models\Approval;
 use App\Models\ReportAudit;
 use Illuminate\Support\Facades\Auth;
@@ -25,9 +26,9 @@ class ApprovalObserver
             $before = ['status' => $approval->getOriginal('status')];
             $after  = ['status' => $approval->status];
 
-            $action = match ($approval->status->value) {
-                1 => 'approved',
-                2 => 'rejected',
+            $action = match ($approval->status) {
+                ApprovalStatus::APPROVED => 'approved',
+                ApprovalStatus::REJECTED => 'rejected',
                 default => 'pending',
             };
 

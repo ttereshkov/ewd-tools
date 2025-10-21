@@ -25,6 +25,10 @@ class ReportService
                 'creator',
                 'answers',
                 'aspects',
+                'aspects.aspectVersion',
+                'approvals',
+                'approvals.requester',
+                'approvals.reviewer',
             ])->findOrFail($id);
         return $report;
     }

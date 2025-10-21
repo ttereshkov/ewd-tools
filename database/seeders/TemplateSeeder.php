@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Aspect;
 use App\Models\Template;
 use App\Models\TemplateVersion;
 use App\Models\AspectVersion;
@@ -28,7 +29,7 @@ class TemplateSeeder extends Seeder
         ]);
 
         // Ambil semua aspect versions
-        $aspectVersions = AspectVersion::with('aspect')->get();
+        $aspects = Aspect::get();
 
         // Definisi bobot untuk setiap aspek
         $aspectWeights = [
@@ -39,13 +40,13 @@ class TemplateSeeder extends Seeder
         ];
 
         // Hubungkan aspect versions dengan template version beserta bobotnya
-        foreach ($aspectVersions as $aspectVersion) {
-            $aspectCode = $aspectVersion->aspect->code;
+        foreach ($aspects as $aspect) {
+            $aspectCode = $aspect->aspect->code;
             
             if (isset($aspectWeights[$aspectCode])) {
                 AspectTemplateVersion::firstOrCreate([
                     'template_version_id' => $templateVersion->id,
-                    'aspect_version_id' => $aspectVersion->id,
+                    'aspect_id' => $aspect->id,
                 ], [
                     'weight' => $aspectWeights[$aspectCode],
                 ]);

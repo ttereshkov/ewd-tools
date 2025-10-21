@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AspectController;
 use App\Http\Controllers\BorrowerController;
 use App\Http\Controllers\DivisionController;
@@ -58,6 +59,14 @@ Route::resource('periods', PeriodController::class)
 Route::resource('reports', ReportController::class)
     ->middleware(['auth', 'verified'])
     ->names('reports');
+
+Route::post('approvals/{approval}/approve', [ApprovalController::class, 'approve'])
+    ->middleware(['auth', 'verified'])
+    ->name('approvals.approve');
+
+Route::post('approvals/{approval}/reject', [ApprovalController::class, 'reject'])
+    ->middleware(['auth', 'verified'])
+    ->name('approvals.reject');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

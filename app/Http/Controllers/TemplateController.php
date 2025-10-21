@@ -15,7 +15,7 @@ class TemplateController extends Controller
 {
     public function index() 
     {
-        $templates = Template::with('latestTemplateVersion.aspectVersions')->latest()->get();
+        $templates = Template::with('latestTemplateVersion.aspects.latestAspectVersion')->latest()->get();
 
         return Inertia::render('template/index', [
             'templates' => $templates,
@@ -47,14 +47,10 @@ class TemplateController extends Controller
 
                 if (!empty($validated['selected_aspects'])) {
                     $aspectDataToAttach = collect($validated['selected_aspects'])->mapWithKeys(function ($aspectData) {
-                        $aspect = Aspect::with('latestAspectVersion')->find($aspectData['id']);
-                        if ($aspect && $aspect->latestAspectVersion) {
-                            return [$aspect->latestAspectVersion->id => ['weight' => $aspectData['weight']]];
-                        }
-                        return [];
-                    })->filter();
+                        return [$aspectData['id'] => ['weight' => $aspectData['weight']]];
+                    });
 
-                    $templateVersion->aspectVersions()->attach($aspectDataToAttach);
+                    $templateVersion->aspects()->attach($aspectDataToAttach);
                 }
 
                 if (!empty($validated['visibility_rules'])) {
@@ -71,7 +67,7 @@ class TemplateController extends Controller
 
     public function show(Template $template)
     {
-        $template->load(['latestTemplateVersion.aspectVersions','latestTemplateVersion.visibilityRules']);
+        $template->load(['latestTemplateVersion.aspects.latestAspectVersion','latestTemplateVersion.visibilityRules']);
 
         return Inertia::render('template/show', [
             'template' => $template
@@ -81,7 +77,7 @@ class TemplateController extends Controller
     public function edit(Template $template)
     {
         $aspects = Aspect::with('latestAspectVersion')->get();
-        $template->load(['latestTemplateVersion.aspectVersions', 'latestTemplateVersion.visibilityRules']);
+        $template->load(['latestTemplateVersion.aspects.latestAspectVersion', 'latestTemplateVersion.visibilityRules']);
 
         return Inertia::render('template/edit', [
             'aspects' => $aspects,
@@ -106,14 +102,10 @@ class TemplateController extends Controller
 
                 if (!empty($validated['selected_aspects'])) {
                     $aspectDataToSync = collect($validated['selected_aspects'])->mapWithKeys(function ($aspectData) {
-                        $aspect = Aspect::with('latestAspectVersion')->find($aspectData['id']);
-                        if ($aspect && $aspect->latestAspectVersion) {
-                            return [$aspect->latestAspectVersion->id => ['weight' => $aspectData['weight']]];
-                        }
-                        return [];
-                    })->filter();
+                        return [$aspectData['id'] => ['weight' => $aspectData['weight']]];
+                    });
 
-                    $templateVersion->aspectVersions()->sync($aspectDataToSync);
+                    $templateVersion->aspects()->sync($aspectDataToSync);
                 } else {
                     $templateVersion->aspects()->detach();
                 }

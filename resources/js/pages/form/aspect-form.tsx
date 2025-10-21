@@ -27,9 +27,11 @@ interface Question {
 
 interface Aspect {
     id: number;
+    aspect_id: number;
     name: string;
     description: string;
-    template_visibility_rules: any[];
+    weight: number;
+    template_visibility_rules?: any[];
     aspects: Question[];
 }
 

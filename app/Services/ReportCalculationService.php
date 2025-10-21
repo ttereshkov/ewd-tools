@@ -17,7 +17,7 @@ class ReportCalculationService extends BaseService
         return $this->tx(function () use ($report) {
             $report->loadMissing([
                 'borrower.detail',
-                'template.latestTemplateVersion.aspectVersions',
+                'template.latestTemplateVersion.aspects.latestAspectVersion',
                 'answers.questionVersion.aspectVersion.aspect',
                 'answers.questionOption',
                 'aspects',
@@ -103,12 +103,12 @@ class ReportCalculationService extends BaseService
         );
     }
 
-    private function getAspectWeightFromTemplate(Report $report, int $aspectVersionId): float
+    private function getAspectWeightFromTemplate(Report $report, int $aspectId): float
     {
         $aspectVersionPivot = $report->template
             ->latestTemplateVersion
-            ->aspectVersions
-            ->firstWhere('id', $aspectVersionId);
+            ->aspects
+            ->firstWhere('id', $aspectId);
 
         return $aspectVersionPivot ? ($aspectVersionPivot->pivot->weight ?? 0) : 0;
     }

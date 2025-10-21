@@ -23,7 +23,7 @@ export default function FormFacility() {
 
     const purpose = informationBorrower.purpose;
     const showKieTable = purpose !== 2;
-    const showKmkeTable = purpose === 3;
+    const showKmkeTable = purpose !== 1;
 
     const [kieRows, setKieRows] = useState<Facility[]>(() => {
         const kie = facilitiesBorrower.filter((facility, index) => {

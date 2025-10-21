@@ -136,11 +136,12 @@ export interface Report {
     period: Period;
     template: Template;
     creator: User;
-    status: string;
+    status: number;
     submitted_at: string;
     rejection_reason: string;
     created_by: number;
     summary: ReportSummary;
+    answers: any;
     aspects: ReportAspect[];
     watchlist?: Watchlist;
     created_at: string;
@@ -153,7 +154,7 @@ export interface ReportAspect {
     aspect_version_id: number;
     aspect_version: AspectVersion;
     total_score: number;
-    classification: string;
+    classification: number;
     created_at: string;
     updated_at: string;
 }
@@ -162,7 +163,7 @@ export interface ReportSummary {
     id: number;
     report_id: number;
     business_notes?: string;
-    final_classification: string;
+    final_classification: number;
     indicative_collectibility: number;
     is_override: boolean;
     override_reason?: string;
@@ -175,7 +176,7 @@ export interface ReportSummary {
 export interface Watchlist {
     id: number;
     report_id: number;
-    status: string;
+    status: number;
     created_at: string;
     updated_at: string;
 }

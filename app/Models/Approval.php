@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\ApprovalLevel;
+use App\Enums\ApprovalLevel;
 use App\Enums\ApprovalStatus;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

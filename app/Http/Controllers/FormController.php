@@ -52,9 +52,9 @@ class FormController extends Controller
 
         if ($finalTemplateId) {
             $template = Template::with([
-                'latestTemplateVersion.aspectVersions.questionVersions.questionOptions',
-                'latestTemplateVersion.aspectVersions.questionVersions.visibilityRules',
-                'latestTemplateVersion.aspectVersions.visibilityRules',
+                'latestTemplateVersion.aspects.latestAspectVersion.questionVersions.questionOptions',
+                'latestTemplateVersion.aspects.latestAspectVersion.questionVersions.visibilityRules',
+                'latestTemplateVersion.aspects.latestAspectVersion.visibilityRules',
                 'latestTemplateVersion.visibilityRules',
             ])->find($finalTemplateId);
 
@@ -131,7 +131,7 @@ class FormController extends Controller
         $aspectGroups = [];
 
         if ($finalTemplateId) {
-            $template = Template::with(['latestTemplateVersion.aspectVersions.questionVersions.questionOptions'])->find($finalTemplateId);
+            $template = Template::with(['latestTemplateVersion.aspects.latestAspectVersion.questionVersions.questionOptions'])->find($finalTemplateId);
 
             if ($template && $template->latestTemplateVersion) {
                 $aspectGroups = $template->latestTemplateVersion->getVisibleAspectGroups($borrowerData, $facilityData);

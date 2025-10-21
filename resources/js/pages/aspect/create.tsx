@@ -101,13 +101,14 @@ export default function AspectCreate() {
         borrower_facility: [
             'borrower_id',
             'facility_name',
+            'facility_type',
             'limit',
             'outstanding',
             'interest_rate',
             'principal_arrears',
             'interest_arrears',
             'pdo_days',
-            'maturity_rate',
+            'maturity_date',
         ],
         answer: [],
     };

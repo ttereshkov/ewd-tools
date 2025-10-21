@@ -383,7 +383,7 @@ export default function AspectEdit({ aspect }: Props) {
                                                                     setData('questions', updated);
                                                                 }}
                                                                 max={100}
-                                                                min={-100}
+                                                                min={-500}
                                                             />
                                                             {question.options.length > 1 && (
                                                                 <Button

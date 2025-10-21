@@ -28,6 +28,14 @@ class ReportController extends Controller
     public function show(int $id)
     {
         $report = $this->reportService->getReportById($id);
+        
+        $report->load([
+            'approvals' => function ($query) {
+                $query->orderBy('level');
+            },
+            'approvals.reviewer'
+        ]);
+        
         return Inertia::render('report/show', [
             'report' => $report
         ]);

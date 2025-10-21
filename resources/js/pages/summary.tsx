@@ -5,9 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes';
+import reportRoutes from '@/routes/reports';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
-import { AlertTriangleIcon, CheckIcon, ChevronDownIcon } from 'lucide-react';
+import { AlertTriangleIcon, CheckIcon, ChevronDownIcon, HomeIcon } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -255,6 +256,10 @@ export default function Summary({ reportData }: SummaryProps) {
         window.open(`/watchlist?reportId=${reportData.id}`, '_self');
     };
 
+    const goToHome = () => {
+        router.visit(reportRoutes.index().url);
+    };
+
     const handleSave = useCallback(async () => {
         if (summaryForm.isOverride && !summaryForm.overrideReason.trim()) {
             toast.error('Alasan override wajib diisi.');
@@ -284,6 +289,12 @@ export default function Summary({ reportData }: SummaryProps) {
                     <div className="flex items-center justify-between px-2">
                         <Label className="text-2xl font-bold">Summary Early Warning</Label>
                         <div className="flex items-center space-x-4">
+                            <div>
+                                <Button className="bg-green-600 text-white hover:bg-green-700" onClick={goToHome}>
+                                    <HomeIcon className="mr-2 h-4 w-4" />
+                                    Home
+                                </Button>
+                            </div>
                             <div>
                                 <Button className="bg-orange-600 text-white hover:bg-orange-700" onClick={openMonitoringNote}>
                                     📝 Buka NAW

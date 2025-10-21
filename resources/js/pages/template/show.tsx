@@ -21,7 +21,7 @@ type TemplateVersion = {
     name: string;
     version_number: number;
     description: string | null;
-    aspect_versions: Aspect[];
+    aspects: Aspect[];
     visibility_rules: VisibilityRule[];
 };
 
@@ -87,7 +87,7 @@ export default function TemplateShow({ template }: Props) {
     ];
 
     const {
-        latest_template_version: { name, version_number, description, aspect_versions, visibility_rules },
+        latest_template_version: { name, version_number, description, aspects, visibility_rules },
     } = template;
 
     return (
@@ -115,16 +115,16 @@ export default function TemplateShow({ template }: Props) {
                             <div className="grid gap-4">
                                 <h3 className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                                     <ClipboardListIcon className="h-4 w-4" />
-                                    Daftar Aspek ({aspect_versions.length})
+                                    Daftar Aspek ({aspects.length})
                                 </h3>
-                                {aspect_versions && aspect_versions.length > 0 ? (
+                                {aspects && aspects.length > 0 ? (
                                     <div className="grid gap-6">
-                                        {aspect_versions.map((aspect, index) => (
+                                        {aspects.map((aspect, index) => (
                                             <Card key={aspect.id} className="p-4">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-3">
                                                         <span className="text-lg font-semibold">
-                                                            ({index + 1}) {aspect.code} - {}
+                                                            ({index + 1}) {aspect.code} - {aspect.latest_aspect_version?.name || 'Tidak ada nama'}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-2">

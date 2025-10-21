@@ -138,15 +138,15 @@ class AspectService extends BaseService
                     $translatedRules = [];
 
                     foreach ($q['visibility_rules'] as $rule) {
-                        if (is_string($rule['source_field'])) {
-                            if (preg_match('/(\d+)/', $rule['source_field'], $matches)) {
-                                $rule['source_field'] = ((int) $matches[1] - 1);
-                            } else {
-                                $rule['source_field'] = 0;
-                            }
-                        }
-                        
                         if ($rule['source_type'] === 'answer') {
+                            if (is_string($rule['source_field'])) {
+                                if (preg_match('/(\d+)/', $rule['source_field'], $matches)) {
+                                    $rule['source_field'] = ((int) $matches[1] - 1);
+                                } else {
+                                    $rule['source_field'] = 0;
+                                }
+                            }
+
                             $sourceIndex = (int)$rule['source_field'];
                             if ($sourceIndex === $index) {
                                 logger()->warning("Question {$index} references itself, skipping rule.");
