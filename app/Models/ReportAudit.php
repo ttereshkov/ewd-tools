@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class ReportAudit extends Model
@@ -27,6 +28,7 @@ class ReportAudit extends Model
     protected $casts = [
         'before' => 'array',
         'after' => 'array',
+        'level' => 'unsignedTinyInteger',
     ];
 
     public function auditable(): MorphTo
@@ -34,12 +36,12 @@ class ReportAudit extends Model
         return $this->morphTo();
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function report()
+    public function report(): BelongsTo
     {
         return $this->belongsTo(Report::class);
     }

@@ -1,8 +1,6 @@
-import axios from 'axios';
-import { toast } from 'react-toastify';
 import { create } from 'zustand';
 
-interface InformationBorrower {
+export interface InformationBorrower {
     borrowerId: number | null;
     borrowerGroup: string;
     purpose: number;
@@ -13,7 +11,7 @@ interface InformationBorrower {
     restructuring: boolean;
 }
 
-interface Facility {
+export interface Facility {
     id: number | null;
     name: string;
     limit: number;
@@ -25,23 +23,21 @@ interface Facility {
     maturityDate: Date | string;
 }
 
-interface Aspect {
+export interface Aspect {
     questionId: number;
     selectedOptionId: number | null;
     notes: string;
     aspectName?: string;
 }
 
-interface ReportMeta {
+export interface ReportMeta {
     template_id: number | null;
     period_id: number | null;
 }
 
-interface FormStoreState {
+export interface FormStoreState {
     activeStep: number;
     totalSteps: number;
-    isSaving: boolean;
-    lastSavedStep: string | null;
     informationBorrower: InformationBorrower;
     facilitiesBorrower: Facility[];
     aspectsBorrower: Aspect[];
@@ -49,27 +45,43 @@ interface FormStoreState {
     aspectGroups: any[];
 
     setActiveStep: (step: number) => void;
-    setIsSaving: (status: boolean) => void;
-    setLastSavedStep: (step: string | null) => void;
     updateInformationBorrower: (payload: Partial<InformationBorrower>) => void;
     updateFacilitiesBorrower: (payload: Facility[]) => void;
-    updateAspectsBorrower: (payload: Aspect[]) => void;
+    setAspectsBorrower: (answer: Aspect) => void;
     updateReportMeta: (payload: Partial<ReportMeta>) => void;
     setAspectGroups: (groups: any[]) => void;
     nextStep: () => void;
     prevStep: () => void;
     resetForm: () => void;
+    hydrate: (data: Partial<FormStoreState>) => void;
+    getAsSubmitData: () => {
+        informationBorrower: InformationBorrower;
+        facilitiesBorrower: Facility[];
+        aspectsBorrower: Aspect[];
+        reportMeta: ReportMeta;
+    };
 }
 
-const initialFormState = {
+export const initialFormState: Omit<
+    FormStoreState,
+    | 'setActiveStep'
+    | 'updateInformationBorrower'
+    | 'updateFacilitiesBorrower'
+    | 'setAspectsBorrower'
+    | 'updateReportMeta'
+    | 'setAspectGroups'
+    | 'nextStep'
+    | 'prevStep'
+    | 'resetForm'
+    | 'hydrate'
+    | 'getAsSubmitData'
+> = {
     activeStep: 1,
     totalSteps: 3,
-    isSaving: false,
-    lastSavedStep: null,
     informationBorrower: {
         borrowerId: null,
         borrowerGroup: '',
-        purpose: 1,
+        purpose: 1, // Pastikan tipe awal cocok
         economicSector: '',
         businessField: '',
         borrowerBusiness: '',
@@ -89,8 +101,6 @@ export const useFormStore = create<FormStoreState>((set, get) => ({
     ...initialFormState,
 
     setActiveStep: (step) => set({ activeStep: step }),
-    setIsSaving: (status) => set({ isSaving: status }),
-    setLastSavedStep: (step) => set({ lastSavedStep: step }),
 
     updateInformationBorrower: (payload) =>
         set((state) => ({
@@ -99,7 +109,14 @@ export const useFormStore = create<FormStoreState>((set, get) => ({
 
     updateFacilitiesBorrower: (payload) => set({ facilitiesBorrower: payload }),
 
-    updateAspectsBorrower: (payload) => set({ aspectsBorrower: payload }),
+    setAspectsBorrower: (answer) =>
+        set((state) => ({
+            aspectsBorrower: [
+                ...state.aspectsBorrower.filter((a) => a.questionId !== answer.questionId),
+                answer,
+                { questionId: answer.questionId, selectedOptionId: answer.selectedOptionId, notes: answer.notes ?? '' },
+            ],
+        })),
 
     updateReportMeta: (payload) =>
         set((state) => ({
@@ -108,30 +125,10 @@ export const useFormStore = create<FormStoreState>((set, get) => ({
 
     setAspectGroups: (groups) => set({ aspectGroups: groups }),
 
-    nextStep: async () => {
-        const { activeStep, totalSteps, informationBorrower, facilitiesBorrower } = get();
-
-        if (activeStep < totalSteps) {
-            const toastId = toast.loading('Memuat data...');
-            try {
-                const response = await axios.post('/forms/save-step', {
-                    informationBorrower,
-                    facilitiesBorrower,
-                });
-
-                set({
-                    aspectGroups: response.data.aspect_groups,
-                    reportMeta: { ...get().reportMeta, template_id: response.data.template_id },
-                });
-
-                toast.update(toastId, { render: 'Berhasil!', type: 'success', isLoading: false, autoClose: 1500 });
-                set({ activeStep: activeStep + 1 });
-            } catch (error) {
-                console.error('Gagal memperbarui data langkah:', error);
-                toast.update(toastId, { render: 'Gagal memuat data!', type: 'error', isLoading: false, autoClose: 3000 });
-            }
-        }
-    },
+    nextStep: () =>
+        set((state) => ({
+            activeStep: state.activeStep < state.totalSteps ? state.activeStep + 1 : state.activeStep,
+        })),
 
     prevStep: () =>
         set((state) => ({
@@ -139,4 +136,24 @@ export const useFormStore = create<FormStoreState>((set, get) => ({
         })),
 
     resetForm: () => set(initialFormState),
+
+    hydrate: (data: any) => set(data),
+
+    getAsSubmitData: () => {
+        const state = get();
+        return {
+            informationBorrower: state.informationBorrower,
+            facilitiesBorrower: state.facilitiesBorrower.map((f) => ({
+                ...f,
+                limit: Number(f.limit) || 0,
+                outstanding: Number(f.outstanding) || 0,
+                interestRate: Number(f.interestRate) || 0,
+                principalArrears: Number(f.principalArrears) || 0,
+                interestArrears: Number(f.interestArrears) || 0,
+                pdo: Number(f.pdo) || 0,
+            })),
+            aspectsBorrower: state.aspectsBorrower,
+            reportMeta: state.reportMeta,
+        };
+    },
 }));

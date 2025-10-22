@@ -1,17 +1,18 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Stepper } from '@/components/ui/stepper';
-import { useFormStore } from '@/stores/form-store';
-import { router } from '@inertiajs/react';
+import { FormStoreState, initialFormState, useFormStore } from '@/stores/form-store';
+import { useForm } from '@inertiajs/react';
+import axios from 'axios';
 import { Building2, Calculator, ListChecks } from 'lucide-react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import FormAspect from './aspect-form';
 import FormFacility from './facility-form';
 import FormInformation from './information-form';
 
 interface FormProps {
-    borrowers?: any[];
+    borrowers: { id: number; name: string }[];
     borrower_id?: number | null;
     period: any;
     aspect_groups: any[];
@@ -40,11 +41,98 @@ export default function FormIndex({
     facility_data = {},
     purpose_options = [],
 }: FormProps) {
-    const { activeStep, totalSteps, nextStep, prevStep, aspectGroups: storeAspectGroups, setAspectGroups } = useFormStore();
+    const [isSavingStep, setIsSavingStep] = useState(false);
+
+    const {
+        activeStep,
+        totalSteps,
+        prevStep,
+        nextStep: storeNextStep,
+        informationBorrower,
+        facilitiesBorrower,
+        setAspectGroups,
+        updateReportMeta,
+        hydrate,
+        getAsSubmitData,
+        resetForm,
+        aspectGroups: storeAspectGroups,
+    } = useFormStore();
 
     useEffect(() => {
-        setAspectGroups(aspect_groups);
-    }, []);
+        hydrate({
+            informationBorrower: borrower_data || initialFormState.informationBorrower,
+            facilitiesBorrower: facility_data || [],
+            aspectGroups: aspect_groups || [],
+            reportMeta: {
+                template_id: template_id,
+                period_id: period?.id,
+            },
+            activeStep: initialFormState.activeStep,
+        } as Partial<FormStoreState>);
+    }, [hydrate, borrower_data, facility_data, aspect_groups, template_id, period]);
+
+    const handleNextStep = async () => {
+        if (activeStep >= totalSteps) return;
+
+        setIsSavingStep(true);
+        const toastId = toast.loading('Memuat data...');
+
+        try {
+            const response = await axios.post('/forms/save-step', {
+                informationBorrower,
+                facilitiesBorrower,
+            });
+
+            setAspectGroups(response.data.aspect_groups);
+            updateReportMeta({ template_id: response.data.template_id });
+
+            toast.update(toastId, { render: 'Berhasil!', type: 'success', isLoading: false, autoClose: 1500 });
+            storeNextStep();
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Gagal memuat data!';
+            toast.update(toastId, { render: message, type: 'error', isLoading: false, autoClose: 3000 });
+        } finally {
+            setIsSavingStep(false);
+        }
+    };
+
+    const { post, processing, errors, data, setData } = useForm({
+        ...getAsSubmitData(),
+    });
+
+    useEffect(() => {
+        setData(getAsSubmitData());
+    }, [
+        informationBorrower,
+        facilitiesBorrower,
+        useFormStore.getState().aspectsBorrower,
+        useFormStore.getState().reportMeta,
+        setData,
+        getAsSubmitData,
+    ]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        post('/forms', {
+            onSuccess: () => {
+                resetForm();
+                toast.success('Data berhasil disimpan!');
+            },
+            onError: (errs) => {
+                console.error('Validation Errors:', errs);
+                const generalError = Object.values(errs).find(
+                    (msg) => !msg.startsWith('informationBorrower.') && !msg.startsWith('facilitiesBorrower.') && !msg.startsWith('aspectsBorrower.'),
+                );
+                if (generalError) {
+                    toast.error(generalError, { theme: 'colored' });
+                } else {
+                    toast.error('Periksa kembali isian formulir Anda.', { theme: 'colored' });
+                }
+            },
+            preserveScroll: true,
+        });
+    };
 
     const steps: StepperStep[] = [
         {
@@ -53,7 +141,7 @@ export default function FormIndex({
             component: FormInformation,
             icon: Building2,
             required: true,
-            props: { borrowers, purpose_options },
+            props: { borrowers, purpose_options, errors },
         },
         {
             id: 2,
@@ -61,7 +149,7 @@ export default function FormIndex({
             component: FormFacility,
             icon: Calculator,
             required: true,
-            props: {},
+            props: { errors },
         },
         {
             id: 3,
@@ -69,42 +157,9 @@ export default function FormIndex({
             component: FormAspect,
             icon: ListChecks,
             required: true,
-            props: { aspect_groups: storeAspectGroups },
+            props: { aspect_groups: storeAspectGroups, errors },
         },
     ];
-
-    const handleSubmit = () => {
-        const { informationBorrower, facilitiesBorrower, aspectsBorrower, reportMeta } = useFormStore.getState();
-
-        const finalReportMeta = {
-            ...reportMeta,
-            template_id: template_id || reportMeta.template_id,
-            period_id: period.id,
-        };
-
-        const formData = {
-            informationBorrower,
-            facilitiesBorrower,
-            aspectsBorrower,
-            reportMeta: finalReportMeta,
-        };
-
-        router.post('/forms', formData, {
-            onStart: () => {
-                toast.info('Mengirim data...', { autoClose: false, theme: 'colored' });
-            },
-            onSuccess: () => {
-                toast.dismiss();
-                toast.success('Data berhasil disimpan!');
-            },
-            onError: (errors) => {
-                toast.dismiss();
-                Object.values(errors).forEach((error) => {
-                    toast.error(error, { theme: 'colored' });
-                });
-            },
-        });
-    };
 
     const currentStepData = steps[activeStep - 1];
 
@@ -126,18 +181,31 @@ export default function FormIndex({
 
             <div className="mx-auto mt-6 flex max-w-4xl flex-col justify-end gap-4 sm:flex-row lg:max-w-6xl lg:gap-6 lg:px-8">
                 {activeStep > 1 && (
-                    <Button variant={'outline'} className="w-full min-w-24 sm:w-auto lg:min-w-32 lg:px-8 lg:py-3" onClick={prevStep}>
+                    <Button
+                        variant={'outline'}
+                        className="w-full min-w-24 sm:w-auto lg:min-w-32 lg:px-8 lg:py-3"
+                        onClick={prevStep}
+                        disabled={processing || isSavingStep}
+                    >
                         Kembali
                     </Button>
                 )}
                 {activeStep < totalSteps && (
-                    <Button className="w-full min-w-24 sm:w-auto lg:min-w-32 lg:px-8 lg:py-3" onClick={nextStep}>
-                        Next
+                    <Button
+                        className="w-full min-w-24 sm:w-auto lg:min-w-32 lg:px-8 lg:py-3"
+                        onClick={handleNextStep}
+                        disabled={isSavingStep || processing}
+                    >
+                        {isSavingStep ? 'Memuat...' : 'Lanjut'}
                     </Button>
                 )}
                 {activeStep === totalSteps && (
-                    <Button className="w-full min-w-24 sm:w-auto lg:min-w-32 lg:px-8 lg:py-3" onClick={handleSubmit}>
-                        Submit
+                    <Button
+                        className="w-full min-w-24 sm:w-auto lg:min-w-32 lg:px-8 lg:py-3"
+                        onClick={handleSubmit}
+                        disabled={isSavingStep || processing}
+                    >
+                        {processing ? 'Mengirim...' : 'Submit'}
                     </Button>
                 )}
             </div>
