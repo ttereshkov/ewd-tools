@@ -22,29 +22,7 @@ class ApprovalObserver
      */
     public function updated(Approval $approval): void
     {
-        if ($approval->isDirty('status')) {
-            $before = ['status' => $approval->getOriginal('status')];
-            $after  = ['status' => $approval->status];
-
-            $action = match ($approval->status) {
-                ApprovalStatus::APPROVED => 'approved',
-                ApprovalStatus::REJECTED => 'rejected',
-                default => 'pending',
-            };
-
-            ReportAudit::create([
-                'auditable_id'   => $approval->id,
-                'auditable_type' => Approval::class,
-                'report_id'      => $approval->report_id,
-                'user_id'        => Auth::id(),
-                'action'         => $action,
-                'level'          => $approval->level->value,
-                'approval_id'    => $approval->id,
-                'before'         => $before,
-                'after'          => $after,
-                'source'         => 'UI',
-            ]);
-        }
+        //
     }
 
     /**

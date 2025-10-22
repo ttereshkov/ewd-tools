@@ -2,67 +2,62 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SubmitApprovalRequest;
 use App\Models\Report;
 use App\Models\ReportSummary;
+use App\Models\User;
+use App\Services\ApprovalService;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Throwable;
 
 class SummaryController extends Controller
 {
+    protected ApprovalService $approvalService;
+
+    public function __construct(
+        ApprovalService $approvalService
+    ) {
+        $this->approvalService = $approvalService;
+    }
+
     public function show(Report $report)
     {
-        $report->load([
+        $report->loadMissing([
             'borrower.division',
             'borrower.detail',
             'borrower.facilities',
             'summary',
             'aspects.aspectVersion.aspect',
-            'creator',
-            'period',
+            'creator:id,name',
+            'period:id,name',
+            'approvals.user:id,name',
         ]);
 
         return Inertia::render('summary', [
-            'reportData' => $report,
+            'report' => $report,
         ]);
     }
 
-    public function update(Request $request, int $reportId)
+    public function update(SubmitApprovalRequest $request, Report $report)
     {
-        try {
-            $validated = $request->validate([
-                'businessNotes' => 'nullable|string',
-                'reviewerNotes' => 'nullable|string',
-                'isOverride' => 'boolean',
-                'overrideReason' => 'nullable|string|required_if:isOverride,true',
-                'indicativeCollectibility' => 'integer|min:1|max:5',
-                'finalClassification' => 'required|string|in:WATCHLIST,SAFE',
-            ]);
+        $actor = Auth::user();
 
-            ReportSummary::updateOrCreate(
-                ['report_id' => $reportId],
-                [
-                    'business_notes' => $validated['businessNotes'],
-                    'reviewer_notes' => $validated['reviewerNotes'],
-                    'is_override' => $validated['isOverride'],
-                    'override_reason' => $validated['overrideReason'],
-                    'indicative_collectibility' => $validated['indicativeCollectibility'],
-                    'final_classification' => $validated['finalClassification'],
-                ]
+        try {
+            $this->approvalService->submitApproval(
+                $report,
+                $actor,
+                $request->validated()
             );
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Ringkasan laporan berhasil disimpan.',
-            ]);
-        } catch (Throwable $e) {
-            Log::error('Error updating report summary: '.$e->getMessage());
+            return redirect()->route('summary.show', $report)->with('success', 'Tindakan persetujuan berhasil disimpan.');
+        } catch (Exception $e) {
+            report($e);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan pada server saat menyimpan ringkasan.',
-            ], 500);
+            return back()->with('error', 'Gagal memproses persetujuan: ' . $e->getMessage());
         }
     }
 }

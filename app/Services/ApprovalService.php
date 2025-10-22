@@ -4,117 +4,121 @@ namespace App\Services;
 
 use App\Enums\ApprovalLevel;
 use App\Enums\ApprovalStatus;
+use App\Enums\Classification;
 use App\Models\Approval;
 use App\Models\Report;
 use App\Enums\ReportStatus;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Auth;
+use InvalidArgumentException;
 
 class ApprovalService extends BaseService
 {
-    public function approve(Approval $approval): void
+    public function submitApproval(Report $report, User $actor, array $data): Approval
     {
-        $this->authorize('approve report');
+        $status = ApprovalStatus::tryFrom($data['status'] ?? '');
+        if (!$status) {
+            throw new InvalidArgumentException('Status persetujuan tidak valid.');
+        }
 
-        $this->tx(function () use ($approval) {
-            $approval->update([
-                'status' => ApprovalStatus::APPROVED,
-                'reviewed_by' => Auth::id(),
+        $level = $this->getApprovalLevelForActor($actor, $report);
+
+        if ($actor->cannot('approve-level', [$report, $level])) {
+             throw new AuthorizationException("Anda tidak berhak memberikan persetujuan level {$level->name}.");
+        }
+
+        $this->validateCurrentReportStatus($report, $level);
+
+        return $this->tx(function () use ($report, $actor, $level, $status, $data) {
+            $approval = $report->approvals()->create([
+                'user_id' => $actor->id,
+                'level' => $level,
+                'status' => $status,
+                'notes' => $data['notes'] ?? null,
             ]);
 
-            $this->audit('Approval', $approval->id, 'approved', [
-                'report_id' => $approval->report_id,
-                'level'     => $approval->level->label(),
-            ]);
-
-            if ($this->isFinalApproval($approval->report)) {
-                $approval->report->update(['status' => ReportStatus::APPROVED]);
+            $nextReportStatus = $this->determineNextReportStatus($report, $level, $status);
+            if ($nextReportStatus) {
+                $report->status = $nextReportStatus;
+                $report->save();
             }
+
+            if ($level === ApprovalLevel::ERO && isset($data['final_classification'])) {
+                 $report->loadMissing('summary');
+                 $report->summary->update([
+                     'final_classification' => Classification::tryFrom($data['final_classification']),
+                     'override_reason' => $data['override_reason'] ?? $data['notes'],
+                 ]);
+            }
+
+            $this->audit($actor, [
+                'action' => $status === ApprovalStatus::APPROVED ? 'approved' : 'rejected',
+                'auditable_id' => $report->id,
+                'auditable_type' => Report::class,
+                'report_id' => $report->id,
+                'approval_id' => $approval->id,
+                'level' => $level->value,
+                'before' => ['report_status' => $report->getOriginal('status')?->value],
+                'after' => ['report_status' => $nextReportStatus?->value],
+                'meta' => [
+                    'notes' => $approval->notes,
+                    'final_classification' => $data['final_classification'] ?? null,
+                ],
+            ]);
+
+            return $approval;
         });
     }
 
     public function reject(Approval $approval, ?string $reason = null): void
     {
-        $this->authorize('reject report');
-
-        $this->tx(function () use ($approval, $reason) {
-            $approval->update([
-                'status' => ApprovalStatus::REJECTED,
-                'reviewed_by' => Auth::id(),
-            ]);
-
-            $approval->report->update([
-                'status' => ReportStatus::REJECTED,
-                'rejection_reason' => $reason,
-            ]);
-
-            $this->audit('Approval', $approval->id, 'rejected', [
-                'report_id' => $approval->report_id,
-                'reason'    => $reason,
-                'level'     => $approval->level->label(),
-            ]);
-        });
-    }
-
-    public function createApprovals(Report $report): void
-    {
-        $this->authorize('create approvals');
-
-        $this->tx(function () use ($report) {
-            foreach (ApprovalLevel::cases() as $level) {
-                Approval::create([
-                    'report_id' => $report->id,
-                    'requested_by' => Auth::id(),
-                    'level' => $level,
-                    'status' => ApprovalStatus::PENDING,
-                ]);
-            };
-        });
-
-        $this->audit('Report', $report->id, 'approvals_created', [
-            'levels_count' => count(ApprovalLevel::cases()),
-        ]);
-    }
-
-    public function getNextPendingApproval(Report $report): ?Approval
-    {
-        return $report->approvals()
-            ->where('status', ApprovalStatus::PENDING)
-            ->orderBy('level')
-            ->first();
+        /**
+         * TO DO
+         */
     }
 
     public function resetApprovals(Report $report): void
     {
         $this->tx(function () use ($report) {
-            $report->approvals()->update([
-                'status' => ApprovalStatus::PENDING,
-                'reviewed_by' => null,
-            ]);
-
-            $report->update(['status' => ReportStatus::SUBMITTED]);
-
-            $this->audit('Report', $report->id, 'reset_approvals');
+            $report->approvals()->delete();
         });
     }
 
-    public function canUserApprove(Approval $approval, int $userId): bool
+    protected function getApprovalLevelForActor(User $actor, Report $report): ApprovalLevel
     {
-        $user = User::find($userId);
+        if ($actor->hasRole('Risk Analyst')) return ApprovalLevel::ERO;
+        if ($actor->hasRole('Kadept Bisnis')) return ApprovalLevel::KADEPT_BISNIS;
+        if ($actor->hasRole('Kadiv Risk')) return ApprovalLevel::KADIV_ERO;
 
-        if (!$user || !$user->can('approve report')) {
-            return false;
-        }
-
-        $nextPendingApproval = $this->getNextPendingApproval($approval->report);
-
-        return $nextPendingApproval && $nextPendingApproval->id === $approval->id;
+        throw new AuthorizationException('Peran pengguna tidak dikenali untuk approval.');
     }
 
-    protected function isFinalApproval(Report $report): bool
+    protected function validateCurrentReportStatus(Report $report, ApprovalLevel $attemptingLevel): void
     {
-        return $report->approvals()
-            ->where('status', '!=', ApprovalStatus::APPROVED)
-            ->doesntExist();
+        $expectedStatus = match ($attemptingLevel) {
+            ApprovalLevel::ERO => ReportStatus::SUBMITTED,
+            ApprovalLevel::KADEPT_BISNIS => ReportStatus::APPROVED,
+            ApprovalLevel::KADIV_ERO => ReportStatus::APPROVED,
+            default => throw new InvalidArgumentException('Level approval tidak valid.'),
+        };
+
+        if ($report->status !== $expectedStatus) {
+            throw new InvalidArgumentException("Status laporan saat ini ({$report->status->name}) tidak valid untuk persetujuan level {$attemptingLevel->name}. Seharusnya {$expectedStatus->name}.");
+        }
+    }
+
+    protected function determineNextReportStatus(Report $report, ApprovalLevel $level, ApprovalStatus $status): ?ReportStatus
+    {
+        if ($status === ApprovalStatus::REJECTED) {
+            return ReportStatus::REJECTED;
+        }
+
+        return match ($level) {
+            ApprovalLevel::ERO => ReportStatus::APPROVED,
+            ApprovalLevel::KADEPT_BISNIS => ReportStatus::APPROVED,
+            ApprovalLevel::KADIV_ERO => ReportStatus::DONE,
+            default => null, 
+        };
     }
 }
