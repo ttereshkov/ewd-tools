@@ -60,6 +60,10 @@ Route::resource('reports', ReportController::class)
     ->middleware(['auth', 'verified'])
     ->names('reports');
 
+Route::get('approvals', [ApprovalController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('approvals.index');
+
 Route::post('approvals/{approval}/approve', [ApprovalController::class, 'approve'])
     ->middleware(['auth', 'verified'])
     ->name('approvals.approve');

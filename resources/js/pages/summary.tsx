@@ -201,6 +201,7 @@ const formatDate = (dateString: string | undefined | null) => {
 };
 
 export default function Summary({ reportData }: SummaryProps) {
+    console.log(reportData);
     const { borrower, creator, period, summary, aspects, facilities, facilitiesTotals } = useMemo(() => {
         const data = reportData;
         const borrower = data.borrower;

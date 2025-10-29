@@ -15,7 +15,7 @@ use InvalidArgumentException;
 
 class ApprovalService extends BaseService
 {
-    public function processApproval(Approval $approval, User $actor, ApprovalStatus $status, array $data): array
+    public function processApproval(Approval $approval, User $actor, ApprovalStatus $status, array $data): Approval
     {
         $this->validateActorPermission($actor, $approval->level);
 
@@ -105,9 +105,9 @@ class ApprovalService extends BaseService
     protected function validateActorPermission(User $actor, ApprovalLevel $level): void
     {
         $expectedRole = match ($level) {
-            ApprovalLevel::ERO => 'Risk Analyst',
-            ApprovalLevel::KADEPT_BISNIS => 'Kadept Bisnis',
-            ApprovalLevel::KADIV_ERO => 'Kadiv Risk',
+            ApprovalLevel::ERO => 'risk_analyst',
+            ApprovalLevel::KADEPT_BISNIS => 'kadept_bisnis',
+            ApprovalLevel::KADIV_ERO => 'kadept_risk',
             default => throw new InvalidArgumentException('Level approval tidak dikenali.'),
         };
 

@@ -48,6 +48,7 @@ export interface FormStoreState {
     updateInformationBorrower: (payload: Partial<InformationBorrower>) => void;
     updateFacilitiesBorrower: (payload: Facility[]) => void;
     setAspectsBorrower: (answer: Aspect) => void;
+    updateAspectsBorrower: (aspects: Aspect[]) => void;
     updateReportMeta: (payload: Partial<ReportMeta>) => void;
     setAspectGroups: (groups: any[]) => void;
     nextStep: () => void;
@@ -68,6 +69,7 @@ export const initialFormState: Omit<
     | 'updateInformationBorrower'
     | 'updateFacilitiesBorrower'
     | 'setAspectsBorrower'
+    | 'updateAspectsBorrower'
     | 'updateReportMeta'
     | 'setAspectGroups'
     | 'nextStep'
@@ -117,6 +119,8 @@ export const useFormStore = create<FormStoreState>((set, get) => ({
                 { questionId: answer.questionId, selectedOptionId: answer.selectedOptionId, notes: answer.notes ?? '' },
             ],
         })),
+
+    updateAspectsBorrower: (aspects) => set({ aspectsBorrower: aspects }),
 
     updateReportMeta: (payload) =>
         set((state) => ({

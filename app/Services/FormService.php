@@ -56,14 +56,14 @@ class FormService extends BaseService
             $borrowerId = $validated['informationBorrower']['borrowerId'];
 
             $this->updateBorrowerDetails($borrowerId, $validated['informationBorrower']);
-            $this->syncBorrowerFacilities($borrowerId, $validated['borrowerFacilities']);
+            $this->syncBorrowerFacilities($borrowerId, $validated['facilitiesBorrower']);
 
             $report = $this->createReport($borrowerId, $validated['reportMeta'], $actor);
             $this->storeReportAnswers($report, $validated['aspectsBorrower']);
 
             $this->reportCalculationService->calculateAndStoreSummary($report, $actor);
 
-            $this->approvalService->resetApprovals($report);
+            $this->approvalService->createPendingApprovals($report);
 
             $this->audit($actor, [
                 'action' => 'form_submitted',

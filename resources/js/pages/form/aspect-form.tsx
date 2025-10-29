@@ -266,7 +266,7 @@ export default function FormAspect({ aspect_groups }: FormAspectProps) {
 
         const finalPayload = {
             borrowerInformation: informationBorrower,
-            borrowerFacilities: facilitiesBorrower,
+            facilitiesBorrower: facilitiesBorrower,
             aspectAnswers: answeredAspects,
         };
 

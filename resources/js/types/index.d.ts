@@ -30,6 +30,14 @@ export interface SharedData {
     [key: string]: unknown;
 }
 
+export interface Role {
+    id: number;
+    name: string;
+    guard_name: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface User {
     id: number;
     name: string;
@@ -40,6 +48,7 @@ export interface User {
     updated_at: string;
     division_id?: number;
     role_id: number;
+    roles?: Role[];
     [key: string]: unknown;
 }
 
@@ -136,7 +145,7 @@ export interface Report {
     period: Period;
     template: Template;
     creator: User;
-    status: number;
+    status: string;
     submitted_at: string;
     rejection_reason: string;
     created_by: number;

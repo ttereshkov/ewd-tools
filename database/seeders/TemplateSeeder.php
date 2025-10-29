@@ -28,8 +28,8 @@ class TemplateSeeder extends Seeder
             'description' => 'Template standar untuk monitoring kredit tahun 2025 dengan 4 aspek penilaian utama.',
         ]);
 
-        // Ambil semua aspect versions
-        $aspects = Aspect::get();
+        // Ambil semua aspects
+        $aspects = Aspect::with('latestAspectVersion')->get();
 
         // Definisi bobot untuk setiap aspek
         $aspectWeights = [
@@ -39,9 +39,9 @@ class TemplateSeeder extends Seeder
             'D' => 0.15, // Aspek Hukum & Kepatuhan - Bobot terendah
         ];
 
-        // Hubungkan aspect versions dengan template version beserta bobotnya
+        // Hubungkan aspects dengan template version beserta bobotnya
         foreach ($aspects as $aspect) {
-            $aspectCode = $aspect->aspect->code;
+            $aspectCode = $aspect->code;
             
             if (isset($aspectWeights[$aspectCode])) {
                 AspectTemplateVersion::firstOrCreate([

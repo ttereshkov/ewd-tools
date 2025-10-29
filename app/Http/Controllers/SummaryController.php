@@ -34,11 +34,11 @@ class SummaryController extends Controller
             'aspects.aspectVersion.aspect',
             'creator:id,name',
             'period:id,name',
-            'approvals.user:id,name',
+            'approvals.reviewer:id,name',
         ]);
 
         return Inertia::render('summary', [
-            'report' => $report,
+            'reportData' => $report,
         ]);
     }
 

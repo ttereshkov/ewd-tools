@@ -30,12 +30,12 @@ class SubmitApprovalRequest extends FormRequest
             'reviewer_notes' => 'nullable|string|max:2000',
 
             'final_classification' => [
-                Auth::user()?->hasRole('Risk Analyst')
+                Auth::user()?->hasRole('risk_analyst')
                     ? ['nullable', new Enum(Classification::class)]
                     : 'prohibited',
             ],
             'override_reason' => [
-                Auth::user()?->hasRole('Risk Analyst')
+                Auth::user()?->hasRole('risk_analyst')
                     ? 'nullable|string|max:1000|required_with:final_classification'
                     : 'prohibited',
             ],

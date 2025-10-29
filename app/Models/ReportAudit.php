@@ -28,7 +28,7 @@ class ReportAudit extends Model
     protected $casts = [
         'before' => 'array',
         'after' => 'array',
-        'level' => 'unsignedTinyInteger',
+        'level' => 'integer',
     ];
 
     public function auditable(): MorphTo

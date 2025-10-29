@@ -36,7 +36,7 @@ class LogApprovalAudit implements ShouldQueue
             'report_id'      => $approval->report_id,
             'user_id'        => Auth::id(),
             'action'         => $action,
-            'level'          => $approval->level,
+            'level'          => $approval->level->value, // Convert enum to integer value
             'approval_id'    => $approval->id,
             'before'         => null,
             'after'          => json_encode(['status' => $action]),

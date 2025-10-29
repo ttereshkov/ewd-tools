@@ -2,6 +2,7 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import approvals from '@/routes/approvals';
 import aspects from '@/routes/aspects';
 import borrowers from '@/routes/borrowers';
 import divisions from '@/routes/divisions';
@@ -15,6 +16,7 @@ import { Link } from '@inertiajs/react';
 import {
     BookOpen,
     BuildingIcon,
+    CheckCircleIcon,
     ClipboardListIcon,
     ClockIcon,
     FileTextIcon,
@@ -68,6 +70,11 @@ const mainNavItems: NavItem[] = [
         title: 'Laporan',
         href: reports.index(),
         icon: PaperclipIcon,
+    },
+    {
+        title: 'Persetujuan',
+        href: approvals.index(),
+        icon: CheckCircleIcon,
     },
 ];
 
