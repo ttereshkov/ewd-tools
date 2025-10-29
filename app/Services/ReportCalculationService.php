@@ -12,6 +12,7 @@ use App\Models\ReportSummary;
 use App\Models\User;
 use App\Models\Watchlist;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use InvalidArgumentException;
 
@@ -35,7 +36,7 @@ class ReportCalculationService extends BaseService
                 $aspectScores,
                 $aspectWeightMap,
                 $report->answers,
-                $report->collectibility,
+                $report->borrower->detail->collectibility ?? null,
             );
 
             $this->storeCalculationResults($report, $aspectScores, $overallSummary);
@@ -78,7 +79,7 @@ class ReportCalculationService extends BaseService
      * Hitung skor untuk setiap aspek berdasarkan jawaban.
      * Kembalikan koleksi DTO.
      */
-    private function calculateAspectScores(Collection $answers): Collection
+    private function calculateAspectScores(Collection $answers): SupportCollection
     {
         $answersByAspect = $answers->groupBy('questionVersion.aspectVersion.id');
 
@@ -114,7 +115,7 @@ class ReportCalculationService extends BaseService
      * Mengembalikan sebuah DTO.
      */
     private function calculateOverallSummary(
-        Collection $aspectScores,
+        SupportCollection $aspectScores,
         array $aspectWeightMap,
         Collection $answers,
         ?string $collectibility,
@@ -122,8 +123,8 @@ class ReportCalculationService extends BaseService
         $totalWeightedScore = 0;
 
         foreach ($aspectScores as $aspectVersionId => $scoreData) {
-            $aspectWeight = $aspectWeightMap[$aspectScores->aspectVersionId] ?? 0;
-            $totalWeightedScore += ($scoreData['total_score'] * $aspectWeight / 100);
+            $aspectWeight = $aspectWeightMap[$aspectVersionId] ?? 0;
+            $totalWeightedScore += ($scoreData->totalScore * $aspectWeight / 100);
         }
 
         $totalScore = round($totalWeightedScore, 2);
@@ -140,7 +141,7 @@ class ReportCalculationService extends BaseService
     /**
      * Simpan hasil kalkulasi dari DTO ke database.
      */
-    private function storeCalculationResults(Report $report, Collection $aspectScores, OverallSummaryDto $overallSummary): void
+    private function storeCalculationResults(Report $report, SupportCollection $aspectScores, OverallSummaryDto $overallSummary): void
     {
         foreach ($aspectScores as $scoreData) {
             ReportAspect::updateOrCreate(
@@ -157,7 +158,7 @@ class ReportCalculationService extends BaseService
             [
                 'total_score' => $overallSummary->totalScore,
                 'final_classification' => $overallSummary->finalClassification,
-                'indicative_collectibility' => $overallSummary->collectibility,
+                'indicative_collectibility' => $overallSummary->collectibility ?? 0,
             ]
         );
     }
@@ -168,7 +169,7 @@ class ReportCalculationService extends BaseService
      * Menentukan klasifikasi final berdasarkan semua aturan.
      * Ini adalah perbaikan LOGIKA KRITIS.
      */
-    private function determineFinalClassification(float $totalScore, Collection $aspectScores, Collection $answers): Classification
+    private function determineFinalClassification(float $totalScore, SupportCollection $aspectScores, Collection $answers): Classification
     {
         if ($this->passesScoreRule($totalScore)
             && $this->passesAspectRule($aspectScores) // <-- Gunakan skor BARU
@@ -184,7 +185,7 @@ class ReportCalculationService extends BaseService
         return $totalScore >= 80;
     }
 
-    private function passesAspectRule(Collection $aspectScores): bool
+    private function passesAspectRule(SupportCollection $aspectScores): bool
     {
         return !$aspectScores->contains(
             fn (AspectScoreDto $aspect) => $aspect->classification === Classification::WATCHLIST
