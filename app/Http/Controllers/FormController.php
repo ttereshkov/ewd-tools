@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\FacilityType;
 use App\Http\Requests\StoreFormRequest;
 use App\Models\Borrower;
+use App\Services\ApprovalService;
 use App\Services\FormService;
 use App\Services\PeriodService;
 use Exception;
@@ -17,13 +18,16 @@ class FormController extends Controller
 {
     protected FormService $formService;
     protected PeriodService $periodService;
+    protected ApprovalService $approvalService;
 
     public function __construct(
         FormService $formService,
-        PeriodService $periodService
+        PeriodService $periodService,
+        ApprovalService $approvalService
     ) {
         $this->formService = $formService;
         $this->periodService = $periodService;
+        $this->approvalService = $approvalService;
     }
 
     public function index(Request $request)
@@ -58,6 +62,10 @@ class FormController extends Controller
         try {
             $report = $this->formService->submit($request->validated(), $actor);
 
+            if ($report) {
+                $this->approvalService->createPendingApprovals($report);
+            }
+            
             session()->forget(['borrower_data', 'facility_data']);
 
             return redirect()->route('summary.show', ['report' => $report->id])

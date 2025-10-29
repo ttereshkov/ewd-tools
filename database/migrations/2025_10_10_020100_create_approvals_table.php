@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('approvals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('report_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('requested_by')->constrained('users')->cascadeOnDelete();
             $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->unsignedTinyInteger('level')->index();
             $table->unsignedTinyInteger('status')->default(0)->index();
-            $table->timestamps();
+            $table->text('notes')->nullable();
+            $table->timestampsTz();
         });
     }
 

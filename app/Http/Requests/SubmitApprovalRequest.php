@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\ApprovalStatus;
 use App\Enums\Classification;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Enum;
 
 class SubmitApprovalRequest extends FormRequest
@@ -24,15 +25,40 @@ class SubmitApprovalRequest extends FormRequest
      */
     public function rules(): array
     {
+        $rules = [
+            'business_notes' => 'nullable|string|max:2000',
+            'reviewer_notes' => 'nullable|string|max:2000',
+
+            'final_classification' => [
+                Auth::user()?->hasRole('Risk Analyst')
+                    ? ['nullable', new Enum(Classification::class)]
+                    : 'prohibited',
+            ],
+            'override_reason' => [
+                Auth::user()?->hasRole('Risk Analyst')
+                    ? 'nullable|string|max:1000|required_with:final_classification'
+                    : 'prohibited',
+            ],
+        ];
+
+        if ($this->routeIs('approvals.reject')) {
+            $rules['notes'] = 'required|string|min:10|max:1000';
+        } else if ($this->routeIs('approvals.approve')) {
+            $rules['notes'] = 'nullable|string|min:10|max:1000';
+        }
+
+        return $rules;
+    }
+
+
+    public function messages(): array
+    {
         return [
-            'status' => ['required', new Enum(ApprovalStatus::class)],
-            'notes' => 'nullable|string|max:1000',
-
-            'final_classification' => ['nullable', new Enum(Classification::class)],
-            'override_reason' => 'nullable|string|max:1000|required_with:final_classification',
-
-            'business_notes' => 'nullable|string',
-            'reviewer_notes' => 'nullable|string',
+            'notes.required' => 'Alasan penolakan (notes) wajib diisi.',
+            'notes.min' => 'Alasan penolakan (notes) minimal 10 karakter.',
+            'override_reason.required_with' => 'Alasan override wajib diisi jika Anda mengubah klasifikasi akhir.',
+            'final_classification.prohibited' => 'Hanya Risk Analyst (ERO) yang dapat mengatur klasifikasi akhir.',
+            'override_reason.prohibited' => 'Hanya Risk Analyst (ERO) yang dapat mengatur alasan override.',
         ];
     }
 }

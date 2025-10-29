@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ApprovalStatus;
+use App\Http\Requests\SubmitApprovalRequest;
 use App\Models\Approval;
 use App\Services\ApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Redirect;
 
 class ApprovalController extends Controller
 {
@@ -15,28 +18,36 @@ class ApprovalController extends Controller
     {
         $this->approvalService = $approvalService;
     }
-
-    public function approve(Approval $approval): RedirectResponse
+    
+    public function approve(SubmitApprovalRequest $request, Approval $approval): RedirectResponse
     {
         try {
-            $this->approvalService->approve($approval);
-            return back()->with('success', 'Laporan berhasil disetujui');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menyetujui laporan: ' . $e->getMessage());
+            $this->approvalService->processApproval(
+                $approval,
+                $request->user(),
+                ApprovalStatus::APPROVED,
+                $request->validated()
+            );
+        } catch (\Throwable $e) {
+            return Redirect::back()->withErrors(['message' => $e->getMessage()]);
         }
+
+        return Redirect::back()->with('success', 'Laporan berhasil disetujui.');
     }
 
-    public function reject(Request $request, Approval $approval): RedirectResponse
+    public function reject(SubmitApprovalRequest $request, Approval $approval): RedirectResponse
     {
-        $request->validate([
-            'reason' => 'required|string|max:1000'
-        ]);
-
         try {
-            $this->approvalService->reject($approval, $request->reason);
-            return back()->with('success', 'Laporan berhasil ditolak');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menolak laporan: ' . $e->getMessage());
+            $this->approvalService->processApproval(
+                $approval,
+                $request->user(),
+                ApprovalStatus::REJECTED,
+                $request->validated()
+            );
+        } catch (\Throwable $e) {
+            return Redirect::back()->withErrors(['message' => $e->getMessage()]);
         }
+
+        return Redirect::back()->with('success', 'Laporan berhasil ditolak.');
     }
 }

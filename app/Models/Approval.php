@@ -15,10 +15,10 @@ class Approval extends Model
 
     protected $fillable = [
         'report_id',
-        'requested_by',
         'reviewed_by',
         'level',
         'status',
+        'notes',
     ];
 
     protected $casts = [
@@ -29,11 +29,6 @@ class Approval extends Model
     public function report(): BelongsTo
     {
         return $this->belongsTo(Report::class);
-    }
-
-    public function requester(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'requested_by');
     }
 
     public function reviewer(): BelongsTo

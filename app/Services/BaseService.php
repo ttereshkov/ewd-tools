@@ -27,14 +27,28 @@ class BaseService
     }
 
     /**
-     * Otorisasi menerima User sebagai argumen. Service akan melempar Exception.
+     * Otorisasi dengan dukungan overloading untuk fleksibilitas pemanggilan.
      * 
-     * @param User|null $actor Pengguna yang melakukan aksi.
-     * @param string $permission Izin yang dibutuhkan.
+     * @param User|string|null $actorOrPermission Pengguna yang melakukan aksi atau permission string.
+     * @param string|null $permission Izin yang dibutuhkan (jika parameter pertama adalah User).
      * @throws AuthorizationException Jika otorisasi gagal.
      */
-    protected function authorize(?User $actor, string $permission): void
+    protected function authorize($actorOrPermission, ?string $permission = null): void
     {
+        // Jika hanya satu parameter (permission string), gunakan Auth::user()
+        if (is_string($actorOrPermission) && $permission === null) {
+            $actor = Auth::user();
+            $permission = $actorOrPermission;
+        }
+        // Jika dua parameter (user, permission)
+        elseif ($actorOrPermission instanceof User && is_string($permission)) {
+            $actor = $actorOrPermission;
+        }
+        // Parameter tidak valid
+        else {
+            throw new AuthorizationException('Parameter authorize tidak valid.');
+        }
+
         if (!$actor) {
             throw new AuthorizationException('Aksi ini membutuhkan pengguna yang terautentikasi.');
         }
