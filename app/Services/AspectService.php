@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\DB;
 
 class AspectService extends BaseService
 {
-    public function getAllAspects()
+    public function getAllAspects($perPage = 15)
     {
         $this->authorize('view aspect');
 
         return Aspect::with('latestAspectVersion', 'latestAspectVersion.questionVersions')
             ->latest()
-            ->get();
+            ->paginate($perPage);
     }
 
     public function getAspectById(int $id): Aspect

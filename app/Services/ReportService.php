@@ -10,9 +10,9 @@ use App\Enums\ApprovalStatus;
 
 class ReportService
 {
-    public function getAllReports()
+    public function getAllReports($perPage = 15)
     {
-        $reports = Report::with(['borrower', 'borrower.division', 'period', 'creator'])->latest()->get();
+        $reports = Report::with(['borrower', 'borrower.division', 'period', 'creator'])->latest()->paginate($perPage);
         return $reports;
     }
 
@@ -38,6 +38,17 @@ class ReportService
 
     public function getReportsForApproval(User $user)
     {
+        // Check if user is admin - admin can see all reports
+        if ($user->hasRole('admin')) {
+            return $this->getAllReportsForApproval();
+        }
+
+        // Check if user is relationship manager - RM can see their own reports
+        if ($user->hasRole('relationship_manager')) {
+            return $this->getReportsCreatedByUser($user);
+        }
+
+        // For other roles, use the existing approval workflow logic
         $approvalLevel = null;
         if ($user->hasRole('risk_analyst')) {
             $approvalLevel = ApprovalLevel::ERO;
@@ -97,5 +108,44 @@ class ReportService
         });
 
         return $query->latest()->get();
+    }
+
+    /**
+     * Get all reports for admin users
+     */
+    public function getAllReportsForApproval()
+    {
+        return Report::with([
+            'borrower', 
+            'borrower.division', 
+            'period', 
+            'creator',
+            'summary',
+            'approvals' => function($q) {
+                $q->orderBy('level');
+            },
+            'approvals.reviewer'
+        ])->latest()->get();
+    }
+
+    /**
+     * Get reports created by specific user (for RM monitoring)
+     */
+    public function getReportsCreatedByUser(User $user)
+    {
+        return Report::with([
+            'borrower', 
+            'borrower.division', 
+            'period', 
+            'creator',
+            'summary',
+            'approvals' => function($q) {
+                $q->orderBy('level');
+            },
+            'approvals.reviewer'
+        ])
+        ->where('created_by', $user->id)
+        ->latest()
+        ->get();
     }
 }

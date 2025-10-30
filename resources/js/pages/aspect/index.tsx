@@ -1,9 +1,10 @@
+import DataPagination from '@/components/data-pagination';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
-import aspects from '@/routes/aspects';
+import aspectRoutes from '@/routes/aspects';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { EditIcon, EyeIcon, PlusIcon, Trash2Icon } from 'lucide-react';
@@ -48,7 +49,25 @@ type VisibilityRule = {
 };
 
 type PageProps = {
-    aspects: Aspect[];
+    aspects: {
+        current_page: number;
+        data: Aspect[];
+        first_page_url: string;
+        from: number;
+        last_page: number;
+        last_page_url: string;
+        links: Array<{
+            url: string | null;
+            label: string;
+            active: boolean;
+        }>;
+        next_page_url: string | null;
+        path: string;
+        per_page: number;
+        prev_page_url: string | null;
+        to: number;
+        total: number;
+    };
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -58,12 +77,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Aspek',
-        href: aspects.index().url,
+        href: aspectRoutes.index().url,
     },
 ];
 
 export default function AspectIndex() {
-    const { aspects: aspectList } = usePage<PageProps>().props;
+    const { aspects } = usePage<PageProps>().props;
+    const aspectList = aspects.data;
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [aspectToDelete, setAspectToDelete] = useState<number | null>(null);
 
@@ -78,7 +98,7 @@ export default function AspectIndex() {
     };
 
     const handleDelete = (id: number) => {
-        router.delete(aspects.destroy(aspectToDelete!).url, {
+        router.delete(aspectRoutes.destroy(aspectToDelete!).url, {
             onSuccess: () => {
                 toast.success('Aspek berhasil dihapus');
             },
@@ -98,67 +118,96 @@ export default function AspectIndex() {
             <Head title="List Aspek" />
             <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-                    <Card>
-                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="text-lg font-bold md:text-2xl">List Aspek</CardTitle>
-                            <Link href={aspects.create().url}>
-                                <Button>
-                                    <PlusIcon className="h-4 w-4" />
+                    <div className="space-y-6">
+                        {/* Header Section */}
+                        <div className="rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 p-8 text-white">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h1 className="mb-2 text-3xl font-bold">Manajemen Aspek</h1>
+                                    <p className="text-lg text-purple-100">Kelola aspek penilaian dan pertanyaan evaluasi</p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="rounded-lg bg-white/10 p-4 backdrop-blur-sm">
+                                        <div className="text-2xl font-bold">{aspectList.length}</div>
+                                        <div className="text-sm text-purple-100">Total Aspek</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Section */}
+                        <div className="flex justify-end">
+                            <Link href={aspectRoutes.create().url}>
+                                <Button className="bg-emerald-600 hover:bg-emerald-700">
+                                    <PlusIcon className="mr-2 h-4 w-4" />
                                     Tambah Aspek
                                 </Button>
                             </Link>
-                        </CardHeader>
-                        <CardContent>
-                            {aspectList.length === 0 ? (
-                                <div className="py-8 text-center text-gray-500">Belum ada aspek yang terdaftar. Silahkan tambahkan aspek baru.</div>
-                            ) : (
-                                <Table className="w-full overflow-x-auto">
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Nama</TableHead>
-                                            <TableHead>Kode</TableHead>
-                                            <TableHead>Versi</TableHead>
-                                            <TableHead>Jumlah Pertanyaan</TableHead>
-                                            <TableHead className="text-right">Aksi</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {aspectList.map((aspect) => (
-                                            <TableRow key={aspect.id}>
-                                                <TableCell>{aspect.latest_aspect_version.name}</TableCell>
-                                                <TableCell>{aspect.code}</TableCell>
-                                                <TableCell>v{aspect.latest_aspect_version.version_number}</TableCell>
-                                                <TableCell>{aspect.latest_aspect_version.question_versions.length}</TableCell>
-                                                <TableCell className="flex justify-end space-x-3 text-right">
-                                                    <Link
-                                                        href={aspects.edit(aspect.id).url}
-                                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                        title="Edit Aspect"
-                                                    >
-                                                        <EditIcon className="h-5 w-5" />
-                                                    </Link>
-                                                    <Link
-                                                        href={aspects.show(aspect.id).url}
-                                                        className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                                                        title="Show Aspect"
-                                                    >
-                                                        <EyeIcon className="h-5 w-5" />
-                                                    </Link>
-                                                    <button
-                                                        onClick={() => openDeleteModal(aspect.id)}
-                                                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                                                        title="Hapus Aspect"
-                                                    >
-                                                        <Trash2Icon className="h-5 w-5" />
-                                                    </button>
-                                                </TableCell>
+                        </div>
+
+                        {/* Data Table */}
+                        <Card className="border-0 bg-white shadow-lg">
+                            <CardHeader className="border-b bg-slate-50">
+                                <CardTitle className="text-slate-800">Daftar Aspek ({aspectList.length})</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                {aspectList.length === 0 ? (
+                                    <div className="py-16 text-center">
+                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                                            <PlusIcon className="h-8 w-8 text-slate-400" />
+                                        </div>
+                                        <h3 className="mb-2 text-lg font-medium text-slate-600">Belum ada aspek</h3>
+                                        <p className="text-slate-500">Belum ada aspek yang terdaftar. Silahkan tambahkan aspek baru.</p>
+                                    </div>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Nama</TableHead>
+                                                <TableHead>Kode</TableHead>
+                                                <TableHead>Versi</TableHead>
+                                                <TableHead>Jumlah Pertanyaan</TableHead>
+                                                <TableHead>Aksi</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            )}
-                        </CardContent>
-                    </Card>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {aspectList.map((aspect) => (
+                                                <TableRow key={aspect.id}>
+                                                    <TableCell className="font-medium">{aspect.latest_aspect_version.name}</TableCell>
+                                                    <TableCell>{aspect.code}</TableCell>
+                                                    <TableCell>v{aspect.latest_aspect_version.version_number}</TableCell>
+                                                    <TableCell>{aspect.latest_aspect_version.question_versions.length}</TableCell>
+                                                    <TableCell>
+                                                        <div className="flex gap-2">
+                                                            <Link href={aspectRoutes.show(aspect.id).url}>
+                                                                <Button variant="outline" size="sm">
+                                                                    <EyeIcon className="mr-1 h-4 w-4" />
+                                                                    Lihat
+                                                                </Button>
+                                                            </Link>
+                                                            <Link href={aspectRoutes.edit(aspect.id).url}>
+                                                                <Button variant="outline" size="sm">
+                                                                    <EditIcon className="mr-1 h-4 w-4" />
+                                                                    Edit
+                                                                </Button>
+                                                            </Link>
+                                                            <Button variant="destructive" size="sm" onClick={() => openDeleteModal(aspect.id)}>
+                                                                <Trash2Icon className="mr-1 h-4 w-4" />
+                                                                Hapus
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                            <CardFooter>
+                                <DataPagination paginationData={aspects} />
+                            </CardFooter>
+                        </Card>
+                    </div>
                 </div>
             </div>
             {isDeleteModalOpen && (

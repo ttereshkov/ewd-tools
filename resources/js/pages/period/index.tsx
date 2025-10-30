@@ -131,20 +131,34 @@ export default function PeriodIndex() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Daftar Periode" />
-            <div className="py-6 md:py-12">
+            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-950 dark:via-purple-950 dark:to-pink-950 py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+                    <div className="mb-8 text-center">
+                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg">
+                            <ClockIcon className="h-8 w-8 text-white" />
+                        </div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
+                            Manajemen Periode
+                        </h1>
+                        <p className="mt-2 text-gray-600 dark:text-gray-300">
+                            Kelola periode pelaporan dan waktu aktif sistem
+                        </p>
+                    </div>
+
                     {latestPeriod && (
-                        <Card className="mb-6">
-                            <CardContent className="p-6">
+                        <Card className="mb-8 shadow-xl border-0 bg-white/90 backdrop-blur-sm dark:bg-gray-900/90 overflow-hidden">
+                            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6">
                                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                                    <div className="flex items-center">
-                                        <ClockIcon className="mr-6 h-10 w-10 text-blue-500" />
+                                    <div className="flex items-center text-white">
+                                        <div className="mr-6 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                                            <ClockIcon className="h-6 w-6" />
+                                        </div>
                                         <div>
-                                            <h3 className="text-lg font-semibold">{latestPeriod.name}</h3>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            <h3 className="text-xl font-bold">{latestPeriod.name}</h3>
+                                            <p className="text-indigo-100">
                                                 {formatDate(latestPeriod.start_date)} - {formatDate(latestPeriod.end_date)}
                                             </p>
-                                            <Badge className={getStatusBadgeClass(Number(latestPeriod.status))}>
+                                            <Badge className={`mt-2 ${getStatusBadgeClass(Number(latestPeriod.status))} border-0`}>
                                                 {status_options.find((s) => s.value === Number(latestPeriod.status))?.label ?? '-'}
                                             </Badge>
                                         </div>
@@ -153,30 +167,34 @@ export default function PeriodIndex() {
                                     {remainingTime && (
                                         <div className="flex flex-col space-y-4">
                                             {remainingTime.status === 'active' ? (
-                                                <div className="flex justify-center space-x-4">
-                                                    {['Hari', 'Jam', 'Menit', 'Detik'].map((unit, i) => {
-                                                        const val = [
-                                                            remainingTime.days,
-                                                            remainingTime.hours,
-                                                            remainingTime.minutes,
-                                                            remainingTime.seconds,
-                                                        ][i];
-                                                        return (
-                                                            <div className="text-center" key={unit}>
-                                                                <div className="text-2xl font-bold">{val}</div>
-                                                                <div className="text-xs text-gray-500 dark:text-gray-400">{unit}</div>
-                                                            </div>
-                                                        );
-                                                    })}
+                                                <div className="rounded-lg bg-white/10 backdrop-blur-sm p-4">
+                                                    <div className="flex justify-center space-x-6">
+                                                        {['Hari', 'Jam', 'Menit', 'Detik'].map((unit, i) => {
+                                                            const val = [
+                                                                remainingTime.days,
+                                                                remainingTime.hours,
+                                                                remainingTime.minutes,
+                                                                remainingTime.seconds,
+                                                            ][i];
+                                                            return (
+                                                                <div className="text-center" key={unit}>
+                                                                    <div className="text-3xl font-bold text-white">{val}</div>
+                                                                    <div className="text-xs text-indigo-200">{unit}</div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                             ) : (
-                                                <p className="text-center text-gray-700 dark:text-gray-300">{remainingTime.message}</p>
+                                                <div className="rounded-lg bg-white/10 backdrop-blur-sm p-4">
+                                                    <p className="text-center text-white font-medium">{remainingTime.message}</p>
+                                                </div>
                                             )}
 
                                             <div className="flex justify-end space-x-2">
                                                 {Number(latestPeriod.status) === 1 && (
                                                     <Button
-                                                        className="bg-green-600 hover:bg-green-700"
+                                                        className="bg-green-500 hover:bg-green-600 text-white border-0 shadow-lg"
                                                         onClick={() => startPeriod(latestPeriod.id)}
                                                         disabled={isStatusUpdateLoading}
                                                     >
@@ -186,7 +204,7 @@ export default function PeriodIndex() {
                                                 )}
                                                 {Number(latestPeriod.status) === 2 && (
                                                     <Button
-                                                        variant="destructive"
+                                                        className="bg-red-500 hover:bg-red-600 text-white border-0 shadow-lg"
                                                         onClick={() => endPeriod(latestPeriod.id)}
                                                         disabled={isStatusUpdateLoading}
                                                     >
@@ -195,7 +213,7 @@ export default function PeriodIndex() {
                                                     </Button>
                                                 )}
                                                 {[3, 4].includes(Number(latestPeriod.status)) && (
-                                                    <Button variant="outline" disabled>
+                                                    <Button className="bg-white/20 text-white border-0" disabled>
                                                         Periode Selesai
                                                     </Button>
                                                 )}
@@ -203,66 +221,113 @@ export default function PeriodIndex() {
                                         </div>
                                     )}
                                 </div>
-                            </CardContent>
+                            </div>
                         </Card>
                     )}
 
-                    <Card>
-                        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="text-xl font-bold">Periode</CardTitle>
-                            <Link href={periods.create().url}>
-                                <Button>
-                                    <PlusCircleIcon className="mr-2 h-4 w-4" />
-                                    Buat Periode Baru
-                                </Button>
-                            </Link>
+                    <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
+                        <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-t-lg">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                <CardTitle className="text-xl font-bold flex items-center gap-3">
+                                    <ClockIcon className="h-6 w-6" />
+                                    Daftar Periode
+                                </CardTitle>
+                                <Link href={periods.create().url}>
+                                    <Button className="bg-white text-indigo-600 hover:bg-indigo-50 border-0 shadow-md">
+                                        <PlusCircleIcon className="mr-2 h-4 w-4" />
+                                        Buat Periode Baru
+                                    </Button>
+                                </Link>
+                            </div>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="p-0">
                             {periodList.length === 0 ? (
-                                <div className="py-8 text-center text-gray-500">Belum ada periode yang terdaftar.</div>
+                                <div className="py-12 text-center">
+                                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
+                                        <ClockIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                                    </div>
+                                    <p className="text-gray-500 dark:text-gray-400">
+                                        Belum ada periode yang terdaftar.
+                                    </p>
+                                </div>
                             ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Periode</TableHead>
-                                            <TableHead>Tanggal Mulai</TableHead>
-                                            <TableHead>Tanggal Selesai</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead className="text-right">Aksi</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {periodList.map((p) => (
-                                            <TableRow key={p.id}>
-                                                <TableCell>{p.name}</TableCell>
-                                                <TableCell>{formatDate(p.start_date)}</TableCell>
-                                                <TableCell>{formatDate(p.end_date)}</TableCell>
-                                                <TableCell>
-                                                    <Badge className={getStatusBadgeClass(Number(p.status))}>
-                                                        {status_options.find((s) => s.value === Number(p.status))?.label ?? '-'}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="flex justify-end space-x-3">
-                                                    <Link href={periods.edit(p.id).url} title="Edit" className="text-blue-600 hover:text-blue-800">
-                                                        <EditIcon className="h-5 w-5" />
-                                                    </Link>
-                                                    <Link href={periods.show(p.id).url} title="View" className="text-green-600 hover:text-green-800">
-                                                        <EyeIcon className="h-5 w-5" />
-                                                    </Link>
-                                                    <button
-                                                        onClick={() => openDeleteModal(p.id)}
-                                                        title="Delete"
-                                                        className="text-red-600 hover:text-red-800"
-                                                    >
-                                                        <Trash2Icon className="h-5 w-5" />
-                                                    </button>
-                                                </TableCell>
+                                <div className="overflow-hidden">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/50 dark:to-purple-900/50 border-b border-indigo-200 dark:border-indigo-700">
+                                                <TableHead className="font-semibold text-indigo-900 dark:text-indigo-100">Periode</TableHead>
+                                                <TableHead className="font-semibold text-indigo-900 dark:text-indigo-100">Tanggal Mulai</TableHead>
+                                                <TableHead className="font-semibold text-indigo-900 dark:text-indigo-100">Tanggal Selesai</TableHead>
+                                                <TableHead className="font-semibold text-indigo-900 dark:text-indigo-100">Status</TableHead>
+                                                <TableHead className="text-right font-semibold text-indigo-900 dark:text-indigo-100">Aksi</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {periodList.map((p, index) => (
+                                                <TableRow 
+                                                    key={p.id}
+                                                    className={`hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors ${
+                                                        index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-indigo-25 dark:bg-gray-800'
+                                                    }`}
+                                                >
+                                                    <TableCell className="font-medium text-indigo-900 dark:text-indigo-100">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
+                                                                <ClockIcon className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                                                            </div>
+                                                            {p.name}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-gray-900 dark:text-gray-100">{formatDate(p.start_date)}</TableCell>
+                                                    <TableCell className="text-gray-900 dark:text-gray-100">{formatDate(p.end_date)}</TableCell>
+                                                    <TableCell>
+                                                        <Badge className={`${getStatusBadgeClass(Number(p.status))} border-0 shadow-sm`}>
+                                                            {status_options.find((s) => s.value === Number(p.status))?.label ?? '-'}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex justify-end space-x-2">
+                                                            <Link 
+                                                                href={periods.edit(p.id).url} 
+                                                                title="Edit" 
+                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-400 dark:hover:bg-indigo-800 transition-colors"
+                                                            >
+                                                                <EditIcon className="h-4 w-4" />
+                                                            </Link>
+                                                            <Link 
+                                                                href={periods.show(p.id).url} 
+                                                                title="View" 
+                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900 dark:text-green-400 dark:hover:bg-green-800 transition-colors"
+                                                            >
+                                                                <EyeIcon className="h-4 w-4" />
+                                                            </Link>
+                                                            <button
+                                                                onClick={() => openDeleteModal(p.id)}
+                                                                title="Delete"
+                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900 dark:text-red-400 dark:hover:bg-red-800 transition-colors"
+                                                            >
+                                                                <Trash2Icon className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             )}
                         </CardContent>
+                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-t border-indigo-200 dark:border-indigo-700 p-6 rounded-b-lg">
+                            <div className="flex items-center justify-between w-full">
+                                <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                                    Total: {periodList.length} periode
+                                </p>
+                                <div className="flex items-center gap-2 text-xs text-indigo-600 dark:text-indigo-400">
+                                    <ClockIcon className="h-4 w-4" />
+                                    <span>Manajemen Waktu</span>
+                                </div>
+                            </div>
+                        </div>
                     </Card>
                 </div>
             </div>

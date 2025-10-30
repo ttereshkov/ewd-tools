@@ -6,6 +6,7 @@ use App\Http\Requests\StoreTemplateRequest;
 use App\Http\Requests\UpdateTemplateRequest;
 use App\Models\Aspect;
 use App\Models\Template;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -13,9 +14,10 @@ use Throwable;
 
 class TemplateController extends Controller
 {
-    public function index() 
+    public function index(Request $request) 
     {
-        $templates = Template::with('latestTemplateVersion.aspects.latestAspectVersion')->latest()->get();
+        $perPage = $request->get('per_page', 15);
+        $templates = Template::with('latestTemplateVersion.aspects.latestAspectVersion')->latest()->paginate($perPage);
 
         return Inertia::render('template/index', [
             'templates' => $templates,

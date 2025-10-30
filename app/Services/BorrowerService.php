@@ -6,13 +6,13 @@ use App\Models\Borrower;
 
 class BorrowerService extends BaseService
 {
-    public function getAllBorrowers()
+    public function getAllBorrowers($perPage = 15)
     {
         $this->authorize('view borrower');
 
         return Borrower::with('division')
             ->latest()
-            ->get();
+            ->paginate($perPage);
     }
 
     public function getBorrowerById(int $id): Borrower
@@ -27,7 +27,6 @@ class BorrowerService extends BaseService
         $this->authorize('create borrower');
 
         $borrower = Borrower::create($data);
-        $this->audit('borrower', $borrower->id, 'created', $data);
 
         return $borrower;
     }
@@ -37,7 +36,6 @@ class BorrowerService extends BaseService
         $this->authorize('update borrower');
 
         $borrower->update($data);
-        $this->audit('borrower', $borrower->id, 'updated', $data);
 
         return $borrower;
     }
@@ -47,6 +45,5 @@ class BorrowerService extends BaseService
         $this->authorize('delete borrower');
 
         $borrower->delete();
-        $this->audit('borrower', $borrower->id, 'deleted');
     }
 }

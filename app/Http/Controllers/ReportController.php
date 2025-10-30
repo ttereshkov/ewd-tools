@@ -17,9 +17,10 @@ class ReportController extends Controller
         $this->reportService = $reportService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $reports = $this->reportService->getAllReports();
+        $perPage = $request->get('per_page', 15);
+        $reports = $this->reportService->getAllReports($perPage);
         return Inertia::render('report/index', [
             'reports' => $reports
         ]);

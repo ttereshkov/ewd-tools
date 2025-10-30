@@ -6,11 +6,11 @@ use App\Models\User;
 
 class UserService extends BaseService
 {
-    public function getAllUsers()
+    public function getAllUsers($perPage = 15)
     {
         $this->authorize('view user');
 
-        return User::with(['division','role'])->latest()->get();
+        return User::with(['division','role'])->latest()->paginate($perPage);
     }
 
     public function getUserById(int $id): User

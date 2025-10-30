@@ -6,6 +6,7 @@ use App\Http\Requests\StoreAspectRequest;
 use App\Http\Requests\UpdateAspectRequest;
 use App\Models\Aspect;
 use App\Services\AspectService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Throwable;
@@ -20,10 +21,11 @@ class AspectController extends Controller
         $this->aspectService = $aspectService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $aspects = $this->aspectService->getAllAspects();
+            $perPage = $request->get('per_page', 15);
+            $aspects = $this->aspectService->getAllAspects($perPage);
             return Inertia::render('aspect/index', [
                 'aspects' => $aspects
             ]);

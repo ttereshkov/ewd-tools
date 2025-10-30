@@ -6,6 +6,7 @@ use App\Http\Requests\BorrowerRequest;
 use App\Models\Borrower;
 use App\Services\BorrowerService;
 use App\Services\DivisionService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Throwable;
@@ -23,10 +24,11 @@ class BorrowerController extends Controller
         $this->divisionService = $divisionService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $borrowers = $this->borrowerService->getAllBorrowers();
+            $perPage = $request->get('per_page', 15);
+            $borrowers = $this->borrowerService->getAllBorrowers($perPage);
             return Inertia::render('borrower/index', [
                 'borrowers' => $borrowers
             ]);

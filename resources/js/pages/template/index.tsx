@@ -1,9 +1,10 @@
+import DataPagination from '@/components/data-pagination';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
-import templates from '@/routes/templates';
+import templateRoutes from '@/routes/templates';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { EditIcon, EyeIcon, PlusIcon, Trash2Icon } from 'lucide-react';
@@ -32,7 +33,25 @@ type Template = {
 };
 
 type PageProps = {
-    templates: Template[];
+    templates: {
+        current_page: number;
+        data: Template[];
+        first_page_url: string;
+        from: number;
+        last_page: number;
+        last_page_url: string;
+        links: Array<{
+            url: string | null;
+            label: string;
+            active: boolean;
+        }>;
+        next_page_url: string | null;
+        path: string;
+        per_page: number;
+        prev_page_url: string | null;
+        to: number;
+        total: number;
+    };
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -42,12 +61,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Template',
-        href: templates.index().url,
+        href: templateRoutes.index().url,
     },
 ];
 
 export default function TemplateIndex() {
-    const { templates: templateList } = usePage<PageProps>().props;
+    const { templates } = usePage<PageProps>().props;
+    const templateList = templates.data;
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [templateToDelete, setTemplateToDelete] = useState<number | null>(null);
     console.log(templateList);
@@ -63,7 +83,7 @@ export default function TemplateIndex() {
     };
 
     const handleDelete = (id: number) => {
-        router.delete(templates.destroy(templateToDelete!).url, {
+        router.delete(templateRoutes.destroy(templateToDelete!).url, {
             onSuccess: () => {
                 toast.success('Template berhasil dihapus');
             },
@@ -81,66 +101,93 @@ export default function TemplateIndex() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List Template" />
             <div className="py-6 md:py-12">
-                <div className="max-w-3-xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-                    <Card>
-                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="text-lg font-bold md:text-2xl">List Template</CardTitle>
-                            <Link href={templates.create().url}>
-                                <Button>
-                                    <PlusIcon className="h-4 w-4" />
+                <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+                    <div className="space-y-6">
+                        {/* Header Section */}
+                        <div className="rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 p-8 text-white">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h1 className="mb-2 text-3xl font-bold">Manajemen Template</h1>
+                                    <p className="text-lg text-indigo-100">Kelola template evaluasi dan aspek penilaian</p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="rounded-lg bg-white/10 p-4 backdrop-blur-sm">
+                                        <div className="text-2xl font-bold">{templateList.length}</div>
+                                        <div className="text-sm text-indigo-100">Total Template</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Section */}
+                        <div className="flex justify-end">
+                            <Link href={templateRoutes.create().url}>
+                                <Button className="bg-emerald-600 hover:bg-emerald-700">
+                                    <PlusIcon className="mr-2 h-4 w-4" />
                                     Tambah Template
                                 </Button>
                             </Link>
-                        </CardHeader>
-                        <CardContent>
-                            {templateList.length === 0 ? (
-                                <div className="py-8 text-center text-gray-500">
-                                    Belum ada template yang terdaftar. Silahkan tambahkan template baru
-                                </div>
-                            ) : (
-                                <Table className="w-full overflow-x-auto">
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Judul</TableHead>
-                                            <TableHead>Jumlah Aspek</TableHead>
-                                            <TableHead className="text-right">Aksi</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {templateList.map((template) => (
-                                            <TableRow key={template.id}>
-                                                <TableCell>{template.latest_template_version.name}</TableCell>
-                                                <TableCell>{template.latest_template_version.aspects.length}</TableCell>
-                                                <TableCell className="flex justify-end space-x-3 text-right">
-                                                    <Link
-                                                        href={templates.edit(template.id).url}
-                                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                        title="Edit Template"
-                                                    >
-                                                        <EditIcon className="h-5 w-5" />
-                                                    </Link>
-                                                    <Link
-                                                        href={templates.show(template.id).url}
-                                                        className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                                                        title="Show Template"
-                                                    >
-                                                        <EyeIcon className="h-5 w-5" />
-                                                    </Link>
-                                                    <button
-                                                        onClick={() => openDeleteModal(template.id)}
-                                                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                                                        title="Hapus Template"
-                                                    >
-                                                        <Trash2Icon className="h-5 w-5" />
-                                                    </button>
-                                                </TableCell>
+                        </div>
+
+                        {/* Data Table */}
+                        <Card className="border-0 bg-white shadow-lg">
+                            <CardHeader className="border-b bg-slate-50">
+                                <CardTitle className="text-slate-800">Daftar Template ({templateList.length})</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                {templateList.length === 0 ? (
+                                    <div className="py-16 text-center">
+                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                                            <PlusIcon className="h-8 w-8 text-slate-400" />
+                                        </div>
+                                        <h3 className="mb-2 text-lg font-medium text-slate-600">Belum ada template</h3>
+                                        <p className="text-slate-500">Belum ada template yang terdaftar. Silahkan tambahkan template baru</p>
+                                    </div>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Judul</TableHead>
+                                                <TableHead>Jumlah Aspek</TableHead>
+                                                <TableHead>Aksi</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            )}
-                        </CardContent>
-                    </Card>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {templateList.map((template) => (
+                                                <TableRow key={template.id}>
+                                                    <TableCell className="font-medium">{template.latest_template_version.name}</TableCell>
+                                                    <TableCell>{template.latest_template_version.aspects.length}</TableCell>
+                                                    <TableCell>
+                                                        <div className="flex gap-2">
+                                                            <Link href={templateRoutes.show(template.id).url}>
+                                                                <Button variant="outline" size="sm">
+                                                                    <EyeIcon className="mr-1 h-4 w-4" />
+                                                                    Lihat
+                                                                </Button>
+                                                            </Link>
+                                                            <Link href={templateRoutes.edit(template.id).url}>
+                                                                <Button variant="outline" size="sm">
+                                                                    <EditIcon className="mr-1 h-4 w-4" />
+                                                                    Edit
+                                                                </Button>
+                                                            </Link>
+                                                            <Button variant="destructive" size="sm" onClick={() => openDeleteModal(template.id)}>
+                                                                <Trash2Icon className="mr-1 h-4 w-4" />
+                                                                Hapus
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                            <CardFooter>
+                                <DataPagination paginationData={templates} />
+                            </CardFooter>
+                        </Card>
+                    </div>
                 </div>
             </div>
             {isDeleteModalOpen && (

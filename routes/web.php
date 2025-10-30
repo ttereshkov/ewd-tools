@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AspectController;
 use App\Http\Controllers\BorrowerController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\PeriodController;
@@ -18,9 +19,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::post('periods/{period}/start', [PeriodController::class, 'start'])->name('periods.start');
     Route::post('periods/{period}/stop', [PeriodController::class, 'stop'])->name('periods.stop');

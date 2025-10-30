@@ -20,10 +20,11 @@ class UserController extends Controller
         $this->userService = $userService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $users = $this->userService->getAllUsers();
+            $perPage = $request->get('per_page', 15);
+            $users = $this->userService->getAllUsers($perPage);
             return Inertia::render('user/index', [
                 'users' => $users
             ]);
