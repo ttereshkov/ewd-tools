@@ -1,12 +1,14 @@
 import { ImgHTMLAttributes } from 'react';
 
-export default function AppLogoIcon(props: ImgHTMLAttributes<HTMLImageElement>) {
+export default function AppLogoIcon({ className, src, alt, ...rest }: ImgHTMLAttributes<HTMLImageElement>) {
     return (
-        <img 
-            {...props} 
-            src="/logo-ieb.png" 
-            alt="Logo IEB" 
-            className={`object-contain ${props.className || ''}`}
+        <img
+            {...rest}
+            src={src ?? '/logo-ieb.png'}
+            alt={alt ?? 'Logo'}
+            loading="lazy"
+            decoding="async"
+            className={`object-contain ${className || ''}`}
         />
     );
 }
