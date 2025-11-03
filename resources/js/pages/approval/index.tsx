@@ -403,77 +403,64 @@ export default function ApprovalIndex({ reports, user }: PageProps) {
             <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                     <div className="space-y-6">
-                        {/* Header Section */}
-                        <div className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 p-8 text-white">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h1 className="mb-2 text-3xl font-bold">Persetujuan Laporan</h1>
-                                    <p className="text-lg text-blue-100">Kelola persetujuan laporan sesuai dengan workflow yang ditetapkan</p>
+                        {/* Header Section (standardized) */}
+                        <Card className="border bg-background">
+                            <CardHeader className="border-b bg-muted/30">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-xl font-bold text-foreground">Persetujuan Laporan</CardTitle>
+                                    <div className="text-sm text-muted-foreground">Menunggu: {pendingCount}</div>
                                 </div>
-                                <div className="text-right">
-                                    <div className="rounded-lg bg-white/10 p-4 backdrop-blur-sm">
-                                        <div className="text-2xl font-bold">{pendingCount}</div>
-                                        <div className="text-sm text-blue-100">Menunggu Persetujuan</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                                <div className="text-sm text-muted-foreground">Kelola persetujuan laporan sesuai dengan workflow yang ditetapkan</div>
+                            </CardHeader>
+                        </Card>
 
-                        {/* Alert for pending approvals */}
+                        {/* Info cards (standardized tone) */}
                         {pendingCount > 0 && (
-                            <div className="rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-6">
-                                <div className="flex items-center">
-                                    <div className="mr-4 rounded-full bg-amber-100 p-2">
-                                        <AlertCircleIcon className="h-6 w-6 text-amber-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="mb-1 font-semibold text-amber-800">Perhatian!</h3>
-                                        <span className="text-amber-700">
-                                            Anda memiliki <strong className="font-bold">{pendingCount}</strong> laporan yang menunggu persetujuan Anda
+                            <Card className="border bg-background">
+                                <CardContent className="p-4">
+                                    <div className="flex items-center gap-3">
+                                        <AlertCircleIcon className="h-5 w-5 text-amber-600" />
+                                        <span className="text-sm text-muted-foreground">
+                                            Anda memiliki <span className="font-semibold text-foreground">{pendingCount}</span> laporan yang menunggu persetujuan Anda
                                         </span>
                                     </div>
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
                         )}
 
-                        {/* Info about user role and level */}
                         {userApprovalLevel && (
-                            <div className="rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-6">
-                                <div className="flex items-center">
-                                    <div className="mr-4 rounded-full bg-blue-100 p-2">
-                                        <UserIcon className="h-6 w-6 text-blue-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="mb-1 font-semibold text-blue-800">Level Persetujuan Anda</h3>
-                                        <span className="text-blue-700">
-                                            Anda dapat menyetujui laporan pada level:{' '}
-                                            <strong className="font-bold">{getApprovalLevelLabel(userApprovalLevel)}</strong>
+                            <Card className="border bg-background">
+                                <CardContent className="p-4">
+                                    <div className="flex items-center gap-3">
+                                        <UserIcon className="h-5 w-5 text-blue-600" />
+                                        <span className="text-sm text-muted-foreground">
+                                            Level persetujuan Anda: <span className="font-semibold text-foreground">{getApprovalLevelLabel(userApprovalLevel)}</span>
                                         </span>
                                     </div>
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
                         )}
 
                         {/* Reports Table */}
-                        <Card className="border-0 bg-white shadow-lg">
-                            <CardHeader className="border-b bg-slate-50">
-                                <CardTitle className="text-slate-800">
+                        <Card className="border bg-background">
+                            <CardHeader className="border-b bg-muted/30">
+                                <CardTitle className="text-foreground">
                                     Laporan Menunggu Persetujuan ({filteredReports.length})
                                     {userApprovalLevel && (
-                                        <span className="ml-2 text-sm font-normal text-slate-600">
+                                        <span className="ml-2 text-sm font-normal text-muted-foreground">
                                             • {userActionableReports.length} dapat Anda setujui
                                         </span>
                                     )}
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="p-0">
+                            <CardContent className="overflow-x-auto p-0">
                                 {filteredReports.length === 0 ? (
                                     <div className="py-16 text-center">
-                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                                            <ClockIcon className="h-8 w-8 text-slate-400" />
+                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                                            <ClockIcon className="h-8 w-8 text-muted-foreground" />
                                         </div>
-                                        <h3 className="mb-2 text-lg font-medium text-slate-600">Tidak ada laporan</h3>
-                                        <p className="text-slate-500">Tidak ada laporan yang menunggu persetujuan saat ini</p>
+                                        <h3 className="mb-2 text-lg font-medium text-muted-foreground">Tidak ada laporan</h3>
+                                        <p className="text-muted-foreground">Tidak ada laporan yang menunggu persetujuan saat ini</p>
                                     </div>
                                 ) : (
                                     <Table>

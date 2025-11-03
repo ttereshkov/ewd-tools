@@ -3,9 +3,32 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class UserService extends BaseService
 {
+    public function paginateUsers(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        $this->authorize('view user');
+
+        $query = User::query()
+            ->with(['division', 'role'])
+            ->latest();
+
+        if (!empty($filters['q'])) {
+            $q = $filters['q'];
+            $query->where(function ($sub) use ($q) {
+                $sub->where('name', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%")
+                    ->orWhereHas('role', fn ($r) => $r->where('name', 'like', "%{$q}%"))
+                    ->orWhereHas('division', fn ($d) => $d->where('name', 'like', "%{$q}%"))
+                    ->orWhereHas('division', fn ($d) => $d->where('code', 'like', "%{$q}%"));
+            });
+        }
+
+        return $query->paginate($perPage);
+    }
+
     public function getAllUsers($perPage = 15)
     {
         $this->authorize('view user');

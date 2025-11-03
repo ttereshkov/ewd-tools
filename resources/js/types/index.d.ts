@@ -49,6 +49,8 @@ export interface User {
     division_id?: number;
     role_id: number;
     roles?: Role[];
+    division?: Division;
+    role: Role;
     [key: string]: unknown;
 }
 
@@ -221,4 +223,55 @@ export interface WatchlistNotePageProps {
         current_progress: ActionItem[];
         next_period: ActionItem[];
     };
+}
+
+// Global pagination types for consistent usage across pages/components
+export interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+export type Paginated<T> = {
+    current_page: number;
+    data: T[];
+    first_page_url: string;
+    from: number | null;
+    last_page: number;
+    last_page_url: string;
+    links: PaginationLink[];
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number | null;
+    total: number;
+};
+
+// Convenience union for props that may be paginated or a plain array
+export type MaybePaginated<T> = T[] | Paginated<T>;
+
+// Pagination payload shape used by DataPagination component
+export interface PaginationData {
+    current_page: number;
+    data: any[] | null;
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: PaginationLink[];
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+}
+
+// Props contract for DataPagination component
+export interface DataPaginationProps {
+    paginationData: PaginationData | null;
+    className?: string;
+    showPerPageSelector?: boolean;
+    perPageOptions?: number[];
 }

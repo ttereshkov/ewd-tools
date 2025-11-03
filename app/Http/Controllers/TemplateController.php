@@ -17,10 +17,21 @@ class TemplateController extends Controller
     public function index(Request $request) 
     {
         $perPage = $request->get('per_page', 15);
-        $templates = Template::with('latestTemplateVersion.aspects.latestAspectVersion')->latest()->paginate($perPage);
+        $q = $request->get('q');
+
+        $templates = Template::with('latestTemplateVersion.aspects.latestAspectVersion')
+            ->when($q, function ($query) use ($q) {
+                $query->whereHas('latestTemplateVersion', function ($sub) use ($q) {
+                    $sub->where('name', 'like', "%{$q}%")
+                        ->orWhere('description', 'like', "%{$q}%");
+                });
+            })
+            ->latest()
+            ->paginate($perPage);
 
         return Inertia::render('template/index', [
             'templates' => $templates,
+            'filters' => [ 'q' => $q ],
         ]);
     }
 

@@ -25,9 +25,13 @@ class AspectController extends Controller
     {
         try {
             $perPage = $request->get('per_page', 15);
-            $aspects = $this->aspectService->getAllAspects($perPage);
+            $filters = [
+                'q' => $request->get('q'),
+            ];
+            $aspects = $this->aspectService->getAllAspects($perPage, $filters);
             return Inertia::render('aspect/index', [
-                'aspects' => $aspects
+                'aspects' => $aspects,
+                'filters' => $filters,
             ]);
         } catch (Throwable $e) {
             Log::error('Gagal memuat aspek pertanyaan: ' . $e->getMessage());

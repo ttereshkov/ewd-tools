@@ -1,53 +1,22 @@
 import DataPagination from '@/components/data-pagination';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import borrowerRoutes from '@/routes/borrowers';
-import { BreadcrumbItem } from '@/types';
+import { type Borrower, type BreadcrumbItem, type Division, type MaybePaginated } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { EditIcon, EyeIcon, PlusIcon, Trash2Icon } from 'lucide-react';
-import { useState } from 'react';
+import { EditIcon, EyeIcon, PlusIcon, SearchIcon, Trash2Icon, XIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
-type Borrower = {
-    id: number;
-    name: string;
-    division_id: number;
-    division: Division;
-    created_at: string;
-    updated_at: string;
-};
-
-type Division = {
-    id: number;
-    code: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-};
-
 type PageProps = {
-    borrowers: {
-        current_page: number;
-        data: Borrower[];
-        first_page_url: string;
-        from: number;
-        last_page: number;
-        last_page_url: string;
-        links: Array<{
-            url: string | null;
-            label: string;
-            active: boolean;
-        }>;
-        next_page_url: string | null;
-        path: string;
-        per_page: number;
-        prev_page_url: string | null;
-        to: number;
-        total: number;
-    };
+    borrowers: MaybePaginated<Borrower>;
+    divisions?: Division[];
+    filters?: { q?: string | null; division_id?: number | string | null };
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -62,10 +31,34 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function BorrowerIndex() {
-    const { borrowers } = usePage<PageProps>().props;
-    const borrowerList = borrowers.data;
+    const pageProps = usePage<PageProps>().props as any;
+    const borrowers = pageProps.borrowers as MaybePaginated<Borrower>;
+    const divisions = (pageProps.divisions ?? []) as Division[];
+    const borrowerList: Borrower[] = Array.isArray(borrowers) ? borrowers : (borrowers?.data ?? []);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [borrowerToDelete, setBorrowerToDelete] = useState<number | null>(null);
+
+    // Initialize search and filter state from URL
+    const initialQ = useMemo(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('q') ?? '';
+        } catch {
+            return '';
+        }
+    }, []);
+    const initialDivisionId = useMemo(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const val = params.get('division_id');
+            return val ?? undefined;
+        } catch {
+            return undefined;
+        }
+    }, []);
+
+    const [q, setQ] = useState<string>(initialQ);
+    const [divisionId, setDivisionId] = useState<string | undefined>(initialDivisionId);
 
     const openDeleteModal = (id: number) => {
         setBorrowerToDelete(id);
@@ -93,6 +86,19 @@ export default function BorrowerIndex() {
         });
     };
 
+    const applySearch = () => {
+        const options: Record<string, string> = {};
+        if (q) options.q = q;
+        if (divisionId) options.division_id = divisionId;
+        router.get(borrowerRoutes.index(options as any).url, {}, { preserveState: true, preserveScroll: true });
+    };
+
+    const resetSearch = () => {
+        setQ('');
+        setDivisionId(undefined);
+        router.get(borrowerRoutes.index().url, {}, { preserveState: true, preserveScroll: true });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List Debitur" />
@@ -100,54 +106,89 @@ export default function BorrowerIndex() {
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                     <div className="space-y-6">
                         {/* Header Section */}
-                        <div className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 p-8 text-white">
+                        <div className="rounded-xl border bg-card p-6 sm:p-8">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h1 className="mb-2 text-3xl font-bold">Manajemen Debitur</h1>
-                                    <p className="text-lg text-blue-100">Kelola data debitur dan informasi divisi terkait</p>
+                                    <h1 className="mb-2 text-2xl font-bold sm:text-3xl">Manajemen Debitur</h1>
+                                    <p className="text-sm text-muted-foreground sm:text-base">Kelola data debitur dan informasi divisi terkait</p>
                                 </div>
                                 <div className="text-right">
-                                    <div className="rounded-lg bg-white/10 p-4 backdrop-blur-sm">
-                                        <div className="text-2xl font-bold">{borrowerList.length}</div>
-                                        <div className="text-sm text-blue-100">Total Debitur</div>
+                                    <div className="rounded-lg border p-3 sm:p-4">
+                                        <div className="text-xl font-bold sm:text-2xl">{borrowerList.length}</div>
+                                        <div className="text-xs text-muted-foreground sm:text-sm">Total Debitur</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Action Section */}
-                        <div className="flex justify-end">
-                            <Link href={borrowerRoutes.create().url}>
-                                <Button className="bg-emerald-600 hover:bg-emerald-700">
-                                    <PlusIcon className="mr-2 h-4 w-4" />
-                                    Tambah Debitur
-                                </Button>
-                            </Link>
-                        </div>
-
                         {/* Data Table */}
-                        <Card className="border-0 bg-white shadow-lg">
-                            <CardHeader className="border-b bg-slate-50">
-                                <CardTitle className="text-slate-800">
-                                    Daftar Debitur ({borrowerList.length})
-                                </CardTitle>
+                        <Card>
+                            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+                                    <div className="flex w-full items-center gap-2">
+                                        <Input
+                                            placeholder="Cari nama debitur atau divisi..."
+                                            value={q}
+                                            onChange={(e) => setQ(e.target.value)}
+                                            className="min-w-0 flex-1"
+                                        />
+                                        <Button variant="secondary" onClick={applySearch} aria-label="Cari">
+                                            <SearchIcon className="h-4 w-4" />
+                                        </Button>
+                                        {(q || divisionId) && (
+                                            <Button variant="ghost" onClick={resetSearch} aria-label="Reset filter">
+                                                <XIcon className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div className="w-full sm:w-64">
+                                        <Select
+                                            value={divisionId ?? undefined}
+                                            onValueChange={(value) => {
+                                                if (value === '__all') {
+                                                    setDivisionId(undefined);
+                                                } else {
+                                                    setDivisionId(value);
+                                                }
+                                            }}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Semua Divisi" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="__all">Semua Divisi</SelectItem>
+                                                {divisions.map((d) => (
+                                                    <SelectItem key={d.id} value={String(d.id)}>
+                                                        {d.code} — {d.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <Link href={borrowerRoutes.create().url}>
+                                    <Button>
+                                        <PlusIcon className="h-4 w-4" />
+                                        Tambah Debitur
+                                    </Button>
+                                </Link>
                             </CardHeader>
-                            <CardContent className="p-0">
+                            <CardContent className="overflow-x-auto p-0">
                                 {borrowerList.length === 0 ? (
                                     <div className="py-16 text-center">
-                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                                            <PlusIcon className="h-8 w-8 text-slate-400" />
+                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                                            <PlusIcon className="h-8 w-8 text-muted-foreground" />
                                         </div>
-                                        <h3 className="mb-2 text-lg font-medium text-slate-600">Belum ada debitur</h3>
-                                        <p className="text-slate-500">Belum ada debitur yang terdaftar. Silahkan tambahkan debitur baru.</p>
+                                        <h3 className="mb-2 text-lg font-medium">Belum ada debitur</h3>
+                                        <p className="text-muted-foreground">Belum ada debitur yang terdaftar. Silahkan tambahkan debitur baru.</p>
                                     </div>
                                 ) : (
-                                    <Table>
+                                    <Table className="min-w-[720px]">
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead>Nama Debitur</TableHead>
                                                 <TableHead>Divisi</TableHead>
-                                                <TableHead>Aksi</TableHead>
+                                                <TableHead className="text-right">Aksi</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -156,22 +197,23 @@ export default function BorrowerIndex() {
                                                     <TableCell className="font-medium">{borrower.name}</TableCell>
                                                     <TableCell>{borrower.division.code}</TableCell>
                                                     <TableCell>
-                                                        <div className="flex gap-2">
+                                                        <div className="flex flex-wrap justify-end gap-2">
                                                             <Link href={borrowerRoutes.show(borrower.id).url}>
-                                                                <Button variant="outline" size="sm">
+                                                                <Button variant="outline" size="sm" className="whitespace-nowrap">
                                                                     <EyeIcon className="mr-1 h-4 w-4" />
                                                                     Lihat
                                                                 </Button>
                                                             </Link>
                                                             <Link href={borrowerRoutes.edit(borrower.id).url}>
-                                                                <Button variant="outline" size="sm">
+                                                                <Button variant="outline" size="sm" className="whitespace-nowrap">
                                                                     <EditIcon className="mr-1 h-4 w-4" />
                                                                     Edit
                                                                 </Button>
                                                             </Link>
                                                             <Button
-                                                                variant="destructive"
+                                                                variant="outline"
                                                                 size="sm"
+                                                                className="whitespace-nowrap text-destructive hover:bg-destructive hover:text-destructive-foreground"
                                                                 onClick={() => openDeleteModal(borrower.id)}
                                                             >
                                                                 <Trash2Icon className="mr-1 h-4 w-4" />
@@ -186,7 +228,7 @@ export default function BorrowerIndex() {
                                 )}
                             </CardContent>
                             <CardFooter>
-                                <DataPagination paginationData={borrowers} />
+                                {!Array.isArray(borrowers) && borrowers?.links ? <DataPagination paginationData={borrowers as any} /> : null}
                             </CardFooter>
                         </Card>
                     </div>
@@ -196,12 +238,12 @@ export default function BorrowerIndex() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
                     <Card className="w-full max-w-sm animate-in fade-in zoom-in">
                         <CardHeader className="items-center text-center">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
-                                <Trash2Icon className="h-6 w-6 text-red-600 dark:text-red-400" />
+                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                <Trash2Icon className="h-6 w-6 text-muted-foreground" />
                             </div>
                         </CardHeader>
                         <CardContent className="text-center">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm text-muted-foreground">
                                 Apakah anda yakin ingin menghapus data ini?
                                 <br />
                                 Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
@@ -211,7 +253,11 @@ export default function BorrowerIndex() {
                             <Button variant="outline" onClick={closeDeleteModal}>
                                 Batal
                             </Button>
-                            <Button variant="destructive" onClick={() => borrowerToDelete && handleDelete(borrowerToDelete)}>
+                            <Button
+                                variant="outline"
+                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={() => borrowerToDelete && handleDelete(borrowerToDelete)}
+                            >
                                 Ya, Hapus
                             </Button>
                         </CardFooter>

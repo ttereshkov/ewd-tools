@@ -24,9 +24,16 @@ class UserController extends Controller
     {
         try {
             $perPage = $request->get('per_page', 15);
-            $users = $this->userService->getAllUsers($perPage);
+            $filters = $request->only(['q', 'division_id', 'role', 'role_id']);
+
+            $users = $this->userService->paginateUsers($filters, $perPage);
+            $divisions = Division::latest()->get();
+            $roles = Role::all();
+
             return Inertia::render('user/index', [
-                'users' => $users
+                'users' => $users,
+                'divisions' => $divisions,
+                'roles' => $roles,
             ]);
         } catch (Throwable $e) {
             Log::error('Gagal memuat pengguna: ' . $e->getMessage());

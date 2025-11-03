@@ -1,59 +1,19 @@
 import DataPagination from '@/components/data-pagination';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import userRoutes from '@/routes/users';
-import { BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type MaybePaginated, type User } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { EditIcon, EyeIcon, PlusIcon, Trash2Icon } from 'lucide-react';
-import { useState } from 'react';
+import { EditIcon, EyeIcon, PlusIcon, SearchIcon, Trash2Icon, XIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
-type User = {
-    id: number;
-    name: string;
-    email: string;
-    division: Division;
-    role: Role;
-    created_at: string;
-    updated_at: string;
-};
-
-type Division = {
-    id: number;
-    code: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-};
-
-type Role = {
-    id: number;
-    name: string;
-};
-
 type PageProps = {
-    users: {
-        current_page: number;
-        data: User[];
-        first_page_url: string;
-        from: number;
-        last_page: number;
-        last_page_url: string;
-        links: Array<{
-            url: string | null;
-            label: string;
-            active: boolean;
-        }>;
-        next_page_url: string | null;
-        path: string;
-        per_page: number;
-        prev_page_url: string | null;
-        to: number;
-        total: number;
-    };
+    users: MaybePaginated<User>;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -68,11 +28,23 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function UserIndex() {
-    const { users } = usePage<PageProps>().props;
-    const userList = users.data;
-    console.log(userList);
+    const pageProps = usePage().props as any;
+    const users = pageProps.users;
+    const userList: User[] = Array.isArray(users) ? users : (users?.data ?? []);
+
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [divisionToDelete, setDivisionToDelete] = useState<number | null>(null);
+
+    // Initialize search query from current URL
+    const initialQ = useMemo(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('q') ?? '';
+        } catch {
+            return '';
+        }
+    }, []);
+    const [q, setQ] = useState<string>(initialQ);
 
     const openDeleteModal = (id: number) => {
         setDivisionToDelete(id);
@@ -100,6 +72,16 @@ export default function UserIndex() {
         });
     };
 
+    const applySearch = () => {
+        const options = q ? { q } : undefined;
+        router.get(userRoutes.index(options as any).url, {}, { preserveState: true, preserveScroll: true });
+    };
+
+    const resetSearch = () => {
+        setQ('');
+        router.get(userRoutes.index().url, {}, { preserveState: true, preserveScroll: true });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List User" />
@@ -107,54 +89,65 @@ export default function UserIndex() {
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                     <div className="space-y-6">
                         {/* Header Section */}
-                        <div className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 p-8 text-white">
+                        <div className="rounded-xl border bg-card p-6 sm:p-8">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h1 className="mb-2 text-3xl font-bold">Manajemen User</h1>
-                                    <p className="text-lg text-blue-100">Kelola data pengguna sistem dan hak akses</p>
+                                    <h1 className="mb-2 text-2xl font-bold sm:text-3xl">Manajemen User</h1>
+                                    <p className="text-sm text-muted-foreground sm:text-base">Kelola data pengguna sistem dan hak akses</p>
                                 </div>
                                 <div className="text-right">
-                                    <div className="rounded-lg bg-white/10 p-4 backdrop-blur-sm">
-                                        <div className="text-2xl font-bold">{userList.length}</div>
-                                        <div className="text-sm text-blue-100">Total User</div>
+                                    <div className="rounded-lg border p-3 sm:p-4">
+                                        <div className="text-xl font-bold sm:text-2xl">{(users as any)?.total ?? userList.length ?? 0}</div>
+                                        <div className="text-xs text-muted-foreground sm:text-sm">Total User</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Action Section */}
-                        <div className="flex justify-end">
-                            <Link href={userRoutes.create().url}>
-                                <Button className="bg-emerald-600 hover:bg-emerald-700">
-                                    <PlusIcon className="mr-2 h-4 w-4" />
-                                    Tambah User
-                                </Button>
-                            </Link>
-                        </div>
-
                         {/* Data Table */}
-                        <Card className="border-0 bg-white shadow-lg">
-                            <CardHeader className="border-b bg-slate-50">
-                                <CardTitle className="text-slate-800">Daftar User ({userList.length})</CardTitle>
+                        <Card>
+                            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex w-full items-center gap-2">
+                                    <Input
+                                        placeholder="Cari nama, email, role, atau divisi..."
+                                        value={q}
+                                        onChange={(e) => setQ(e.target.value)}
+                                        className="min-w-0 flex-1"
+                                    />
+                                    <Button variant="secondary" onClick={applySearch} aria-label="Cari">
+                                        <SearchIcon className="h-4 w-4" />
+                                    </Button>
+                                    {q && (
+                                        <Button variant="ghost" onClick={resetSearch} aria-label="Reset pencarian">
+                                            <XIcon className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
+                                <Link href={userRoutes.create().url}>
+                                    <Button>
+                                        <PlusIcon className="h-4 w-4" />
+                                        Tambah User
+                                    </Button>
+                                </Link>
                             </CardHeader>
-                            <CardContent className="p-0">
+                            <CardContent className="overflow-x-auto p-0">
                                 {userList.length === 0 ? (
                                     <div className="py-16 text-center">
-                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                                            <PlusIcon className="h-8 w-8 text-slate-400" />
+                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                                            <PlusIcon className="h-8 w-8 text-muted-foreground" />
                                         </div>
-                                        <h3 className="mb-2 text-lg font-medium text-slate-600">Belum ada user</h3>
-                                        <p className="text-slate-500">Belum ada user yang terdaftar. Silahkan tambahkan user baru.</p>
+                                        <h3 className="mb-2 text-lg font-medium">Belum ada user</h3>
+                                        <p className="text-muted-foreground">Belum ada user yang terdaftar. Silahkan tambahkan user baru.</p>
                                     </div>
                                 ) : (
-                                    <Table>
+                                    <Table className="min-w-[720px]">
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead>Nama</TableHead>
                                                 <TableHead>Email</TableHead>
                                                 <TableHead>Role</TableHead>
                                                 <TableHead>Divisi</TableHead>
-                                                <TableHead>Aksi</TableHead>
+                                                <TableHead className="text-right">Aksi</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -165,22 +158,38 @@ export default function UserIndex() {
                                                     <TableCell>{user.role.name}</TableCell>
                                                     <TableCell>{user.division?.name ?? '-'}</TableCell>
                                                     <TableCell>
-                                                        <div className="flex gap-2">
+                                                        <div className="flex flex-wrap justify-end gap-2">
                                                             <Link href={userRoutes.show(user.id).url}>
-                                                                <Button variant="outline" size="sm">
-                                                                    <EyeIcon className="mr-1 h-4 w-4" />
-                                                                    Lihat
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950"
+                                                                    aria-label="Lihat"
+                                                                >
+                                                                    <EyeIcon className="h-4 w-4" />
+                                                                    <span className="sr-only">Lihat</span>
                                                                 </Button>
                                                             </Link>
                                                             <Link href={userRoutes.edit(user.id).url}>
-                                                                <Button variant="outline" size="sm">
-                                                                    <EditIcon className="mr-1 h-4 w-4" />
-                                                                    Edit
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950"
+                                                                    aria-label="Edit"
+                                                                >
+                                                                    <EditIcon className="h-4 w-4" />
+                                                                    <span className="sr-only">Edit</span>
                                                                 </Button>
                                                             </Link>
-                                                            <Button variant="destructive" size="sm" onClick={() => openDeleteModal(user.id)}>
-                                                                <Trash2Icon className="mr-1 h-4 w-4" />
-                                                                Hapus
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                                onClick={() => openDeleteModal(user.id)}
+                                                                aria-label="Hapus"
+                                                            >
+                                                                <Trash2Icon className="h-4 w-4" />
+                                                                <span className="sr-only">Hapus</span>
                                                             </Button>
                                                         </div>
                                                     </TableCell>
@@ -190,9 +199,7 @@ export default function UserIndex() {
                                     </Table>
                                 )}
                             </CardContent>
-                            <CardFooter>
-                                <DataPagination paginationData={users} />
-                            </CardFooter>
+                            <CardFooter>{(users as any)?.links ? <DataPagination paginationData={users as any} /> : null}</CardFooter>
                         </Card>
                     </div>
                 </div>
@@ -201,12 +208,12 @@ export default function UserIndex() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
                     <Card className="w-full max-w-sm animate-in fade-in zoom-in">
                         <CardHeader className="items-center text-center">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
-                                <Trash2Icon className="h-6 w-6 text-red-600 dark:text-red-400" />
+                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                <Trash2Icon className="h-6 w-6 text-muted-foreground" />
                             </div>
                         </CardHeader>
                         <CardContent className="text-center">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm text-muted-foreground">
                                 Apakah anda yakin ingin menghapus data ini?
                                 <br />
                                 Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
@@ -216,7 +223,11 @@ export default function UserIndex() {
                             <Button variant="outline" onClick={closeDeleteModal}>
                                 Batal
                             </Button>
-                            <Button variant="destructive" onClick={() => divisionToDelete && handleDelete(divisionToDelete)}>
+                            <Button
+                                variant="outline"
+                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={() => divisionToDelete && handleDelete(divisionToDelete)}
+                            >
                                 Ya, Hapus
                             </Button>
                         </CardFooter>

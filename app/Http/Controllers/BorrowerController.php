@@ -28,9 +28,16 @@ class BorrowerController extends Controller
     {
         try {
             $perPage = $request->get('per_page', 15);
-            $borrowers = $this->borrowerService->getAllBorrowers($perPage);
+            $filters = [
+                'q' => $request->get('q'),
+                'division_id' => $request->get('division_id'),
+            ];
+            $borrowers = $this->borrowerService->getAllBorrowers($perPage, $filters);
+            $divisions = $this->divisionService->getAllDivisions();
             return Inertia::render('borrower/index', [
-                'borrowers' => $borrowers
+                'borrowers' => $borrowers,
+                'divisions' => $divisions,
+                'filters' => $filters,
             ]);
         } catch (Throwable $e) {
             Log::error('Gagal memuat debitur: ' . $e->getMessage());

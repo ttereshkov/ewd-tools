@@ -81,8 +81,8 @@ export default function UserEdit({ user, divisions }: Props) {
             <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                     <Card>
-                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="text-lg font-bold md:text-2xl">Edit User</CardTitle>
+                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-muted/30">
+                            <CardTitle className="text-lg font-bold text-foreground md:text-2xl">Edit User</CardTitle>
                             <Link href={users.index().url}>
                                 <Button variant={"outline"}>
                                     <ArrowLeftIcon className="h-4 w-4"/>

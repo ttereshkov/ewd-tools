@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
@@ -131,44 +131,46 @@ export default function PeriodIndex() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Daftar Periode" />
-            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-950 dark:via-purple-950 dark:to-pink-950 py-6 md:py-12">
+            <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-                    <div className="mb-8 text-center">
-                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg">
-                            <ClockIcon className="h-8 w-8 text-white" />
-                        </div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
-                            Manajemen Periode
-                        </h1>
-                        <p className="mt-2 text-gray-600 dark:text-gray-300">
-                            Kelola periode pelaporan dan waktu aktif sistem
-                        </p>
-                    </div>
+                    {/* Header (standardized) */}
+                    <Card className="mb-8 border bg-background">
+                        <CardHeader className="border-b bg-muted/30">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-xl font-bold flex items-center gap-3 text-foreground">
+                                    <ClockIcon className="h-6 w-6 text-muted-foreground" />
+                                    Manajemen Periode
+                                </CardTitle>
+                                <div className="text-sm text-muted-foreground">Total: {periodList.length} periode</div>
+                            </div>
+                            <div className="text-sm text-muted-foreground">Kelola periode pelaporan dan waktu aktif sistem</div>
+                        </CardHeader>
+                    </Card>
 
                     {latestPeriod && (
-                        <Card className="mb-8 shadow-xl border-0 bg-white/90 backdrop-blur-sm dark:bg-gray-900/90 overflow-hidden">
-                            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6">
+                        <Card className="mb-8 border bg-background">
+                            <CardHeader className="border-b bg-muted/30">
                                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                                    <div className="flex items-center text-white">
-                                        <div className="mr-6 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-                                            <ClockIcon className="h-6 w-6" />
+                                    <div className="flex items-center">
+                                        <div className="mr-6 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                            <ClockIcon className="h-6 w-6 text-muted-foreground" />
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-bold">{latestPeriod.name}</h3>
-                                            <p className="text-indigo-100">
+                                            <h3 className="text-xl font-bold text-foreground">{latestPeriod.name}</h3>
+                                            <p className="text-sm text-muted-foreground">
                                                 {formatDate(latestPeriod.start_date)} - {formatDate(latestPeriod.end_date)}
                                             </p>
-                                            <Badge className={`mt-2 ${getStatusBadgeClass(Number(latestPeriod.status))} border-0`}>
+                                            <Badge className={`mt-2 ${getStatusBadgeClass(Number(latestPeriod.status))}`}> 
                                                 {status_options.find((s) => s.value === Number(latestPeriod.status))?.label ?? '-'}
                                             </Badge>
                                         </div>
                                     </div>
 
                                     {remainingTime && (
-                                        <div className="flex flex-col space-y-4">
+                                        <div className="flex flex-col gap-4">
                                             {remainingTime.status === 'active' ? (
-                                                <div className="rounded-lg bg-white/10 backdrop-blur-sm p-4">
-                                                    <div className="flex justify-center space-x-6">
+                                                <div className="rounded-md border p-4">
+                                                    <div className="flex justify-center gap-6">
                                                         {['Hari', 'Jam', 'Menit', 'Detik'].map((unit, i) => {
                                                             const val = [
                                                                 remainingTime.days,
@@ -178,42 +180,34 @@ export default function PeriodIndex() {
                                                             ][i];
                                                             return (
                                                                 <div className="text-center" key={unit}>
-                                                                    <div className="text-3xl font-bold text-white">{val}</div>
-                                                                    <div className="text-xs text-indigo-200">{unit}</div>
+                                                                    <div className="text-2xl font-semibold text-foreground">{val}</div>
+                                                                    <div className="text-xs text-muted-foreground">{unit}</div>
                                                                 </div>
                                                             );
                                                         })}
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="rounded-lg bg-white/10 backdrop-blur-sm p-4">
-                                                    <p className="text-center text-white font-medium">{remainingTime.message}</p>
+                                                <div className="rounded-md border p-4">
+                                                    <p className="text-center text-muted-foreground font-medium">{remainingTime.message}</p>
                                                 </div>
                                             )}
 
-                                            <div className="flex justify-end space-x-2">
+                                            <div className="flex justify-end gap-2">
                                                 {Number(latestPeriod.status) === 1 && (
-                                                    <Button
-                                                        className="bg-green-500 hover:bg-green-600 text-white border-0 shadow-lg"
-                                                        onClick={() => startPeriod(latestPeriod.id)}
-                                                        disabled={isStatusUpdateLoading}
-                                                    >
+                                                    <Button variant="outline" onClick={() => startPeriod(latestPeriod.id)} disabled={isStatusUpdateLoading}>
                                                         <PlayIcon className="mr-2 h-4 w-4" />
                                                         Mulai
                                                     </Button>
                                                 )}
                                                 {Number(latestPeriod.status) === 2 && (
-                                                    <Button
-                                                        className="bg-red-500 hover:bg-red-600 text-white border-0 shadow-lg"
-                                                        onClick={() => endPeriod(latestPeriod.id)}
-                                                        disabled={isStatusUpdateLoading}
-                                                    >
+                                                    <Button variant="outline" onClick={() => endPeriod(latestPeriod.id)} disabled={isStatusUpdateLoading}>
                                                         <StopCircle className="mr-2 h-4 w-4" />
                                                         Akhiri
                                                     </Button>
                                                 )}
                                                 {[3, 4].includes(Number(latestPeriod.status)) && (
-                                                    <Button className="bg-white/20 text-white border-0" disabled>
+                                                    <Button variant="outline" disabled>
                                                         Periode Selesai
                                                     </Button>
                                                 )}
@@ -221,19 +215,19 @@ export default function PeriodIndex() {
                                         </div>
                                     )}
                                 </div>
-                            </div>
+                            </CardHeader>
                         </Card>
                     )}
 
-                    <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
-                        <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-t-lg">
+                    <Card className="border bg-background">
+                        <CardHeader className="border-b bg-muted/30">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                                <CardTitle className="text-xl font-bold flex items-center gap-3">
-                                    <ClockIcon className="h-6 w-6" />
-                                    Daftar Periode
+                                <CardTitle className="text-xl font-bold flex items-center gap-3 text-foreground">
+                                    <ClockIcon className="h-6 w-6 text-muted-foreground" />
+                                    Daftar Periode ({periodList.length})
                                 </CardTitle>
                                 <Link href={periods.create().url}>
-                                    <Button className="bg-white text-indigo-600 hover:bg-indigo-50 border-0 shadow-md">
+                                    <Button variant="outline" size="sm" className="whitespace-nowrap">
                                         <PlusCircleIcon className="mr-2 h-4 w-4" />
                                         Buat Periode Baru
                                     </Button>
@@ -243,41 +237,35 @@ export default function PeriodIndex() {
                         <CardContent className="p-0">
                             {periodList.length === 0 ? (
                                 <div className="py-12 text-center">
-                                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
-                                        <ClockIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                        <ClockIcon className="h-6 w-6 text-muted-foreground" />
                                     </div>
-                                    <p className="text-gray-500 dark:text-gray-400">
-                                        Belum ada periode yang terdaftar.
-                                    </p>
+                                    <p className="text-muted-foreground">Belum ada periode yang terdaftar.</p>
                                 </div>
                             ) : (
-                                <div className="overflow-hidden">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/50 dark:to-purple-900/50 border-b border-indigo-200 dark:border-indigo-700">
-                                                <TableHead className="font-semibold text-indigo-900 dark:text-indigo-100">Periode</TableHead>
-                                                <TableHead className="font-semibold text-indigo-900 dark:text-indigo-100">Tanggal Mulai</TableHead>
-                                                <TableHead className="font-semibold text-indigo-900 dark:text-indigo-100">Tanggal Selesai</TableHead>
-                                                <TableHead className="font-semibold text-indigo-900 dark:text-indigo-100">Status</TableHead>
-                                                <TableHead className="text-right font-semibold text-indigo-900 dark:text-indigo-100">Aksi</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {periodList.map((p, index) => (
-                                                <TableRow 
-                                                    key={p.id}
-                                                    className={`hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors ${
-                                                        index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-indigo-25 dark:bg-gray-800'
-                                                    }`}
-                                                >
-                                                    <TableCell className="font-medium text-indigo-900 dark:text-indigo-100">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
-                                                                <ClockIcon className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                                <div className="overflow-x-auto">
+                                    <div className="min-w-[720px]">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Periode</TableHead>
+                                                    <TableHead>Tanggal Mulai</TableHead>
+                                                    <TableHead>Tanggal Selesai</TableHead>
+                                                    <TableHead>Status</TableHead>
+                                                    <TableHead className="text-right">Aksi</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {periodList.map((p, index) => (
+                                                    <TableRow key={p.id} className="transition-colors">
+                                                        <TableCell className="font-medium text-foreground">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                                                                    <ClockIcon className="h-4 w-4 text-muted-foreground" />
+                                                                </div>
+                                                                {p.name}
                                                             </div>
-                                                            {p.name}
-                                                        </div>
-                                                    </TableCell>
+                                                        </TableCell>
                                                     <TableCell className="text-gray-900 dark:text-gray-100">{formatDate(p.start_date)}</TableCell>
                                                     <TableCell className="text-gray-900 dark:text-gray-100">{formatDate(p.end_date)}</TableCell>
                                                     <TableCell>
@@ -286,51 +274,75 @@ export default function PeriodIndex() {
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        <div className="flex justify-end space-x-2">
-                                                            <Link 
-                                                                href={periods.edit(p.id).url} 
-                                                                title="Edit" 
-                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-400 dark:hover:bg-indigo-800 transition-colors"
-                                                            >
-                                                                <EditIcon className="h-4 w-4" />
+                                                        <div className="flex flex-wrap justify-end gap-2">
+                                                            <Link href={periods.edit(p.id).url} title="Edit">
+                                                                <Button variant="outline" size="sm" className="whitespace-nowrap">
+                                                                    <EditIcon className="mr-1 h-4 w-4" />
+                                                                    Edit
+                                                                </Button>
                                                             </Link>
-                                                            <Link 
-                                                                href={periods.show(p.id).url} 
-                                                                title="View" 
-                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900 dark:text-green-400 dark:hover:bg-green-800 transition-colors"
-                                                            >
-                                                                <EyeIcon className="h-4 w-4" />
+                                                            <Link href={periods.show(p.id).url} title="Lihat">
+                                                                <Button variant="outline" size="sm" className="whitespace-nowrap">
+                                                                    <EyeIcon className="mr-1 h-4 w-4" />
+                                                                    Lihat
+                                                                </Button>
                                                             </Link>
-                                                            <button
-                                                                onClick={() => openDeleteModal(p.id)}
-                                                                title="Delete"
-                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900 dark:text-red-400 dark:hover:bg-red-800 transition-colors"
-                                                            >
-                                                                <Trash2Icon className="h-4 w-4" />
-                                                            </button>
+                                                            <Button variant="outline" size="sm" className="whitespace-nowrap" title="Hapus" onClick={() => openDeleteModal(p.id)}>
+                                                                <Trash2Icon className="mr-1 h-4 w-4" />
+                                                                Hapus
+                                                            </Button>
                                                         </div>
                                                     </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
                                 </div>
                             )}
                         </CardContent>
-                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-t border-indigo-200 dark:border-indigo-700 p-6 rounded-b-lg">
+                        <CardFooter>
                             <div className="flex items-center justify-between w-full">
-                                <p className="text-sm text-indigo-700 dark:text-indigo-300">
-                                    Total: {periodList.length} periode
-                                </p>
-                                <div className="flex items-center gap-2 text-xs text-indigo-600 dark:text-indigo-400">
+                                <p className="text-sm text-muted-foreground">Total: {periodList.length} periode</p>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                     <ClockIcon className="h-4 w-4" />
                                     <span>Manajemen Waktu</span>
                                 </div>
                             </div>
-                        </div>
+                        </CardFooter>
                     </Card>
                 </div>
             </div>
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <Card className="w-full max-w-sm animate-in fade-in zoom-in">
+                        <CardHeader className="items-center text-center">
+                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                <Trash2Icon className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                        </CardHeader>
+                        <CardContent className="text-center">
+                            <p className="text-sm text-muted-foreground">
+                                Apakah anda yakin ingin menghapus periode ini?
+                                <br />
+                                Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
+                            </p>
+                        </CardContent>
+                        <CardFooter className="flex flex-col-reverse gap-3 px-6 sm:flex-row sm:justify-end">
+                            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+                                Batal
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={handleDelete}
+                            >
+                                Ya, Hapus
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </div>
+            )}
         </AppLayout>
     );
 }

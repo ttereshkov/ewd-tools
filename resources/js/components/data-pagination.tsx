@@ -9,33 +9,7 @@ import {
 } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { router } from '@inertiajs/react';
-
-interface PaginationData {
-    current_page: number;
-    data: any[] | null;
-    first_page_url: string;
-    from: number;
-    last_page: number;
-    last_page_url: string;
-    links: Array<{
-        url: string | null;
-        label: string;
-        active: boolean;
-    }>;
-    next_page_url: string | null;
-    path: string;
-    per_page: number;
-    prev_page_url: string | null;
-    to: number;
-    total: number;
-}
-
-interface DataPaginationProps {
-    paginationData: PaginationData | null;
-    className?: string;
-    showPerPageSelector?: boolean;
-    perPageOptions?: number[];
-}
+import type { DataPaginationProps, PaginationData } from '@/types';
 
 export default function DataPagination({
     paginationData,

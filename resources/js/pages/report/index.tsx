@@ -1,33 +1,23 @@
 import DataPagination from '@/components/data-pagination';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import reportRoutes from '@/routes/reports';
-import { BreadcrumbItem, Report } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
-import { EditIcon, EyeIcon, Trash2Icon } from 'lucide-react';
+import { type BreadcrumbItem, type MaybePaginated, type Report, type Division, type Period } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { EditIcon, EyeIcon, Trash2Icon, SearchIcon, XIcon, PlusIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
 
 type PageProps = {
-    reports: {
-        current_page: number;
-        data: Report[];
-        first_page_url: string;
-        from: number;
-        last_page: number;
-        last_page_url: string;
-        links: Array<{
-            url: string | null;
-            label: string;
-            active: boolean;
-        }>;
-        next_page_url: string | null;
-        path: string;
-        per_page: number;
-        prev_page_url: string | null;
-        to: number;
-        total: number;
-    };
+    reports: MaybePaginated<Report>;
+    divisions?: Division[];
+    periods?: Period[];
+    filters?: { q?: string | null; division_id?: number | string | null; period_id?: number | string | null };
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -42,80 +32,275 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function ReportIndex() {
-    const { reports } = usePage<PageProps>().props;
-    const reportList = reports.data;
+    const pageProps = usePage<PageProps>().props as any;
+    const reports = pageProps.reports as MaybePaginated<Report>;
+    const divisions = (pageProps.divisions ?? []) as Division[];
+    const periods = (pageProps.periods ?? []) as Period[];
+    const reportList: Report[] = Array.isArray(reports) ? reports : (reports?.data ?? []);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [reportToDelete, setReportToDelete] = useState<number | null>(null);
+
+    // Initialize search and filter state from URL
+    const initialQ = useMemo(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('q') ?? '';
+        } catch {
+            return '';
+        }
+    }, []);
+    const initialDivisionId = useMemo(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const val = params.get('division_id');
+            return val ?? undefined;
+        } catch {
+            return undefined;
+        }
+    }, []);
+    const initialPeriodId = useMemo(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const val = params.get('period_id');
+            return val ?? undefined;
+        } catch {
+            return undefined;
+        }
+    }, []);
+
+    const [q, setQ] = useState<string>(initialQ);
+    const [divisionId, setDivisionId] = useState<string | undefined>(initialDivisionId);
+    const [periodId, setPeriodId] = useState<string | undefined>(initialPeriodId);
+
+    const openDeleteModal = (id: number) => {
+        setReportToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const closeDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setReportToDelete(null);
+    };
+
+    const handleDelete = () => {
+        if (!reportToDelete) return;
+        router.delete(reportRoutes.destroy(reportToDelete).url, {
+            onSuccess: () => {
+                toast.success('Laporan berhasil dihapus');
+            },
+            onError: (errs) => {
+                Object.values(errs).forEach((error) => toast.error(error as string));
+            },
+            onFinish: () => {
+                closeDeleteModal();
+            },
+        });
+    };
+
+    const applySearch = () => {
+        const options: Record<string, string> = {};
+        if (q) options.q = q;
+        if (divisionId) options.division_id = divisionId;
+        if (periodId) options.period_id = periodId;
+        router.get(reportRoutes.index(options as any).url, {}, { preserveState: true, preserveScroll: true });
+    };
+
+    const resetSearch = () => {
+        setQ('');
+        setDivisionId(undefined);
+        setPeriodId(undefined);
+        router.get(reportRoutes.index().url, {}, { preserveState: true, preserveScroll: true });
+    };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Daftar Laporan" />
             <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                     <div className="space-y-6">
-                        {/* Header Section */}
-                        <div className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
-                            <h1 className="text-2xl font-bold md:text-3xl">Daftar Laporan</h1>
-                            <p className="mt-2 text-blue-100">Kelola dan pantau semua laporan dalam sistem</p>
-                        </div>
-
                         {/* Content Section */}
-                        <Card className="shadow-lg">
-                            <CardHeader className="rounded-t-lg bg-gray-50 dark:bg-gray-800">
-                                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">Daftar Laporan</CardTitle>
+                        <Card className="border bg-background">
+                            <CardHeader className="flex flex-col gap-3 border-b bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+                                    <div className="flex w-full items-center gap-2">
+                                        <Input
+                                            placeholder="Cari debitur/divisi/periode/pembuat..."
+                                            value={q}
+                                            onChange={(e) => setQ(e.target.value)}
+                                            className="min-w-0 flex-1"
+                                        />
+                                        <Button variant="secondary" onClick={applySearch} aria-label="Cari">
+                                            <SearchIcon className="h-4 w-4" />
+                                        </Button>
+                                        {(q || divisionId || periodId) && (
+                                            <Button variant="ghost" onClick={resetSearch} aria-label="Reset filter">
+                                                <XIcon className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div className="w-full sm:w-56">
+                                        <Select
+                                            value={divisionId ?? undefined}
+                                            onValueChange={(value) => {
+                                                if (value === '__all') {
+                                                    setDivisionId(undefined);
+                                                } else {
+                                                    setDivisionId(value);
+                                                }
+                                            }}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Semua Divisi" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="__all">Semua Divisi</SelectItem>
+                                                {divisions.map((d) => (
+                                                    <SelectItem key={d.id} value={String(d.id)}>
+                                                        {d.code} — {d.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="w-full sm:w-56">
+                                        <Select
+                                            value={periodId ?? undefined}
+                                            onValueChange={(value) => {
+                                                if (value === '__all') {
+                                                    setPeriodId(undefined);
+                                                } else {
+                                                    setPeriodId(value);
+                                                }
+                                            }}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Semua Periode" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="__all">Semua Periode</SelectItem>
+                                                {periods.map((p) => (
+                                                    <SelectItem key={p.id} value={String(p.id)}>
+                                                        {p.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <Link href={reportRoutes.create().url}>
+                                    <Button variant="outline" size="sm" className="whitespace-nowrap">
+                                        <PlusIcon className="mr-2 h-4 w-4" />
+                                        Buat Laporan
+                                    </Button>
+                                </Link>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="p-0">
                                 {reportList.length === 0 ? (
-                                    <div className="py-8 text-center text-gray-500">Belum ada user yang terdaftar. Silahkan tambahkan user baru.</div>
+                                    <div className="py-14 text-center">
+                                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                                            <EyeIcon className="h-7 w-7 text-muted-foreground" />
+                                        </div>
+                                        <h3 className="mb-2 text-base font-medium text-foreground">Belum ada laporan</h3>
+                                        <p className="text-sm text-muted-foreground">Belum ada laporan yang terdaftar.</p>
+                                    </div>
                                 ) : (
-                                    <Table className="w-full overflow-x-auto">
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Debitur</TableHead>
-                                                <TableHead>Divisi</TableHead>
-                                                <TableHead>Periode</TableHead>
-                                                <TableHead className="text-right">Aksi</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {reportList.map((report) => (
-                                                <TableRow key={report.id}>
-                                                    <TableCell>{report.borrower.name}</TableCell>
-                                                    <TableCell>{report.borrower.division.code}</TableCell>
-                                                    <TableCell>{report.period.name}</TableCell>
-                                                    <TableCell className="flex justify-end space-x-3 text-right">
-                                                        <Link
-                                                            href={'#'}
-                                                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                            title="Edit User"
-                                                        >
-                                                            <EditIcon className="h-5 w-5" />
-                                                        </Link>
-                                                        <Link
-                                                            href={reportRoutes.show(report.id).url}
-                                                            className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                                                            title="Show User"
-                                                        >
-                                                            <EyeIcon className="h-5 w-5" />
-                                                        </Link>
-                                                        <button
-                                                            onClick={() => {}}
-                                                            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                                                            title="Hapus User"
-                                                        >
-                                                            <Trash2Icon className="h-5 w-5" />
-                                                        </button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                    <div className="overflow-x-auto">
+                                        <div className="min-w-[720px]">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Debitur</TableHead>
+                                                        <TableHead>Divisi</TableHead>
+                                                        <TableHead>Periode</TableHead>
+                                                        <TableHead className="text-right">Aksi</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {reportList.map((report) => (
+                                                        <TableRow key={report.id}>
+                                                            <TableCell>{report.borrower.name}</TableCell>
+                                                            <TableCell>{report.borrower.division.code}</TableCell>
+                                                            <TableCell>{report.period.name}</TableCell>
+                                                            <TableCell className="text-right">
+                                                                <div className="flex flex-wrap justify-end gap-2">
+                                                                    <Link href={'#'}>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            className="whitespace-nowrap"
+                                                                            title="Edit Laporan"
+                                                                        >
+                                                                            <EditIcon className="mr-1 h-4 w-4" />
+                                                                            Edit
+                                                                        </Button>
+                                                                    </Link>
+                                                                    <Link href={reportRoutes.show(report.id).url}>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            className="whitespace-nowrap"
+                                                                            title="Detail Laporan"
+                                                                        >
+                                                                            <EyeIcon className="mr-1 h-4 w-4" />
+                                                                            Lihat
+                                                                        </Button>
+                                                                    </Link>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="whitespace-nowrap text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                                                        title="Hapus Laporan"
+                                                                        onClick={() => openDeleteModal(report.id)}
+                                                                    >
+                                                                        <Trash2Icon className="mr-1 h-4 w-4" />
+                                                                        Hapus
+                                                                    </Button>
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    </div>
                                 )}
                             </CardContent>
-                            <CardFooter className="rounded-b-lg bg-gray-50 dark:bg-gray-800">
-                                <DataPagination paginationData={reports} />
+                            <CardFooter>
+                                {!Array.isArray(reports) && reports?.links ? <DataPagination paginationData={reports as any} /> : null}
                             </CardFooter>
                         </Card>
                     </div>
                 </div>
             </div>
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <Card className="w-full max-w-sm animate-in fade-in zoom-in">
+                        <CardHeader className="items-center text-center">
+                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                <Trash2Icon className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                        </CardHeader>
+                        <CardContent className="text-center">
+                            <p className="text-sm text-muted-foreground">
+                                Apakah anda yakin ingin menghapus laporan ini?
+                                <br />
+                                Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
+                            </p>
+                        </CardContent>
+                        <CardFooter className="flex flex-col-reverse gap-3 px-6 sm:flex-row sm:justify-end">
+                            <Button variant="outline" onClick={closeDeleteModal}>
+                                Batal
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={handleDelete}
+                            >
+                                Ya, Hapus
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </div>
+            )}
         </AppLayout>
     );
 }

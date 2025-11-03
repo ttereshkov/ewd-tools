@@ -10,10 +10,44 @@ use App\Enums\ApprovalStatus;
 
 class ReportService
 {
-    public function getAllReports($perPage = 15)
+    public function getAllReports($perPage = 15, array $filters = [])
     {
-        $reports = Report::with(['borrower', 'borrower.division', 'period', 'creator'])->latest()->paginate($perPage);
-        return $reports;
+        $query = Report::with(['borrower', 'borrower.division', 'period', 'creator'])->latest();
+
+        // General search (q): borrower name, division code/name, period name, creator name
+        $q = trim((string)($filters['q'] ?? ''));
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub
+                    ->whereHas('borrower', function ($bq) use ($q) {
+                        $bq->where('name', 'like', "%{$q}%")
+                           ->orWhereHas('division', function ($dq) use ($q) {
+                               $dq->where('name', 'like', "%{$q}%")
+                                  ->orWhere('code', 'like', "%{$q}%");
+                           });
+                    })
+                    ->orWhereHas('period', function ($pq) use ($q) {
+                        $pq->where('name', 'like', "%{$q}%");
+                    })
+                    ->orWhereHas('creator', function ($cq) use ($q) {
+                        $cq->where('name', 'like', "%{$q}%");
+                    });
+            });
+        }
+
+        // Filter by division (borrower.division_id)
+        if (!empty($filters['division_id'])) {
+            $query->whereHas('borrower', function ($bq) use ($filters) {
+                $bq->where('division_id', $filters['division_id']);
+            });
+        }
+
+        // Filter by period
+        if (!empty($filters['period_id'])) {
+            $query->where('period_id', $filters['period_id']);
+        }
+
+        return $query->paginate($perPage);
     }
 
     public function getReportById(int $id)

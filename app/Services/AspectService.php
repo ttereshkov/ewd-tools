@@ -9,13 +9,23 @@ use Illuminate\Support\Facades\DB;
 
 class AspectService extends BaseService
 {
-    public function getAllAspects($perPage = 15)
+    public function getAllAspects($perPage = 15, array $filters = [])
     {
         $this->authorize('view aspect');
+        $query = Aspect::with('latestAspectVersion', 'latestAspectVersion.questionVersions')
+            ->latest();
 
-        return Aspect::with('latestAspectVersion', 'latestAspectVersion.questionVersions')
-            ->latest()
-            ->paginate($perPage);
+        $q = trim((string)($filters['q'] ?? ''));
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('code', 'like', "%{$q}%")
+                    ->orWhereHas('latestAspectVersion', function ($v) use ($q) {
+                        $v->where('name', 'like', "%{$q}%");
+                    });
+            });
+        }
+
+        return $query->paginate($perPage);
     }
 
     public function getAspectById(int $id): Aspect

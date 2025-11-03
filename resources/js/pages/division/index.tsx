@@ -1,43 +1,38 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import AppLayout from "@/layouts/app-layout";
-import { dashboard } from "@/routes";
-import divisions from "@/routes/divisions";
-import { type BreadcrumbItem } from "@/types";
-import { Head, Link, router, usePage } from "@inertiajs/react";
-import { BuildingIcon, EditIcon, EyeIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import { useState } from "react";
-import { toast } from "react-toastify";
-
-type Division = {
-    id: number;
-    code: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-};
+import DataPagination from '@/components/data-pagination';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
+import { dashboard } from '@/routes';
+import divisionRoutes from '@/routes/divisions';
+import { type BreadcrumbItem, type Division, type MaybePaginated } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { BuildingIcon, EditIcon, EyeIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
 
 type PageProps = {
-    divisions: Division[];
+    divisions: MaybePaginated<Division>;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: "Dashboard",
-        href: dashboard().url
+        title: 'Dashboard',
+        href: dashboard().url,
     },
     {
-        title: "Divisi",
-        href: divisions.index().url
-    }
+        title: 'Divisi',
+        href: divisionRoutes.index().url,
+    },
 ];
 
 export default function DivisionIndex() {
-    const { divisions: divisionList } = usePage<PageProps>().props;
+    const pageProps = usePage<PageProps>().props as any;
+    const divisions = pageProps.divisions as Paginated<Division> | Division[] | undefined;
+    const divisionList: Division[] = Array.isArray(divisions) ? divisions : divisions?.data ?? [];
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [divisionToDelete, setDivisionToDelete] = useState<number | null>(null);
-    
+
     const openDeleteModal = (id: number) => {
         setDivisionToDelete(id);
         setIsDeleteModalOpen(true);
@@ -49,13 +44,13 @@ export default function DivisionIndex() {
     };
 
     const handleDelete = (id: number) => {
-        router.delete(divisions.destroy(divisionToDelete!).url, {
+        router.delete(divisionRoutes.destroy(id).url, {
             onSuccess: () => {
-                toast.success("Divisi berhasil dihapus");
+                toast.success('Divisi berhasil dihapus');
             },
-            onError: (errs) => {
-                Object.values(errs).forEach((error) => {
-                    toast.error(error as string);
+            onError: (errs: any) => {
+                Object.values(errs || {}).forEach((error) => {
+                    toast.error(String(error));
                 });
             },
             onFinish: () => {
@@ -67,130 +62,105 @@ export default function DivisionIndex() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="List Divisi" />
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-cyan-50 dark:from-blue-950 dark:via-sky-950 dark:to-cyan-950 py-6 md:py-12">
+            <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-                    <div className="mb-8 text-center">
-                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-sky-500 shadow-lg">
-                            <BuildingIcon className="h-8 w-8 text-white" />
+                    <div className="space-y-6">
+                        {/* Header Section */}
+                        <div className="rounded-xl border bg-card p-6 sm:p-8">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h1 className="mb-2 text-2xl font-bold sm:text-3xl">Manajemen Divisi</h1>
+                                    <p className="text-sm text-muted-foreground sm:text-base">Kelola struktur organisasi dan divisi perusahaan</p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="rounded-lg border p-3 sm:p-4">
+                                        <div className="text-xl font-bold sm:text-2xl">{divisionList.length}</div>
+                                        <div className="text-xs text-muted-foreground sm:text-sm">Total Divisi</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
-                            Manajemen Divisi
-                        </h1>
-                        <p className="mt-2 text-gray-600 dark:text-gray-300">
-                            Kelola struktur organisasi dan divisi perusahaan
-                        </p>
-                    </div>
-                    
-                    <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
-                        <CardHeader className="bg-gradient-to-r from-blue-500 to-sky-500 text-white rounded-t-lg">
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                <CardTitle className="text-lg font-bold md:text-2xl flex items-center gap-3">
-                                    <BuildingIcon className="h-6 w-6" />
-                                    Daftar Divisi
-                                </CardTitle>
-                                <Link href={divisions.create().url}>
-                                    <Button className="bg-white text-blue-600 hover:bg-blue-50 border-0 shadow-md">
+
+                        {/* Data Table */}
+                        <Card>
+                            <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                <CardTitle></CardTitle>
+                                <Link href={divisionRoutes.create().url}>
+                                    <Button>
                                         <PlusIcon className="h-4 w-4" />
                                         Tambah Divisi
                                     </Button>
                                 </Link>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            {divisionList.length === 0 ? (
-                                <div className="py-12 text-center">
-                                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-                                        <BuildingIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                            </CardHeader>
+                            <CardContent className="overflow-x-auto p-0">
+                                {divisionList.length === 0 ? (
+                                    <div className="py-16 text-center">
+                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                                            <BuildingIcon className="h-8 w-8 text-muted-foreground" />
+                                        </div>
+                                        <h3 className="mb-2 text-lg font-medium">Belum ada divisi</h3>
+                                        <p className="text-muted-foreground">Belum ada divisi yang terdaftar. Silahkan tambahkan divisi baru.</p>
                                     </div>
-                                    <p className="text-gray-500 dark:text-gray-400">
-                                        Belum ada divisi yang terdaftar. Silahkan tambahkan divisi baru.
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="overflow-hidden">
-                                    <Table className="w-full">
+                                ) : (
+                                    <Table className="min-w-[720px]">
                                         <TableHeader>
-                                            <TableRow className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-900/50 dark:to-sky-900/50 border-b border-blue-200 dark:border-blue-700">
-                                                <TableHead className="font-semibold text-blue-900 dark:text-blue-100">Kode</TableHead>
-                                                <TableHead className="font-semibold text-blue-900 dark:text-blue-100">Nama</TableHead>
-                                                <TableHead className="text-right font-semibold text-blue-900 dark:text-blue-100">Aksi</TableHead>
+                                            <TableRow>
+                                                <TableHead>Kode</TableHead>
+                                                <TableHead>Nama</TableHead>
+                                                <TableHead className="text-right">Aksi</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {divisionList.map((division, index) => (
-                                                <TableRow 
-                                                    key={division.id}
-                                                    className={`hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors ${
-                                                        index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-blue-25 dark:bg-gray-800'
-                                                    }`}
-                                                >
-                                                    <TableCell className="font-medium text-blue-900 dark:text-blue-100">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-                                                                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                                                                    {division.code.charAt(0)}
-                                                                </span>
-                                                            </div>
-                                                            {division.code}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="text-gray-900 dark:text-gray-100">{division.name}</TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex justify-end space-x-2">
-                                                            <Link
-                                                                href={divisions.edit(division.id).url}
-                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-400 dark:hover:bg-blue-800 transition-colors"
-                                                                title="Edit Divisi"
-                                                            >
-                                                                <EditIcon className="h-4 w-4" />
+                                            {divisionList.map((division) => (
+                                                <TableRow key={division.id}>
+                                                    <TableCell className="font-medium">{division.code}</TableCell>
+                                                    <TableCell>{division.name}</TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-wrap justify-end gap-2">
+                                                            <Link href={divisionRoutes.show(division.id).url}>
+                                                                <Button variant="outline" size="sm" className="whitespace-nowrap">
+                                                                    <EyeIcon className="mr-1 h-4 w-4" />
+                                                                    Lihat
+                                                                </Button>
                                                             </Link>
-                                                            <Link
-                                                                href={divisions.show(division.id).url}
-                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900 dark:text-green-400 dark:hover:bg-green-800 transition-colors"
-                                                                title="Lihat Divisi"
-                                                            >
-                                                                <EyeIcon className="h-4 w-4" />
+                                                            <Link href={divisionRoutes.edit(division.id).url}>
+                                                                <Button variant="outline" size="sm" className="whitespace-nowrap">
+                                                                    <EditIcon className="mr-1 h-4 w-4" />
+                                                                    Edit
+                                                                </Button>
                                                             </Link>
-                                                            <button
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="whitespace-nowrap text-destructive hover:bg-destructive hover:text-destructive-foreground"
                                                                 onClick={() => openDeleteModal(division.id)}
-                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900 dark:text-red-400 dark:hover:bg-red-800 transition-colors"
-                                                                title="Hapus Divisi"
                                                             >
-                                                                <Trash2Icon className="h-4 w-4" />
-                                                            </button>
+                                                                <Trash2Icon className="mr-1 h-4 w-4" />
+                                                                Hapus
+                                                            </Button>
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
                                     </Table>
-                                </div>
-                            )}
-                        </CardContent>
-                        <CardFooter className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-900/20 dark:to-sky-900/20 border-t border-blue-200 dark:border-blue-700 p-6 rounded-b-lg">
-                            <div className="flex items-center justify-between w-full">
-                                <p className="text-sm text-blue-700 dark:text-blue-300">
-                                    Total: {divisionList.length} divisi
-                                </p>
-                                <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
-                                    <BuildingIcon className="h-4 w-4" />
-                                    <span>Struktur Organisasi</span>
-                                </div>
-                            </div>
-                        </CardFooter>
-                    </Card>
+                                )}
+                            </CardContent>
+                            <CardFooter>{(divisions as any)?.links ? <DataPagination paginationData={divisions as any} /> : null}</CardFooter>
+                        </Card>
+                    </div>
                 </div>
             </div>
             {isDeleteModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
                     <Card className="w-full max-w-sm animate-in fade-in zoom-in">
                         <CardHeader className="items-center text-center">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
-                                <Trash2Icon className="h-6 w-6 text-red-600 dark:text-red-400"/>
+                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                <Trash2Icon className="h-6 w-6 text-muted-foreground" />
                             </div>
                         </CardHeader>
                         <CardContent className="text-center">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm text-muted-foreground">
                                 Apakah anda yakin ingin menghapus data ini?
                                 <br />
                                 Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
@@ -201,7 +171,8 @@ export default function DivisionIndex() {
                                 Batal
                             </Button>
                             <Button
-                                variant="destructive"
+                                variant="outline"
+                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
                                 onClick={() => divisionToDelete && handleDelete(divisionToDelete)}
                             >
                                 Ya, Hapus
@@ -211,5 +182,5 @@ export default function DivisionIndex() {
                 </div>
             )}
         </AppLayout>
-    )
+    );
 }
