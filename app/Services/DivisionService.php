@@ -6,6 +6,23 @@ use App\Models\Division;
 
 class DivisionService extends BaseService
 {
+    public function paginateDivisions(array $filters = [], int $perPage = 15)
+    {
+        $this->authorize('view division');
+
+        $query = Division::query()->latest();
+
+        $q = trim((string)($filters['q'] ?? ''));
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('name', 'like', "%{$q}%")
+                    ->orWhere('code', 'like', "%{$q}%");
+            });
+        }
+
+        return $query->paginate($perPage);
+    }
+
     public function getAllDivisions()
     {
         $this->authorize('view division');
@@ -26,8 +43,6 @@ class DivisionService extends BaseService
 
         $division = Division::create($data);
 
-        $this->audit('division', $division->id, 'created', $data);
-
         return $division;
     }
 
@@ -37,7 +52,6 @@ class DivisionService extends BaseService
 
         $division->update($data);
 
-        $this->audit('division', $division->id, 'updated', $data);
 
         return $division;
     }
@@ -48,6 +62,5 @@ class DivisionService extends BaseService
 
         $division->delete();
 
-        $this->audit('division', $division->id, 'deleted');
     }
 }

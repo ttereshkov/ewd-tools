@@ -1,1 +1,0 @@
-function s(e){if(!e||Object.keys(e).length===0)return"";const n=new URLSearchParams;Object.entries(e).forEach(([a,t])=>{t!=null&&n.append(a,String(t))});const r=n.toString();return r?`?${r}`:""}function i(e,n={}){let r=e;return Object.entries(n).forEach(([a,t])=>{const c=new RegExp(`\\{${a}\\??\\}`,"g");r=r.replace(c,String(t))}),r}export{i as a,s as q};

@@ -29,11 +29,11 @@ class UserService extends BaseService
         return $query->paginate($perPage);
     }
 
-    public function getAllUsers($perPage = 15)
+    public function getAllUsers()
     {
         $this->authorize('view user');
 
-        return User::with(['division','role'])->latest()->paginate($perPage);
+        return User::with(['division','role'])->latest()->get();
     }
 
     public function getUserById(int $id): User

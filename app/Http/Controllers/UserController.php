@@ -81,10 +81,12 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $divisions = Division::latest()->get();
+        $roles = Role::all();
 
         return Inertia::render('user/edit', [
             'user' => $user->load('division'),
             'divisions' => $divisions,
+            'roles' => $roles,
         ]);
     }
 
@@ -101,11 +103,23 @@ class UserController extends Controller
             unset($validated['password']);
         };
 
-        $user->update($validated);
+        try {
+            $this->userService->update($user, $validated);
+            return redirect()->route('users.index')->with('success', 'User berhasil diperbarui.');
+        } catch (Throwable $e) {
+            Log::error('Gagal memperbarui pengguna: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui pengguna');
+        }
     }
 
     public function destroy(User $user)
     {
-        $user->delete();
+        try {
+            $this->userService->destroy($user);
+            return redirect()->route('users.index')->with('success', 'User berhasil dihapus.');
+        } catch (Throwable $e) {
+            Log::error('Gagal menghapus pengguna: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat menghapus pengguna');
+        }
     }
 }

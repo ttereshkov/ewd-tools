@@ -1,6 +1,7 @@
 import DataPagination from '@/components/data-pagination';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
@@ -8,7 +9,7 @@ import { dashboard } from '@/routes';
 import userRoutes from '@/routes/users';
 import { type BreadcrumbItem, type MaybePaginated, type User } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { EditIcon, EyeIcon, PlusIcon, SearchIcon, Trash2Icon, XIcon } from 'lucide-react';
+import { EditIcon, EyeIcon, Loader2 as Loader2Icon, PlusIcon, SearchIcon, Trash2Icon, XIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -28,14 +29,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function UserIndex() {
-    const pageProps = usePage().props as any;
+    const pageProps = usePage<PageProps>().props;
     const users = pageProps.users;
     const userList: User[] = Array.isArray(users) ? users : (users?.data ?? []);
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [divisionToDelete, setDivisionToDelete] = useState<number | null>(null);
+    const [userToDelete, setUserToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
-    // Initialize search query from current URL
     const initialQ = useMemo(() => {
         try {
             const params = new URLSearchParams(window.location.search);
@@ -47,17 +48,19 @@ export default function UserIndex() {
     const [q, setQ] = useState<string>(initialQ);
 
     const openDeleteModal = (id: number) => {
-        setDivisionToDelete(id);
+        setUserToDelete(id);
         setIsDeleteModalOpen(true);
     };
 
     const closeDeleteModal = () => {
         setIsDeleteModalOpen(false);
-        setDivisionToDelete(null);
+        setUserToDelete(null);
     };
 
-    const handleDelete = (id: number) => {
-        router.delete(userRoutes.destroy(id).url, {
+    const handleDelete = () => {
+        if (!userToDelete) return;
+        setIsDeleting(true);
+        router.delete(userRoutes.destroy(userToDelete).url, {
             onSuccess: () => {
                 toast.success('User berhasil dihapus');
             },
@@ -67,10 +70,13 @@ export default function UserIndex() {
                 });
             },
             onFinish: () => {
+                setIsDeleting(false);
                 closeDeleteModal();
             },
         });
     };
+
+    const deletingUser = useMemo(() => userList.find((u) => u.id === userToDelete), [userToDelete, userList]);
 
     const applySearch = () => {
         const options = q ? { q } : undefined;
@@ -204,36 +210,37 @@ export default function UserIndex() {
                     </div>
                 </div>
             </div>
-            {isDeleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-                    <Card className="w-full max-w-sm animate-in fade-in zoom-in">
-                        <CardHeader className="items-center text-center">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                                <Trash2Icon className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                        </CardHeader>
-                        <CardContent className="text-center">
-                            <p className="text-sm text-muted-foreground">
-                                Apakah anda yakin ingin menghapus data ini?
-                                <br />
-                                Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
-                            </p>
-                        </CardContent>
-                        <CardFooter className="flex flex-col-reverse gap-3 px-6 sm:flex-row sm:justify-end">
-                            <Button variant="outline" onClick={closeDeleteModal}>
-                                Batal
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                onClick={() => divisionToDelete && handleDelete(divisionToDelete)}
-                            >
-                                Ya, Hapus
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                </div>
-            )}
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent
+                    className="sm:max-w-md"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleDelete();
+                        }
+                    }}
+                >
+                    <DialogHeader className="items-center text-center">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                            <Trash2Icon className="h-6 w-6 text-destructive" />
+                        </div>
+                        <DialogTitle>Hapus user?</DialogTitle>
+                        <DialogDescription>
+                            Menghapus user <span className="font-semibold">{deletingUser ? deletingUser.name : 'terpilih'}</span>. Tindakan ini
+                            permanen.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <Button variant="outline" onClick={closeDeleteModal} disabled={isDeleting}>
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={handleDelete} disabled={isDeleting} aria-busy={isDeleting}>
+                            {isDeleting ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Trash2Icon className="mr-2 h-4 w-4" />}
+                            Hapus
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

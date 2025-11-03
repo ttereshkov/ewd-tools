@@ -9,7 +9,7 @@ import { dashboard } from '@/routes';
 import users from '@/routes/users';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeftIcon, UserPlus } from 'lucide-react';
+import { ArrowLeftIcon } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 type Division = {
@@ -90,16 +90,8 @@ export default function UserCreate({ divisions, roles }: Props) {
             <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                     <Card>
-                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-muted/30">
-                            <div>
-                                <CardTitle className="text-lg font-bold text-foreground md:text-2xl flex items-center gap-2">
-                                    <div className="p-2 rounded-lg bg-muted">
-                                        <UserPlus className="h-5 w-5 text-muted-foreground" />
-                                    </div>
-                                    Tambah User
-                                </CardTitle>
-                                <p className="text-sm text-muted-foreground mt-1">Buat akun pengguna baru dengan informasi yang diperlukan</p>
-                            </div>
+                        <CardHeader className="flex flex-col gap-4 bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
+                            <CardTitle className="text-lg font-bold text-foreground md:text-2xl">Tambah User</CardTitle>
                             <Link href={users.index().url}>
                                 <Button variant={'outline'}>
                                     <ArrowLeftIcon className="h-4 w-4" />
@@ -109,53 +101,49 @@ export default function UserCreate({ divisions, roles }: Props) {
                         </CardHeader>
                         <form onSubmit={submit} className="space-y-6">
                             <CardContent className="space-y-6">
-                                <div className="grid gap-6 md:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="name">Nama</Label>
-                                        <Input
-                                            id="name"
-                                            value={data.name}
-                                            onChange={(e) => setData('name', e.target.value)}
-                                            placeholder="Masukkan nama user"
-                                        />
-                                        <InputError message={errors.name} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="email">Email</Label>
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            value={data.email}
-                                            onChange={(e) => setData('email', e.target.value)}
-                                            placeholder="Masukkan email user"
-                                        />
-                                        <InputError message={errors.email} />
-                                    </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="name">Nama</Label>
+                                    <Input
+                                        id="name"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        placeholder="Masukkan nama user"
+                                    />
+                                    <InputError message={errors.name} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        value={data.email}
+                                        onChange={(e) => setData('email', e.target.value)}
+                                        placeholder="Masukkan email user"
+                                    />
+                                    <InputError message={errors.email} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="password">Password</Label>
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        value={data.password}
+                                        onChange={(e) => setData('password', e.target.value)}
+                                        placeholder="Masukkan password"
+                                    />
+                                    <InputError message={errors.password} />
                                 </div>
 
-                                <div className="grid gap-6 md:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="password">Password</Label>
-                                        <Input
-                                            id="password"
-                                            type="password"
-                                            value={data.password}
-                                            onChange={(e) => setData('password', e.target.value)}
-                                            placeholder="Masukkan password"
-                                        />
-                                        <InputError message={errors.password} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="password_confirmation">Konfirmasi Password</Label>
-                                        <Input
-                                            id="password_confirmation"
-                                            type="password"
-                                            value={data.password_confirmation}
-                                            onChange={(e) => setData('password_confirmation', e.target.value)}
-                                            placeholder="Konfirmasi password"
-                                        />
-                                        <InputError message={errors.password_confirmation} />
-                                    </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="password_confirmation">Konfirmasi Password</Label>
+                                    <Input
+                                        id="password_confirmation"
+                                        type="password"
+                                        value={data.password_confirmation}
+                                        onChange={(e) => setData('password_confirmation', e.target.value)}
+                                        placeholder="Konfirmasi password"
+                                    />
+                                    <InputError message={errors.password_confirmation} />
                                 </div>
 
                                 <div className="grid gap-6 md:grid-cols-2">
@@ -199,20 +187,13 @@ export default function UserCreate({ divisions, roles }: Props) {
                                     </div>
                                 </div>
                             </CardContent>
-                            <CardFooter className="flex items-center justify-end gap-4">
+                            <CardFooter className="flex flex-col-reverse items-center justify-end gap-4 sm:flex-row">
                                 {isDirty && (
-                                    <Button
-                                        type="button"
-                                        variant={'outline'}
-                                        onClick={() => reset()}
-                                    >
+                                    <Button type="button" variant={'outline'} onClick={() => reset()}>
                                         Reset
                                     </Button>
                                 )}
-                                <Button
-                                    type="submit"
-                                    disabled={!isDirty || processing}
-                                >
+                                <Button type="submit" disabled={!isDirty || processing}>
                                     {processing ? 'Menyimpan...' : 'Simpan'}
                                 </Button>
                             </CardFooter>
