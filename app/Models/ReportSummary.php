@@ -18,6 +18,7 @@ class ReportSummary extends Model
         'indicative_collectibility',
         'is_override',
         'override_reason',
+        'override_by',
         'business_notes',
         'reviewer_notes',
     ];
@@ -31,5 +32,10 @@ class ReportSummary extends Model
     public function report(): BelongsTo
     {
         return $this->belongsTo(Report::class);
+    }
+
+    public function overrideBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'override_by');
     }
 }

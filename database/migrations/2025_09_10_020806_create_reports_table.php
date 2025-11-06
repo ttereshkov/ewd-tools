@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('template_id')->constrained('templates')->restrictOnDelete();
             $table->foreignId('period_id')->constrained('periods')->restrictOnDelete();
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
-            $table->unsignedTinyInteger('status')->default(0);
+            $table->unsignedTinyInteger('status')->default(1);
             $table->timestampTz('submitted_at')->nullable();
             $table->text('rejection_reason')->nullable();
             $table->timestampsTz();

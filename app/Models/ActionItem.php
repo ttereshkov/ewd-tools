@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\ActionItemStatus;
+use App\Enums\ActionItemType;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +17,7 @@ class ActionItem extends Model
         'monitoring_note_id',
         'action_description',
         'item_type',
-        'progress_note',
+        'progress_notes',
         'people_in_charge',
         'notes',
         'due_date',
@@ -25,6 +27,8 @@ class ActionItem extends Model
     ];
 
     protected $casts = [
+        'item_type' => ActionItemType::class,
+        'status' => ActionItemStatus::class,
         'due_date' => 'date',
         'completion_date' => 'date',
     ];

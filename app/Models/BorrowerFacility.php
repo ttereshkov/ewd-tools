@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BorrowerFacility extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'borrower_id',
@@ -34,10 +35,5 @@ class BorrowerFacility extends Model
     public function borrower(): BelongsTo
     {
         return $this->belongsTo(Borrower::class);
-    }
-
-    public function report(): BelongsTo
-    {
-        return $this->belongsTo(Report::class);
     }
 }

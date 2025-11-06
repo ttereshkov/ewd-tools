@@ -52,7 +52,7 @@ class TemplateVersion extends Model
             if (! empty($questions)) {
                 $aspectGroups[] = [
                     'id' => $aspect->id,
-                    'aspect_id' => $aspect->aspect_id,
+                    'aspect_id' => $aspect->id,
                     'name' => $aspect->name,
                     'description' => $aspect->description,
                     'weight' => $aspect->pivot->weight ?? 0,

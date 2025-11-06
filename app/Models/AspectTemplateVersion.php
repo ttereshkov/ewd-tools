@@ -9,12 +9,12 @@ class AspectTemplateVersion extends Model
 {
     protected $fillable = [
         'template_version_id',
-        'aspect_version_id',
+        'aspect_id',
         'weight',
     ];
 
     protected $casts = [
-        'weight' => 'decimal:4',
+        'weight' => 'decimal:2',
     ];
 
     /**
@@ -26,10 +26,10 @@ class AspectTemplateVersion extends Model
     }
 
     /**
-     * Relasi ke AspectVersion
+     * Relasi ke Aspect
      */
-    public function aspectVersion(): BelongsTo
+    public function aspect(): BelongsTo
     {
-        return $this->belongsTo(AspectVersion::class);
+        return $this->belongsTo(Aspect::class);
     }
 }

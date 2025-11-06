@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ActionItemType;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -42,16 +43,16 @@ class MonitoringNote extends Model
 
     public function previousPeriodItems(): HasMany
     {
-        return $this->hasMany(ActionItem::class)->where('item_type', 'previous_period');
+        return $this->hasMany(ActionItem::class)->where('item_type', ActionItemType::PREVIOUS_PERIOD->value);
     }
 
     public function currentPeriodItems(): HasMany
     {
-        return $this->hasMany(ActionItem::class)->where('item_type', 'current_progress');
+        return $this->hasMany(ActionItem::class)->where('item_type', ActionItemType::CURRENT_PROGRESS->value);
     }
 
     public function nextPeriodItems(): HasMany
     {
-        return $this->hasMany(ActionItem::class)->where('item_type', 'next_period');
+        return $this->hasMany(ActionItem::class)->where('item_type', ActionItemType::NEXT_PERIOD->value);
     }
 }

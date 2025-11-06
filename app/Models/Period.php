@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PeriodStatus;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use PHPUnit\Logging\OpenTestReporting\Status;
 
 class Period extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -31,6 +32,10 @@ class Period extends Model
         'status' => PeriodStatus::class
     ];
 
+    protected $attributes = [
+        'status' => PeriodStatus::DRAFT->value,
+    ];
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -38,11 +43,11 @@ class Period extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', PeriodStatus::ACTIVE);
+        return $query->where('status', PeriodStatus::ACTIVE->value);
     }
 
     public function scopeExpired($query)
     {
-        return $query->where('status', PeriodStatus::EXPIRED);
+        return $query->where('status', PeriodStatus::EXPIRED->value);
     }
 }

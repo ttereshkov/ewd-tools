@@ -29,14 +29,13 @@ class Report extends Model
         'submitted_at' => 'datetime',
     ];
 
+    protected $attributes = [
+        'status' => ReportStatus::SUBMITTED->value,
+    ];
+
     public function borrower(): BelongsTo
     {
         return $this->belongsTo(Borrower::class);
-    }
-
-    public function facilities(): HasMany
-    {
-        return $this->hasMany(BorrowerFacility::class);
     }
 
     public function period(): BelongsTo

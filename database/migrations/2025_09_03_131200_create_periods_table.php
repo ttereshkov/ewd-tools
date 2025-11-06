@@ -17,7 +17,7 @@ return new class extends Migration
             $table->timestampTz('start_date');
             $table->timestampTz('end_date');
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
-            $table->unsignedTinyInteger('status')->default(0);
+            $table->unsignedTinyInteger('status')->default(1);
             $table->timestampsTz();
             $table->softDeletesTz();
 
