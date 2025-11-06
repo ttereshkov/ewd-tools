@@ -8,34 +8,39 @@ import { Textarea } from '@/components/ui/textarea';
 import { TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { destroy, store, update } from '@/routes/action-items';
 import watchlist from '@/routes/watchlist';
-import { WatchlistNotePageProps } from '@/types';
+import { WatchlistNotePageProps, ActionItem as ActionItemT, ActionItemStatus as ActionItemStatusT, ActionItemType as ActionItemTypeT, ActionItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import { Tooltip } from '@radix-ui/react-tooltip';
 import { ArrowLeftIcon, Calendar, FileText, MessageSquare, Pencil, Trash2, User } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
-type ActionItemStatus = 'pending' | 'in_progress' | 'completed' | 'overdue';
-type ActionItemType = 'previous_period' | 'current_progress' | 'next_period';
-
-interface ActionItem {
-    id: number;
-    action_description: string;
-    progress_notes: string;
-    people_in_charge: string;
-    notes: string;
-    due_date: string;
-    status: ActionItemStatus;
-    item_type: ActionItemType;
-}
+// Support both numeric-backed enums from backend and string labels in UI
+type ActionItemStatus = ActionItemStatusT | 0 | 1 | 2 | 3;
+type ActionItemType = ActionItemTypeT | 0 | 1 | 2;
 
 const formatDate = (date: string) => {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-const getStatusBadgeClass = (status: ActionItemStatus) => {
+const normalizeStatus = (status: ActionItemStatus): ActionItemStatusT => {
     switch (status) {
+        case 0:
+            return 'pending';
+        case 1:
+            return 'in_progress';
+        case 2:
+            return 'completed';
+        case 3:
+            return 'overdue';
+        default:
+            return status;
+    }
+};
+
+const getStatusBadgeClass = (status: ActionItemStatus) => {
+    switch (normalizeStatus(status)) {
         case 'completed':
             return 'bg-green-100 text-green-800';
         case 'in_progress':
@@ -49,8 +54,21 @@ const getStatusBadgeClass = (status: ActionItemStatus) => {
     }
 };
 
-const getItemTypeLabel = (type: ActionItemType) => {
+const normalizeItemType = (type: ActionItemType): ActionItemTypeT => {
     switch (type) {
+        case 0:
+            return 'previous_period';
+        case 1:
+            return 'current_progress';
+        case 2:
+            return 'next_period';
+        default:
+            return type;
+    }
+};
+
+const getItemTypeLabel = (type: ActionItemType) => {
+    switch (normalizeItemType(type)) {
         case 'previous_period':
             return 'Progress Periode Sebelumnya';
         case 'current_progress':
@@ -97,7 +115,7 @@ export default function WatchlistNote({ report_data, monitoring_note, action_ite
 
     const [errors, setErrors] = useState<{
         note?: { watchlist_reason?: string; account_strategy?: string };
-        actionItem?: Partial<Record<keyof ActionItem, string>>;
+        actionItem?: Partial<Record<keyof ActionItemT, string>>;
     }>({});
 
     // Handle untuk mengubah monitoring note
@@ -134,7 +152,7 @@ export default function WatchlistNote({ report_data, monitoring_note, action_ite
         );
     };
 
-    const handleAddActionItem = (item: ActionItem) => {
+    const handleAddActionItem = (item: ActionItemT) => {
         const newErrors: typeof errors.actionItem = {};
 
         if (!item.action_description?.trim()) {
@@ -166,9 +184,9 @@ export default function WatchlistNote({ report_data, monitoring_note, action_ite
                     if (page.props.action_items) {
                         setActionItems(
                             page.props.action_items as {
-                                previous_period: ActionItem[];
-                                current_progress: ActionItem[];
-                                next_period: ActionItem[];
+                                previous_period: ActionItemT[];
+                                current_progress: ActionItemT[];
+                                next_period: ActionItemT[];
                             },
                         );
                     }
@@ -182,7 +200,7 @@ export default function WatchlistNote({ report_data, monitoring_note, action_ite
         );
     };
 
-    const handleUpdateActionItem = (item: ActionItem) => {
+    const handleUpdateActionItem = (item: ActionItemT) => {
         const newErrors: typeof errors.actionItem = {};
 
         if (!item.action_description?.trim()) {
@@ -214,9 +232,9 @@ export default function WatchlistNote({ report_data, monitoring_note, action_ite
                     if (page.props.action_items) {
                         setActionItems(
                             page.props.action_items as {
-                                previous_period: ActionItem[];
-                                current_progress: ActionItem[];
-                                next_period: ActionItem[];
+                                previous_period: ActionItemT[];
+                                current_progress: ActionItemT[];
+                                next_period: ActionItemT[];
                             },
                         );
                     }
@@ -231,7 +249,7 @@ export default function WatchlistNote({ report_data, monitoring_note, action_ite
         );
     };
 
-    const handleDeleteActionItem = (item: ActionItem) => {
+    const handleDeleteActionItem = (item: ActionItemT) => {
         if (!window.confirm('Apakah Anda yakin ingin menghapus Action Item ini?')) return;
 
         router.delete(destroy(item.id).url, {
@@ -248,7 +266,7 @@ export default function WatchlistNote({ report_data, monitoring_note, action_ite
                 } else {
                     setActionItems((prev) => ({
                         ...prev,
-                        [item.item_type]: prev[item.item_type].filter((x) => x.id !== item.id),
+                        [normalizeItemType(item.item_type)]: prev[normalizeItemType(item.item_type)].filter((x) => x.id !== item.id),
                     }));
                 }
             },
@@ -403,7 +421,7 @@ export default function WatchlistNote({ report_data, monitoring_note, action_ite
     );
 }
 
-function ActionItemDisplay({ item, onEdit, onDelete }: { item: ActionItem; onEdit: () => void; onDelete: () => void }) {
+function ActionItemDisplay({ item, onEdit, onDelete }: { item: ActionItemT; onEdit: () => void; onDelete: () => void }) {
     return (
         <div className="rounded-lg border p-4 transition-all hover:shadow-sm">
             {/* Bagian Header (Judul, Status, Tombol) */}
@@ -411,7 +429,7 @@ function ActionItemDisplay({ item, onEdit, onDelete }: { item: ActionItem; onEdi
                 <div className="flex-1 pr-4">
                     <h4 className="font-semibold text-gray-800">{item.action_description}</h4>
                     <div className="mt-1">
-                        <Badge className={getStatusBadgeClass(item.status)}>{item.status.replace('_', ' ').toUpperCase()}</Badge>
+                        <Badge className={getStatusBadgeClass(item.status)}>{normalizeStatus(item.status).replace('_', ' ').toUpperCase()}</Badge>
                     </div>
                 </div>
                 <div className="flex flex-shrink-0 gap-2">
@@ -453,7 +471,7 @@ function ActionItemDisplay({ item, onEdit, onDelete }: { item: ActionItem; onEdi
                         </div>
                     </div>
                 ) : (
-                    item.item_type === 'previous_period' && (
+                    normalizeItemType(item.item_type) === 'previous_period' && (
                         <div className="mb-3 flex items-center gap-3 rounded-md bg-red-50 p-2 text-sm text-red-700">
                             <MessageSquare className="h-4 w-4 flex-shrink-0" />
                             <p className="font-medium">Progress notes belum diisi - Wajib dilengkapi.</p>
@@ -499,13 +517,13 @@ function ActionItemForm({
     onCancel,
     errors,
 }: {
-    item?: ActionItem;
+    item?: ActionItemT;
     itemType?: ActionItemType;
-    onSave: (item: ActionItem) => void;
+    onSave: (item: ActionItemT) => void;
     onCancel?: () => void;
-    errors?: Partial<Record<keyof ActionItem, string>>;
+    errors?: Partial<Record<keyof ActionItemT, string>>;
 }) {
-    const initialFormState: ActionItem = item || {
+    const initialFormState: ActionItemT = item || {
         id: 0,
         action_description: '',
         progress_notes: '',
@@ -518,7 +536,7 @@ function ActionItemForm({
 
     const [formState, setFormState] = useState(initialFormState);
     const isEditing = !!item;
-    const isPreviousPeriod = formState.item_type === 'previous_period';
+    const isPreviousPeriod = normalizeItemType(formState.item_type) === 'previous_period';
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;

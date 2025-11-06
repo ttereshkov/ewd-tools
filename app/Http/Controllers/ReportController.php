@@ -34,7 +34,8 @@ class ReportController extends Controller
             'period_id' => $request->get('period_id'),
         ];
         $reports = $this->reportService->getAllReports($perPage, $filters);
-        $divisions = $this->divisionService->getAllDivisions();
+        // Gunakan daftar divisi yang aman untuk filter agar tidak mewajibkan izin 'view division'
+        $divisions = $this->divisionService->getDivisionsForFilters();
         $periods = $this->periodService->getAllPeriods();
         return Inertia::render('report/index', [
             'reports' => $reports,

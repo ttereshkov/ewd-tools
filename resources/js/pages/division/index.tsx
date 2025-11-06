@@ -1,14 +1,16 @@
 import DataPagination from '@/components/data-pagination';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import divisionRoutes from '@/routes/divisions';
 import { type BreadcrumbItem, type Division, type MaybePaginated } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { BuildingIcon, EditIcon, EyeIcon, PlusIcon, Trash2Icon } from 'lucide-react';
-import { useState } from 'react';
+import { BuildingIcon, EditIcon, EyeIcon, Loader2 as Loader2Icon, PlusIcon, Trash2Icon, SearchIcon, XIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
 type PageProps = {
@@ -27,11 +29,23 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function DivisionIndex() {
-    const pageProps = usePage<PageProps>().props as any;
-    const divisions = pageProps.divisions as Paginated<Division> | Division[] | undefined;
+    const pageProps = usePage<PageProps>().props;
+    const divisions = pageProps.divisions;
     const divisionList: Division[] = Array.isArray(divisions) ? divisions : divisions?.data ?? [];
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [divisionToDelete, setDivisionToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Search state synced with URL like UserIndex
+    const initialQ = useMemo(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('q') ?? '';
+        } catch {
+            return '';
+        }
+    }, []);
+    const [q, setQ] = useState<string>(initialQ);
 
     const openDeleteModal = (id: number) => {
         setDivisionToDelete(id);
@@ -43,8 +57,10 @@ export default function DivisionIndex() {
         setDivisionToDelete(null);
     };
 
-    const handleDelete = (id: number) => {
-        router.delete(divisionRoutes.destroy(id).url, {
+    const handleDelete = () => {
+        if (!divisionToDelete) return;
+        setIsDeleting(true);
+        router.delete(divisionRoutes.destroy(divisionToDelete).url, {
             onSuccess: () => {
                 toast.success('Divisi berhasil dihapus');
             },
@@ -54,9 +70,20 @@ export default function DivisionIndex() {
                 });
             },
             onFinish: () => {
+                setIsDeleting(false);
                 closeDeleteModal();
             },
         });
+    };
+
+    const applySearch = () => {
+        const options = q ? { q } : undefined;
+        router.get(divisionRoutes.index(options as any).url, {}, { preserveState: true, preserveScroll: true });
+    };
+
+    const resetSearch = () => {
+        setQ('');
+        router.get(divisionRoutes.index().url, {}, { preserveState: true, preserveScroll: true });
     };
 
     return (
@@ -74,7 +101,7 @@ export default function DivisionIndex() {
                                 </div>
                                 <div className="text-right">
                                     <div className="rounded-lg border p-3 sm:p-4">
-                                        <div className="text-xl font-bold sm:text-2xl">{divisionList.length}</div>
+                                        <div className="text-xl font-bold sm:text-2xl">{(divisions as any)?.total ?? divisionList.length ?? 0}</div>
                                         <div className="text-xs text-muted-foreground sm:text-sm">Total Divisi</div>
                                     </div>
                                 </div>
@@ -83,8 +110,23 @@ export default function DivisionIndex() {
 
                         {/* Data Table */}
                         <Card>
-                            <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                <CardTitle></CardTitle>
+                            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex w-full items-center gap-2">
+                                    <Input
+                                        placeholder="Cari nama atau kode divisi..."
+                                        value={q}
+                                        onChange={(e) => setQ(e.target.value)}
+                                        className="min-w-0 flex-1"
+                                    />
+                                    <Button variant="secondary" onClick={applySearch} aria-label="Cari">
+                                        <SearchIcon className="h-4 w-4" />
+                                    </Button>
+                                    {q && (
+                                        <Button variant="ghost" onClick={resetSearch} aria-label="Reset pencarian">
+                                            <XIcon className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
                                 <Link href={divisionRoutes.create().url}>
                                     <Button>
                                         <PlusIcon className="h-4 w-4" />
@@ -118,25 +160,36 @@ export default function DivisionIndex() {
                                                     <TableCell>
                                                         <div className="flex flex-wrap justify-end gap-2">
                                                             <Link href={divisionRoutes.show(division.id).url}>
-                                                                <Button variant="outline" size="sm" className="whitespace-nowrap">
-                                                                    <EyeIcon className="mr-1 h-4 w-4" />
-                                                                    Lihat
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950"
+                                                                    aria-label="Lihat"
+                                                                >
+                                                                    <EyeIcon className="h-4 w-4" />
+                                                                    <span className="sr-only">Lihat</span>
                                                                 </Button>
                                                             </Link>
                                                             <Link href={divisionRoutes.edit(division.id).url}>
-                                                                <Button variant="outline" size="sm" className="whitespace-nowrap">
-                                                                    <EditIcon className="mr-1 h-4 w-4" />
-                                                                    Edit
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950"
+                                                                    aria-label="Edit"
+                                                                >
+                                                                    <EditIcon className="h-4 w-4" />
+                                                                    <span className="sr-only">Edit</span>
                                                                 </Button>
                                                             </Link>
                                                             <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                className="whitespace-nowrap text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                                                 onClick={() => openDeleteModal(division.id)}
+                                                                aria-label="Hapus"
                                                             >
-                                                                <Trash2Icon className="mr-1 h-4 w-4" />
-                                                                Hapus
+                                                                <Trash2Icon className="h-4 w-4" />
+                                                                <span className="sr-only">Hapus</span>
                                                             </Button>
                                                         </div>
                                                     </TableCell>
@@ -151,36 +204,36 @@ export default function DivisionIndex() {
                     </div>
                 </div>
             </div>
-            {isDeleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-                    <Card className="w-full max-w-sm animate-in fade-in zoom-in">
-                        <CardHeader className="items-center text-center">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                                <Trash2Icon className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                        </CardHeader>
-                        <CardContent className="text-center">
-                            <p className="text-sm text-muted-foreground">
-                                Apakah anda yakin ingin menghapus data ini?
-                                <br />
-                                Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
-                            </p>
-                        </CardContent>
-                        <CardFooter className="flex flex-col-reverse gap-3 px-6 sm:flex-row sm:justify-end">
-                            <Button variant="outline" onClick={closeDeleteModal}>
-                                Batal
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                onClick={() => divisionToDelete && handleDelete(divisionToDelete)}
-                            >
-                                Ya, Hapus
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                </div>
-            )}
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent
+                    className="sm:max-w-md"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleDelete();
+                        }
+                    }}
+                >
+                    <DialogHeader className="items-center text-center">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                            <Trash2Icon className="h-6 w-6 text-destructive" />
+                        </div>
+                        <DialogTitle>Hapus divisi?</DialogTitle>
+                        <DialogDescription>
+                            Menghapus divisi terpilih. Tindakan ini permanen dan tidak dapat dibatalkan.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <Button variant="outline" onClick={closeDeleteModal} disabled={isDeleting}>
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={handleDelete} disabled={isDeleting} aria-busy={isDeleting}>
+                            {isDeleting ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Trash2Icon className="mr-2 h-4 w-4" />}
+                            Hapus
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

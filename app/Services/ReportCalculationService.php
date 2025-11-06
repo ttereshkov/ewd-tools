@@ -23,20 +23,26 @@ class ReportCalculationService extends BaseService
         return $this->tx(function () use ($report, $actor) {
             $report->loadMissing([
                 'borrower.detail',
-                'template.latestTemplateVersion.aspects',
+                'borrower.facilities',
+                'template.latestTemplateVersion.aspects.latestAspectVersion.visibilityRules',
                 'answers.questionVersion',
                 'answers.questionOption',
+                'answers.questionVersion.visibilityRules',
             ]);
 
-            $aspectWeightMap = $this->buildAspectWeightMap($report);
+            [$borrowerData, $facilityData] = $this->extractContextData($report);
 
-            $aspectScores = $this->calculateAspectScores($report->answers);
+            $aspectWeightMap = $this->buildAspectWeightMap($report, $borrowerData, $facilityData);
+
+            $aspectScores = $this->calculateAspectScores($report->answers, $borrowerData, $facilityData);
 
             $overallSummary = $this->calculateOverallSummary(
                 $aspectScores,
                 $aspectWeightMap,
                 $report->answers,
                 $report->borrower->detail->collectibility ?? null,
+                $borrowerData,
+                $facilityData,
             );
 
             $this->storeCalculationResults($report, $aspectScores, $overallSummary);
@@ -63,25 +69,43 @@ class ReportCalculationService extends BaseService
     /**
      * Membuat peta sederhana [aspect_version_id => weight] untuk pencarian cepat.
      */
-    private function buildAspectWeightMap(Report $report): array
+    private function buildAspectWeightMap(Report $report, array $borrowerData, array $facilityData): array
     {
         if (!$report->template || !$report->template->latestTemplateVersion) {
             throw new InvalidArgumentException("Laporan #{$report->id} tidak memiliki template atau versi template yang aktif");
         }
 
-        return $report->template->latestTemplateVersion->aspects
-            ->pluck('pivot.weight', 'id')
-            ->map(fn ($weight) => $weight ?? 0)
-            ->all();
+        $map = [];
+        foreach ($report->template->latestTemplateVersion->aspects as $aspect) {
+            $aspectVersion = $aspect->latestAspectVersion;
+            if (!$aspectVersion) continue;
+
+            if (method_exists($aspectVersion, 'checkVisibility') && !$aspectVersion->checkVisibility($borrowerData, $facilityData)) {
+                continue;
+            }
+
+            $map[$aspectVersion->id] = $aspect->pivot->weight ?? 0;
+        }
+
+        return $map;
     }
 
     /**
      * Hitung skor untuk setiap aspek berdasarkan jawaban.
      * Kembalikan koleksi DTO.
      */
-    private function calculateAspectScores(Collection $answers): SupportCollection
+    private function calculateAspectScores(Collection $answers, array $borrowerData, array $facilityData): SupportCollection
     {
-        $answersByAspect = $answers->groupBy('questionVersion.aspectVersion.id');
+        $visibleAnswers = $answers->filter(function ($answer) use ($borrowerData, $facilityData) {
+            $qv = $answer->questionVersion;
+            if (!$qv) return false;
+            if (method_exists($qv, 'checkVisibility')) {
+                return $qv->checkVisibility($borrowerData, $facilityData);
+            }
+            return true;
+        });
+
+        $answersByAspect = $visibleAnswers->groupBy('questionVersion.aspectVersion.id');
 
         return $answersByAspect->map(function ($aspectAnswers, $aspectVersionId) {
             $totalScore = 0;
@@ -119,6 +143,8 @@ class ReportCalculationService extends BaseService
         array $aspectWeightMap,
         Collection $answers,
         ?string $collectibility,
+        array $borrowerData,
+        array $facilityData,
     ): OverallSummaryDto {
         $totalWeightedScore = 0;
 
@@ -129,7 +155,7 @@ class ReportCalculationService extends BaseService
 
         $totalScore = round($totalWeightedScore, 2);
 
-        $finalClassification = $this->determineFinalClassification($totalScore, $aspectScores, $answers);
+        $finalClassification = $this->determineFinalClassification($totalScore, $aspectScores, $answers, $borrowerData, $facilityData);
 
         return new OverallSummaryDto(
             totalScore: $totalScore,
@@ -156,7 +182,6 @@ class ReportCalculationService extends BaseService
         ReportSummary::updateOrCreate(
             ['report_id' => $report->id],
             [
-                'total_score' => $overallSummary->totalScore,
                 'final_classification' => $overallSummary->finalClassification,
                 'indicative_collectibility' => $overallSummary->collectibility ?? 0,
             ]
@@ -169,11 +194,11 @@ class ReportCalculationService extends BaseService
      * Menentukan klasifikasi final berdasarkan semua aturan.
      * Ini adalah perbaikan LOGIKA KRITIS.
      */
-    private function determineFinalClassification(float $totalScore, SupportCollection $aspectScores, Collection $answers): Classification
+    private function determineFinalClassification(float $totalScore, SupportCollection $aspectScores, Collection $answers, array $borrowerData, array $facilityData): Classification
     {
         if ($this->passesScoreRule($totalScore)
             && $this->passesAspectRule($aspectScores) // <-- Gunakan skor BARU
-            && $this->passesMandatoryRule($answers)) { // <-- Gunakan jawaban mentah
+            && $this->passesMandatoryRule($answers, $borrowerData, $facilityData)) { // <-- Hanya cek pertanyaan mandatory yang terlihat
             return Classification::SAFE;
         }
 
@@ -195,16 +220,34 @@ class ReportCalculationService extends BaseService
     /**
      * Periksa aturan wajib dari data $answers mentah.
      */
-    private function passesMandatoryRule(Collection $answers): bool
+    private function passesMandatoryRule(Collection $answers, array $borrowerData, array $facilityData): bool
     {
         $mandatoryLimit = 1;
 
         $failedMandatoryCount = $answers
-            ->filter(fn($answer) => $answer->questionVersion?->is_mandatory)
-            ->filter(fn($answer) => !$answer->questionOption || $answer->questionOption->score < 0)
+            ->filter(function ($answer) use ($borrowerData, $facilityData) {
+                $qv = $answer->questionVersion;
+                if (!$qv) return false;
+                if (!$qv->is_mandatory) return false;
+                if (method_exists($qv, 'checkVisibility') && !$qv->checkVisibility($borrowerData, $facilityData)) {
+                    return false; // Abaikan pertanyaan mandatory yang tidak terlihat
+                }
+                return !$answer->questionOption || ($answer->questionOption->score ?? 0) < 0;
+            })
             ->count();
 
         return $failedMandatoryCount <= $mandatoryLimit;
+    }
+
+    /**
+     * Ekstrak data konteks untuk evaluasi visibility: borrower_detail + borrower_facility[]
+     */
+    private function extractContextData(Report $report): array
+    {
+        $borrowerData = $report->borrower?->detail ? $report->borrower->detail->toArray() : [];
+        $facilityData = $report->borrower?->facilities ? $report->borrower->facilities->map(fn($f) => $f->toArray())->all() : [];
+
+        return [$borrowerData, $facilityData];
     }
 
     // --- LOGIC SIDE-EFFECT

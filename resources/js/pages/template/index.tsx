@@ -1,6 +1,7 @@
 import DataPagination from '@/components/data-pagination';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
@@ -8,7 +9,7 @@ import { dashboard } from '@/routes';
 import templateRoutes from '@/routes/templates';
 import { type BreadcrumbItem, type MaybePaginated } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { EditIcon, EyeIcon, PlusIcon, SearchIcon, Trash2Icon, XIcon } from 'lucide-react';
+import { EditIcon, EyeIcon, Loader2 as Loader2Icon, PlusIcon, SearchIcon, Trash2Icon, XIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -54,6 +55,7 @@ export default function TemplateIndex() {
     const templateList: Template[] = Array.isArray(templates) ? templates : (templates?.data ?? []);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [templateToDelete, setTemplateToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Initialize search from URL
     const initialQ = useMemo(() => {
@@ -76,8 +78,10 @@ export default function TemplateIndex() {
         setTemplateToDelete(null);
     };
 
-    const handleDelete = (id: number) => {
-        router.delete(templateRoutes.destroy(templateToDelete!).url, {
+    const handleDelete = () => {
+        if (!templateToDelete) return;
+        setIsDeleting(true);
+        router.delete(templateRoutes.destroy(templateToDelete).url, {
             onSuccess: () => {
                 toast.success('Template berhasil dihapus');
             },
@@ -87,6 +91,7 @@ export default function TemplateIndex() {
                 });
             },
             onFinish: () => {
+                setIsDeleting(false);
                 closeDeleteModal();
             },
         });
@@ -107,10 +112,24 @@ export default function TemplateIndex() {
             <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                     <div className="space-y-6">
+                        {/* Header Section */}
+                        <div className='rounded-xl border bg-card p-6 sm:p-8'>
+                            <div className='flex items-center justify-between'>
+                                <div>
+                                    <h1 className='mb-2 text-2xl font-bold sm:text-3xl'>Manajemen Template</h1>
+                                    <p className='text-sm text-muted-foreground sm:text-base'>Kelola template laporan dan aspek terkait</p>
+                                </div>
+                                <div className='text-right'>
+                                    <div className='rounded-lg border p-3 sm:p-4'>
+                                        <div className='text-xl font-bold sm:text-2xl'>{(!Array.isArray(templates) && (templates as any)?.total) ?? templateList.length ?? 0}</div>
+                                        <div className='text-xs text-muted-foreground sm:text-sm'>Total Template</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         {/* Data Table */}
-                        <Card className="border bg-background">
-                            <CardHeader className="border-b bg-muted/30">
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <Card>
+                            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div className="flex w-full items-center gap-2">
                                         <Input
                                             placeholder="Cari template..."
@@ -128,12 +147,11 @@ export default function TemplateIndex() {
                                         )}
                                     </div>
                                     <Link href={templateRoutes.create().url}>
-                                        <Button variant="outline" size="sm" className="whitespace-nowrap">
-                                            <PlusIcon className="mr-2 h-4 w-4" />
+                                        <Button>
+                                            <PlusIcon className="h-4 w-4" />
                                             Tambah Template
                                         </Button>
                                     </Link>
-                                </div>
                             </CardHeader>
                             <CardContent className="p-0">
                                 {templateList.length === 0 ? (
@@ -165,25 +183,36 @@ export default function TemplateIndex() {
                                                             <TableCell>
                                                                 <div className="flex flex-wrap gap-2">
                                                                     <Link href={templateRoutes.show(template.id).url}>
-                                                                        <Button variant="outline" size="sm" className="whitespace-nowrap">
-                                                                            <EyeIcon className="mr-1 h-4 w-4" />
-                                                                            Lihat
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950"
+                                                                            aria-label="Lihat"
+                                                                        >
+                                                                            <EyeIcon className="h-4 w-4" />
+                                                                            <span className="sr-only">Lihat</span>
                                                                         </Button>
                                                                     </Link>
                                                                     <Link href={templateRoutes.edit(template.id).url}>
-                                                                        <Button variant="outline" size="sm" className="whitespace-nowrap">
-                                                                            <EditIcon className="mr-1 h-4 w-4" />
-                                                                            Edit
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950"
+                                                                            aria-label="Edit"
+                                                                        >
+                                                                            <EditIcon className="h-4 w-4" />
+                                                                            <span className="sr-only">Edit</span>
                                                                         </Button>
                                                                     </Link>
                                                                     <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        className="whitespace-nowrap"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                                                         onClick={() => openDeleteModal(template.id)}
+                                                                        aria-label="Hapus"
                                                                     >
-                                                                        <Trash2Icon className="mr-1 h-4 w-4" />
-                                                                        Hapus
+                                                                        <Trash2Icon className="h-4 w-4" />
+                                                                        <span className="sr-only">Hapus</span>
                                                                     </Button>
                                                                 </div>
                                                             </TableCell>
@@ -202,36 +231,36 @@ export default function TemplateIndex() {
                     </div>
                 </div>
             </div>
-            {isDeleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <Card className="w-full max-w-sm animate-in fade-in zoom-in">
-                        <CardHeader className="items-center text-center">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                                <Trash2Icon className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                        </CardHeader>
-                        <CardContent className="text-center">
-                            <p className="text-sm text-muted-foreground">
-                                Apakah anda yakin ingin menghapus data ini?
-                                <br />
-                                Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
-                            </p>
-                        </CardContent>
-                        <CardFooter className="flex flex-col-reverse gap-3 px-6 sm:flex-row sm:justify-end">
-                            <Button variant="outline" onClick={closeDeleteModal}>
-                                Batal
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="hover:bg-destructive hover:text-destructive-foreground"
-                                onClick={() => templateToDelete && handleDelete(templateToDelete)}
-                            >
-                                Ya, Hapus
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                </div>
-            )}
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent
+                    className="sm:max-w-md"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleDelete();
+                        }
+                    }}
+                >
+                    <DialogHeader className="items-center text-center">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                            <Trash2Icon className="h-6 w-6 text-destructive" />
+                        </div>
+                        <DialogTitle>Hapus template?</DialogTitle>
+                        <DialogDescription>
+                            Menghapus template terpilih. Tindakan ini permanen dan tidak dapat dibatalkan.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <Button variant="outline" onClick={closeDeleteModal} disabled={isDeleting}>
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={handleDelete} disabled={isDeleting} aria-busy={isDeleting}>
+                            {isDeleting ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Trash2Icon className="mr-2 h-4 w-4" />}
+                            Hapus
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

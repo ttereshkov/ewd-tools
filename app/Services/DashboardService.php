@@ -10,7 +10,9 @@ use App\Models\Approval;
 use App\Models\Watchlist;
 use App\Models\ActionItem;
 use App\Enums\ReportStatus;
+use App\Enums\PeriodStatus;
 use App\Enums\ApprovalLevel;
+use App\Enums\ApprovalStatus;
 use App\Enums\ActionItemStatus;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -41,7 +43,7 @@ class DashboardService extends BaseService
                 'total_users' => User::count(),
                 'total_reports' => Report::count(),
                 'total_borrowers' => Borrower::count(),
-                'active_periods' => Period::where('status', 1)->count(),
+            'active_periods' => Period::where('status', PeriodStatus::ACTIVE)->count(),
             ],
             'charts' => [
                 'reports_by_status' => $this->getReportsByStatus(),
@@ -51,7 +53,7 @@ class DashboardService extends BaseService
             'recent_activities' => $this->getRecentActivities(),
             'system_health' => $this->getSystemHealth(),
             'actionable_items' => [
-                'pending_approvals' => Approval::where('status', 'pending')->count(),
+                'pending_approvals' => Approval::where('status', ApprovalStatus::PENDING)->count(),
                 'overdue_reports' => $this->getOverdueReportsCount(),
                 'inactive_users' => $this->getInactiveUsersCount(),
             ],
@@ -95,7 +97,7 @@ class DashboardService extends BaseService
     protected function getRiskAnalystDashboard(User $user): array
     {
         $pendingApprovals = Approval::where('level', ApprovalLevel::ERO->value)
-            ->where('status', 'pending')
+            ->where('status', ApprovalStatus::PENDING)
             ->whereHas('report.borrower', function ($query) use ($user) {
                 $query->where('division_id', $user->division_id);
             });
@@ -132,7 +134,7 @@ class DashboardService extends BaseService
     protected function getKadeptBisnisDashboard(User $user): array
     {
         $pendingApprovals = Approval::where('level', ApprovalLevel::KADEPT_BISNIS->value)
-            ->where('status', 'pending')
+            ->where('status', ApprovalStatus::PENDING)
             ->whereHas('report.borrower', function ($query) use ($user) {
                 $query->where('division_id', $user->division_id);
             });
@@ -169,7 +171,7 @@ class DashboardService extends BaseService
     protected function getKadeptRiskDashboard(User $user): array
     {
         $pendingApprovals = Approval::where('level', ApprovalLevel::KADIV_ERO->value)
-            ->where('status', 'pending')
+            ->where('status', ApprovalStatus::PENDING)
             ->whereHas('report.borrower', function ($query) use ($user) {
                 $query->where('division_id', $user->division_id);
             });
@@ -349,7 +351,7 @@ class DashboardService extends BaseService
     {
         return Approval::where('level', $level->value)
             ->where('reviewed_by', $user->id)
-            ->where('status', 'approved')
+            ->where('status', ApprovalStatus::APPROVED)
             ->whereMonth('updated_at', Carbon::now()->month)
             ->count();
     }
@@ -398,7 +400,7 @@ class DashboardService extends BaseService
     {
         return Approval::with(['report.borrower', 'report.creator'])
             ->where('level', $level->value)
-            ->where('status', 'pending')
+            ->where('status', ApprovalStatus::PENDING)
             ->whereHas('report.borrower', function ($query) use ($user) {
                 $query->where('division_id', $user->division_id);
             })

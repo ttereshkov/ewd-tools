@@ -47,17 +47,19 @@ class MonitoringNoteService extends BaseService
                 ->values(),
         ];
 
-        $this->audit('MonitoringNote', $monitoringNote->id, 'fetched', [
+        $this->audit(Auth::user(), [
+            'action' => 'fetched',
+            'auditable_id' => $monitoringNote->id,
+            'auditable_type' => MonitoringNote::class,
             'report_id' => $reportId,
-            'watchlist_id' => $watchlist->id,
-            'action_item_counts' => [
-                'previous' => $actionItems['previous_period']->count(),
-                'current'  => $actionItems['current_progress']->count(),
-                'next'     => $actionItems['next_period']->count(),
-            ],
         ]);
 
-        return compact('watchlist', 'report', 'monitoringNote', 'actionItems');
+        return [
+            'watchlist' => $watchlist,
+            'report_data' => $report,
+            'monitoring_note' => $monitoringNote,
+            'action_items' => $actionItems,
+        ];
     }
 
     public function getOrCreateWatchlistByReportId(int $reportId): Watchlist
@@ -70,9 +72,11 @@ class MonitoringNoteService extends BaseService
             if (!$watchlist) {
                 $report = Report::findOrFail($reportId);
                 $watchlist = $this->watchlistService->getOrCreateWatchlist($report);
-                $this->audit('Watchlist', $watchlist->id, 'auto_created', [
+                $this->audit(Auth::user(), [
+                    'action' => 'auto_created',
+                    'auditable_id' => $watchlist->id,
+                    'auditable_type' => Watchlist::class,
                     'report_id' => $reportId,
-                    'borrower_id' => $report->borrower_id,
                 ]);
             }
 
@@ -96,9 +100,11 @@ class MonitoringNoteService extends BaseService
                     'updated_by'       => Auth::id(),
                 ]);
 
-                $this->audit('MonitoringNote', $monitoringNote->id, 'created', [
-                    'watchlist_id' => $watchlistId,
-                    'borrower_id'  => $borrowerId,
+                $this->audit(Auth::user(), [
+                    'action' => 'created',
+                    'auditable_id' => $monitoringNote->id,
+                    'auditable_type' => MonitoringNote::class,
+                    'report_id' => Watchlist::find($watchlistId)?->report_id,
                 ]);
 
                 if ($borrowerId) {
@@ -129,14 +135,19 @@ class MonitoringNoteService extends BaseService
     {
         try {
             $this->actionItemService->copyFromPreviousPeriod($monitoringNoteId, $borrowerId);
-            $this->audit('MonitoringNote', $monitoringNoteId, 'auto_copy_previous_period', [
-                'borrower_id' => $borrowerId,
+            $this->audit(Auth::user(), [
+                'action' => 'auto_copy_previous_period',
+                'auditable_id' => $monitoringNoteId,
+                'auditable_type' => MonitoringNote::class,
+                'report_id' => MonitoringNote::find($monitoringNoteId)?->watchlist?->report_id,
             ]);
         } catch (Exception $e) {
             Log::warning('Failed to auto-copy from previous period: ' . $e->getMessage());
-            $this->audit('MonitoringNote', $monitoringNoteId, 'auto_copy_failed', [
-                'borrower_id' => $borrowerId,
-                'error' => $e->getMessage(),
+            $this->audit(Auth::user(), [
+                'action' => 'auto_copy_failed',
+                'auditable_id' => $monitoringNoteId,
+                'auditable_type' => MonitoringNote::class,
+                'report_id' => MonitoringNote::find($monitoringNoteId)?->watchlist?->report_id,
             ]);
         }
     }
@@ -170,11 +181,6 @@ class MonitoringNoteService extends BaseService
         }
 
         $isComplete = empty($missingItems);
-
-        $this->audit('MonitoringNote', $monitoringNote->id, 'validated', [
-            'is_complete' => $isComplete,
-            'missing_items' => $missingItems,
-        ]);
 
         return compact('isComplete', 'missingItems');
     }

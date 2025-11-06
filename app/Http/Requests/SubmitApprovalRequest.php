@@ -29,22 +29,19 @@ class SubmitApprovalRequest extends FormRequest
             'business_notes' => 'nullable|string|max:2000',
             'reviewer_notes' => 'nullable|string|max:2000',
 
-            'final_classification' => [
-                Auth::user()?->hasRole('risk_analyst')
-                    ? ['nullable', new Enum(Classification::class)]
-                    : 'prohibited',
-            ],
-            'override_reason' => [
-                Auth::user()?->hasRole('risk_analyst')
-                    ? 'nullable|string|max:1000|required_with:final_classification'
-                    : 'prohibited',
-            ],
+            'final_classification' => Auth::user()?->hasRole('risk_analyst')
+                ? ['nullable', new Enum(Classification::class)]
+                : ['prohibited'],
+
+            'override_reason' => Auth::user()?->hasRole('risk_analyst')
+                ? ['nullable', 'string', 'max:1000', 'required_with:final_classification']
+                : ['prohibited'],
         ];
 
         if ($this->routeIs('approvals.reject')) {
-            $rules['notes'] = 'required|string|min:10|max:1000';
+            $rules['notes'] = ['required', 'string', 'min:10', 'max:1000'];
         } else if ($this->routeIs('approvals.approve')) {
-            $rules['notes'] = 'nullable|string|min:10|max:1000';
+            $rules['notes'] = ['nullable', 'string', 'min:10', 'max:1000'];
         }
 
         return $rules;

@@ -1,6 +1,7 @@
 import DataPagination from '@/components/data-pagination';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,7 +10,7 @@ import { dashboard } from '@/routes';
 import reportRoutes from '@/routes/reports';
 import { type BreadcrumbItem, type MaybePaginated, type Report, type Division, type Period } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { EditIcon, EyeIcon, Trash2Icon, SearchIcon, XIcon, PlusIcon } from 'lucide-react';
+import { EditIcon, EyeIcon, Loader2 as Loader2Icon, Trash2Icon, SearchIcon, XIcon, PlusIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -39,6 +40,7 @@ export default function ReportIndex() {
     const reportList: Report[] = Array.isArray(reports) ? reports : (reports?.data ?? []);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [reportToDelete, setReportToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Initialize search and filter state from URL
     const initialQ = useMemo(() => {
@@ -84,6 +86,7 @@ export default function ReportIndex() {
 
     const handleDelete = () => {
         if (!reportToDelete) return;
+        setIsDeleting(true);
         router.delete(reportRoutes.destroy(reportToDelete).url, {
             onSuccess: () => {
                 toast.success('Laporan berhasil dihapus');
@@ -92,6 +95,7 @@ export default function ReportIndex() {
                 Object.values(errs).forEach((error) => toast.error(error as string));
             },
             onFinish: () => {
+                setIsDeleting(false);
                 closeDeleteModal();
             },
         });
@@ -221,38 +225,41 @@ export default function ReportIndex() {
                                                             <TableCell>{report.borrower.division.code}</TableCell>
                                                             <TableCell>{report.period.name}</TableCell>
                                                             <TableCell className="text-right">
-                                                                <div className="flex flex-wrap justify-end gap-2">
+                                                                <div className="flex flex-wrap justify-end gap-1 sm:gap-2">
                                                                     <Link href={'#'}>
                                                                         <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            className="whitespace-nowrap"
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950"
+                                                                            aria-label="Edit Laporan"
                                                                             title="Edit Laporan"
                                                                         >
-                                                                            <EditIcon className="mr-1 h-4 w-4" />
-                                                                            Edit
+                                                                            <EditIcon className="h-4 w-4" />
+                                                                            <span className="sr-only">Edit</span>
                                                                         </Button>
                                                                     </Link>
                                                                     <Link href={reportRoutes.show(report.id).url}>
                                                                         <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            className="whitespace-nowrap"
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950"
+                                                                            aria-label="Detail Laporan"
                                                                             title="Detail Laporan"
                                                                         >
-                                                                            <EyeIcon className="mr-1 h-4 w-4" />
-                                                                            Lihat
+                                                                            <EyeIcon className="h-4 w-4" />
+                                                                            <span className="sr-only">Lihat</span>
                                                                         </Button>
                                                                     </Link>
                                                                     <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        className="whitespace-nowrap text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                                                         title="Hapus Laporan"
                                                                         onClick={() => openDeleteModal(report.id)}
+                                                                        aria-label="Hapus Laporan"
                                                                     >
-                                                                        <Trash2Icon className="mr-1 h-4 w-4" />
-                                                                        Hapus
+                                                                        <Trash2Icon className="h-4 w-4" />
+                                                                        <span className="sr-only">Hapus</span>
                                                                     </Button>
                                                                 </div>
                                                             </TableCell>
@@ -271,36 +278,36 @@ export default function ReportIndex() {
                     </div>
                 </div>
             </div>
-            {isDeleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-                    <Card className="w-full max-w-sm animate-in fade-in zoom-in">
-                        <CardHeader className="items-center text-center">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                                <Trash2Icon className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                        </CardHeader>
-                        <CardContent className="text-center">
-                            <p className="text-sm text-muted-foreground">
-                                Apakah anda yakin ingin menghapus laporan ini?
-                                <br />
-                                Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
-                            </p>
-                        </CardContent>
-                        <CardFooter className="flex flex-col-reverse gap-3 px-6 sm:flex-row sm:justify-end">
-                            <Button variant="outline" onClick={closeDeleteModal}>
-                                Batal
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                onClick={handleDelete}
-                            >
-                                Ya, Hapus
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                </div>
-            )}
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent
+                    className="sm:max-w-md"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleDelete();
+                        }
+                    }}
+                >
+                    <DialogHeader className="items-center text-center">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                            <Trash2Icon className="h-6 w-6 text-destructive" />
+                        </div>
+                        <DialogTitle>Hapus laporan?</DialogTitle>
+                        <DialogDescription>
+                            Menghapus laporan terpilih. Tindakan ini permanen dan tidak dapat dibatalkan.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <Button variant="outline" onClick={closeDeleteModal} disabled={isDeleting}>
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={handleDelete} disabled={isDeleting} aria-busy={isDeleting}>
+                            {isDeleting ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Trash2Icon className="mr-2 h-4 w-4" />}
+                            Hapus
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

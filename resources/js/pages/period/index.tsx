@@ -1,13 +1,14 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import periods from '@/routes/periods';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { ClockIcon, EditIcon, EyeIcon, PlayIcon, PlusCircleIcon, StopCircle, Trash2Icon } from 'lucide-react';
+import { ClockIcon, EditIcon, EyeIcon, PlayIcon, PlusCircleIcon, StopCircle, Trash2Icon, SearchIcon, XIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -56,6 +57,15 @@ export default function PeriodIndex() {
     const [periodToDelete, setPeriodToDelete] = useState<number | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [isStatusUpdateLoading, setIsStatusUpdateLoading] = useState(false);
+    const initialQ = useMemo(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('q') ?? '';
+        } catch {
+            return '';
+        }
+    }, []);
+    const [q, setQ] = useState<string>(initialQ);
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -68,6 +78,25 @@ export default function PeriodIndex() {
         if (active) return active;
         return [...periodList].sort((a, b) => new Date(b.start_date ?? '').getTime() - new Date(a.start_date ?? '').getTime())[0];
     }, [periodList]);
+
+    const filteredPeriods = useMemo(() => {
+        if (!q) return periodList;
+        const qLower = q.toLowerCase();
+        return periodList.filter((p) => {
+            const fields = [p.name, p.start_date, p.end_date].filter(Boolean).map((v) => String(v).toLowerCase());
+            return fields.some((f) => f.includes(qLower));
+        });
+    }, [periodList, q]);
+
+    const applySearch = () => {
+        const options = q ? { q } : undefined;
+        router.get(periods.index(options as any).url, {}, { preserveState: true, preserveScroll: true });
+    };
+
+    const resetSearch = () => {
+        setQ('');
+        router.get(periods.index().url, {}, { preserveState: true, preserveScroll: true });
+    };
 
     const remainingTime = useMemo(() => {
         if (!latestPeriod || !latestPeriod.end_date) return null;
@@ -133,19 +162,14 @@ export default function PeriodIndex() {
             <Head title="Daftar Periode" />
             <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-                    {/* Header (standardized) */}
-                    <Card className="mb-8 border bg-background">
-                        <CardHeader className="border-b bg-muted/30">
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="text-xl font-bold flex items-center gap-3 text-foreground">
-                                    <ClockIcon className="h-6 w-6 text-muted-foreground" />
-                                    Manajemen Periode
-                                </CardTitle>
-                                <div className="text-sm text-muted-foreground">Total: {periodList.length} periode</div>
+                    {/* Header Section */}
+                    <div className='rounded-xl border bg-card p-6 sm:p-8'>
+                        <div className='flex items-center justify-between'>
+                            <div>
+                                <h1 className='mb-2 text-2xl font-bold sm:text-3xl'>Manajemen Periode</h1>
                             </div>
-                            <div className="text-sm text-muted-foreground">Kelola periode pelaporan dan waktu aktif sistem</div>
-                        </CardHeader>
-                    </Card>
+                        </div>
+                    </div>
 
                     {latestPeriod && (
                         <Card className="mb-8 border bg-background">
@@ -221,11 +245,27 @@ export default function PeriodIndex() {
 
                     <Card className="border bg-background">
                         <CardHeader className="border-b bg-muted/30">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <CardTitle className="text-xl font-bold flex items-center gap-3 text-foreground">
                                     <ClockIcon className="h-6 w-6 text-muted-foreground" />
-                                    Daftar Periode ({periodList.length})
+                                    Daftar Periode ({filteredPeriods.length})
                                 </CardTitle>
+                                <div className="flex w-full items-center gap-2 sm:w-auto">
+                                    <Input
+                                        placeholder="Cari nama/tanggal periode..."
+                                        value={q}
+                                        onChange={(e) => setQ(e.target.value)}
+                                        className="min-w-0 flex-1 sm:w-80"
+                                    />
+                                    <Button variant="secondary" onClick={applySearch} aria-label="Cari">
+                                        <SearchIcon className="h-4 w-4" />
+                                    </Button>
+                                    {q && (
+                                        <Button variant="ghost" onClick={resetSearch} aria-label="Reset pencarian">
+                                            <XIcon className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
                                 <Link href={periods.create().url}>
                                     <Button variant="outline" size="sm" className="whitespace-nowrap">
                                         <PlusCircleIcon className="mr-2 h-4 w-4" />
@@ -235,7 +275,7 @@ export default function PeriodIndex() {
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
-                            {periodList.length === 0 ? (
+                            {filteredPeriods.length === 0 ? (
                                 <div className="py-12 text-center">
                                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                                         <ClockIcon className="h-6 w-6 text-muted-foreground" />
@@ -256,7 +296,7 @@ export default function PeriodIndex() {
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {periodList.map((p, index) => (
+                                                {filteredPeriods.map((p, index) => (
                                                     <TableRow key={p.id} className="transition-colors">
                                                         <TableCell className="font-medium text-foreground">
                                                             <div className="flex items-center gap-3">

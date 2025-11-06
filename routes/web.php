@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AspectController;
 use App\Http\Controllers\BorrowerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\FormController;
+use App\Http\Controllers\ErrorReportController;
 use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SummaryController;
@@ -70,6 +72,10 @@ Route::post('approvals/{approval}/approve', [ApprovalController::class, 'approve
 Route::post('approvals/{approval}/reject', [ApprovalController::class, 'reject'])
     ->middleware(['auth', 'verified'])
     ->name('approvals.reject');
+
+Route::get('admin/audits', [AuditController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('audits.index');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

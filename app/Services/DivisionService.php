@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Division;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Collection;
 
 class DivisionService extends BaseService
 {
@@ -28,6 +30,26 @@ class DivisionService extends BaseService
         $this->authorize('view division');
 
         return Division::latest()->get();
+    }
+
+    /**
+     * Mengembalikan daftar divisi untuk kebutuhan filter/select tanpa mewajibkan permission penuh.
+     * - Jika user punya izin 'view division', kembalikan semua divisi.
+     * - Jika tidak, kembalikan hanya divisi milik user (jika ada).
+     * - Jika user tidak punya divisi, kembalikan koleksi kosong.
+     */
+    public function getDivisionsForFilters(): Collection
+    {
+        $actor = Auth::user();
+        if ($actor && $actor->can('view division')) {
+            return Division::latest()->get();
+        }
+
+        if ($actor && $actor->division_id) {
+            return Division::where('id', $actor->division_id)->get();
+        }
+
+        return collect();
     }
 
     public function getDivisionById(int $id): Division

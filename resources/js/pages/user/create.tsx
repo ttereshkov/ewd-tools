@@ -90,7 +90,7 @@ export default function UserCreate({ divisions, roles }: Props) {
             <div className="py-6 md:py-12">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                     <Card>
-                        <CardHeader className="flex flex-col gap-4 bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
+                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <CardTitle className="text-lg font-bold text-foreground md:text-2xl">Tambah User</CardTitle>
                             <Link href={users.index().url}>
                                 <Button variant={'outline'}>

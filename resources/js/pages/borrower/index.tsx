@@ -9,7 +9,8 @@ import { dashboard } from '@/routes';
 import borrowerRoutes from '@/routes/borrowers';
 import { type Borrower, type BreadcrumbItem, type Division, type MaybePaginated } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { EditIcon, EyeIcon, PlusIcon, SearchIcon, Trash2Icon, XIcon } from 'lucide-react';
+import { EditIcon, EyeIcon, Loader2 as Loader2Icon, PlusIcon, SearchIcon, Trash2Icon, XIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -37,6 +38,7 @@ export default function BorrowerIndex() {
     const borrowerList: Borrower[] = Array.isArray(borrowers) ? borrowers : (borrowers?.data ?? []);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [borrowerToDelete, setBorrowerToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Initialize search and filter state from URL
     const initialQ = useMemo(() => {
@@ -70,8 +72,10 @@ export default function BorrowerIndex() {
         setBorrowerToDelete(null);
     };
 
-    const handleDelete = (id: number) => {
-        router.delete(borrowerRoutes.destroy(borrowerToDelete!).url, {
+    const handleDelete = () => {
+        if (!borrowerToDelete) return;
+        setIsDeleting(true);
+        router.delete(borrowerRoutes.destroy(borrowerToDelete).url, {
             onSuccess: () => {
                 toast.success('Debitur berhasil dihapus');
             },
@@ -81,6 +85,7 @@ export default function BorrowerIndex() {
                 });
             },
             onFinish: () => {
+                setIsDeleting(false);
                 closeDeleteModal();
             },
         });
@@ -114,7 +119,7 @@ export default function BorrowerIndex() {
                                 </div>
                                 <div className="text-right">
                                     <div className="rounded-lg border p-3 sm:p-4">
-                                        <div className="text-xl font-bold sm:text-2xl">{borrowerList.length}</div>
+                                        <div className="text-xl font-bold sm:text-2xl">{(!Array.isArray(borrowers) && (borrowers as any)?.total) ?? borrowerList.length ?? 0}</div>
                                         <div className="text-xs text-muted-foreground sm:text-sm">Total Debitur</div>
                                     </div>
                                 </div>
@@ -199,25 +204,36 @@ export default function BorrowerIndex() {
                                                     <TableCell>
                                                         <div className="flex flex-wrap justify-end gap-2">
                                                             <Link href={borrowerRoutes.show(borrower.id).url}>
-                                                                <Button variant="outline" size="sm" className="whitespace-nowrap">
-                                                                    <EyeIcon className="mr-1 h-4 w-4" />
-                                                                    Lihat
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950"
+                                                                    aria-label="Lihat"
+                                                                >
+                                                                    <EyeIcon className="h-4 w-4" />
+                                                                    <span className="sr-only">Lihat</span>
                                                                 </Button>
                                                             </Link>
                                                             <Link href={borrowerRoutes.edit(borrower.id).url}>
-                                                                <Button variant="outline" size="sm" className="whitespace-nowrap">
-                                                                    <EditIcon className="mr-1 h-4 w-4" />
-                                                                    Edit
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950"
+                                                                    aria-label="Edit"
+                                                                >
+                                                                    <EditIcon className="h-4 w-4" />
+                                                                    <span className="sr-only">Edit</span>
                                                                 </Button>
                                                             </Link>
                                                             <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                className="whitespace-nowrap text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                                                 onClick={() => openDeleteModal(borrower.id)}
+                                                                aria-label="Hapus"
                                                             >
-                                                                <Trash2Icon className="mr-1 h-4 w-4" />
-                                                                Hapus
+                                                                <Trash2Icon className="h-4 w-4" />
+                                                                <span className="sr-only">Hapus</span>
                                                             </Button>
                                                         </div>
                                                     </TableCell>
@@ -234,36 +250,36 @@ export default function BorrowerIndex() {
                     </div>
                 </div>
             </div>
-            {isDeleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-                    <Card className="w-full max-w-sm animate-in fade-in zoom-in">
-                        <CardHeader className="items-center text-center">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                                <Trash2Icon className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                        </CardHeader>
-                        <CardContent className="text-center">
-                            <p className="text-sm text-muted-foreground">
-                                Apakah anda yakin ingin menghapus data ini?
-                                <br />
-                                Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
-                            </p>
-                        </CardContent>
-                        <CardFooter className="flex flex-col-reverse gap-3 px-6 sm:flex-row sm:justify-end">
-                            <Button variant="outline" onClick={closeDeleteModal}>
-                                Batal
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                onClick={() => borrowerToDelete && handleDelete(borrowerToDelete)}
-                            >
-                                Ya, Hapus
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                </div>
-            )}
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent
+                    className="sm:max-w-md"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleDelete();
+                        }
+                    }}
+                >
+                    <DialogHeader className="items-center text-center">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                            <Trash2Icon className="h-6 w-6 text-destructive" />
+                        </div>
+                        <DialogTitle>Hapus debitur?</DialogTitle>
+                        <DialogDescription>
+                            Menghapus debitur terpilih. Tindakan ini permanen dan tidak dapat dibatalkan.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <Button variant="outline" onClick={closeDeleteModal} disabled={isDeleting}>
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={handleDelete} disabled={isDeleting} aria-busy={isDeleting}>
+                            {isDeleting ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Trash2Icon className="mr-2 h-4 w-4" />}
+                            Hapus
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

@@ -62,6 +62,8 @@ class ReportService
                 'summary', 
                 'creator',
                 'answers',
+                'answers.questionVersion',
+                'answers.questionOption',
                 'aspects',
                 'aspects.aspectVersion',
                 'approvals',

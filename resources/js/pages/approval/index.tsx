@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -9,7 +10,7 @@ import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { BreadcrumbItem, User } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { AlertCircleIcon, CheckIcon, ClockIcon, EyeIcon, UserIcon, XIcon } from 'lucide-react';
+import { AlertCircleIcon, CheckIcon, ClockIcon, EyeIcon, UserIcon, XIcon, SearchIcon } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -218,10 +219,43 @@ export default function ApprovalIndex({ reports, user }: PageProps) {
     const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
     const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
 
-    // Show all reports without filtering
+    // URL-synced search state and client-side filtering
+    const initialQ = useMemo(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('q') ?? '';
+        } catch {
+            return '';
+        }
+    }, []);
+    const [q, setQ] = useState<string>(initialQ);
+
     const filteredReports = useMemo(() => {
-        return reports || [];
-    }, [reports]);
+        if (!q) return reports || [];
+        const qLower = q.toLowerCase();
+        return (reports || []).filter((r) => {
+            const fields = [
+                r?.borrower?.name,
+                r?.borrower?.division?.name,
+                r?.borrower?.division?.code,
+                r?.period?.name,
+                r?.creator?.name,
+            ]
+                .filter(Boolean)
+                .map((v) => String(v).toLowerCase());
+            return fields.some((f) => f.includes(qLower));
+        });
+    }, [reports, q]);
+
+    const applySearch = () => {
+        const options = q ? { q } : undefined;
+        router.get('/approvals', options as any, { preserveState: true, preserveScroll: true });
+    };
+
+    const resetSearch = () => {
+        setQ('');
+        router.get('/approvals', {}, { preserveState: true, preserveScroll: true });
+    };
 
     // Get user's approval level
     const userApprovalLevel = useMemo(() => {
@@ -406,9 +440,27 @@ export default function ApprovalIndex({ reports, user }: PageProps) {
                         {/* Header Section (standardized) */}
                         <Card className="border bg-background">
                             <CardHeader className="border-b bg-muted/30">
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-xl font-bold text-foreground">Persetujuan Laporan</CardTitle>
-                                    <div className="text-sm text-muted-foreground">Menunggu: {pendingCount}</div>
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <CardTitle className="text-xl font-bold text-foreground">Persetujuan Laporan</CardTitle>
+                                        <div className="text-sm text-muted-foreground">Menunggu: {pendingCount}</div>
+                                    </div>
+                                    <div className="flex w-full items-center gap-2 sm:w-auto">
+                                        <Input
+                                            placeholder="Cari debitur/divisi/periode/pembuat..."
+                                            value={q}
+                                            onChange={(e) => setQ(e.target.value)}
+                                            className="min-w-0 flex-1 sm:w-96"
+                                        />
+                                        <Button variant="secondary" onClick={applySearch} aria-label="Cari">
+                                            <SearchIcon className="h-4 w-4" />
+                                        </Button>
+                                        {q && (
+                                            <Button variant="ghost" onClick={resetSearch} aria-label="Reset pencarian">
+                                                <XIcon className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="text-sm text-muted-foreground">Kelola persetujuan laporan sesuai dengan workflow yang ditetapkan</div>
                             </CardHeader>

@@ -21,6 +21,8 @@ class SummaryObserver
         }
 
         if ($summary->final_classification === Classification::WATCHLIST) {
+            $addedBy = Auth::id() ?? $report->created_by;
+
             $watchlist = Watchlist::firstOrCreate(
                 [
                     'borrower_id' => $report->borrower_id,
@@ -28,7 +30,7 @@ class SummaryObserver
                     'status' => WatchlistStatus::ACTIVE,
                 ],
                 [
-                    'added_by' => Auth::id()
+                    'added_by' => $addedBy
                 ]
             );
 
@@ -39,7 +41,7 @@ class SummaryObserver
                 [
                     'watchlist_reason' => '',
                     'account_strategy' => '',
-                    'created_by' => Auth::id(),
+                    'created_by' => $addedBy,
                 ]
             );
         } else {

@@ -15,11 +15,11 @@ class PeriodSeeder extends Seeder
      */
     public function run(): void
     {
-        // Ambil admin user sebagai creator
-        $admin = User::where('email', 'admin@bank.com')->first();
+        // Ambil admin user sebagai creator (tanpa mengandalkan email tertentu)
+        $admin = User::query()->role('admin')->first();
         
         if (!$admin) {
-            $this->command->error('Admin user not found. Please run UserSeeder first.');
+            $this->command->error('Admin user tidak ditemukan. Pastikan RolePermissionSeeder dan Admin/UserSeeder sudah dijalankan.');
             return;
         }
 

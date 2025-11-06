@@ -16,13 +16,19 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolePermissionSeeder::class,
             AdminSeeder::class,
-            // DivisionSeeder::class,
-            // UserSeeder::class,
-            // AspectSeeder::class,
-            // QuestionSeeder::class,
-            // QuestionOptionSeeder::class,
-            // TemplateSeeder::class,
-            // PeriodSeeder::class,
+            DivisionSeeder::class,
+            UserSeeder::class,
+            AspectSeeder::class,
+            QuestionSeeder::class,
+            QuestionOptionSeeder::class,
+            TemplateSeeder::class,
+            PeriodSeeder::class,
+            BorrowerSeeder::class,
+            BorrowerDetailSeeder::class,
+            BorrowerFacilitySeeder::class,
+            ReportSeeder::class,
+            AnswerSeeder::class,
+            MonitoringNoteSeeder::class,
         ]);
     }
 }

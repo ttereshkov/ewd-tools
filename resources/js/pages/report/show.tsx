@@ -8,7 +8,8 @@ import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import reports from '@/routes/reports';
 import { BreadcrumbItem, Report, Template, Watchlist } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { type SharedData } from '@/types';
 import {
     AlertTriangleIcon,
     ArrowLeftIcon,
@@ -70,6 +71,21 @@ const getClassificationBg = (c?: number) => (c === 0 ? 'bg-red-100' : 'bg-green-
 const getClassificationIcon = (c?: number) => (c === 0 ? AlertTriangleIcon : CheckIcon);
 
 export default function ReportShow({ report }: PageProps) {
+    const page = usePage<SharedData>().props;
+    const roles = useMemo(() => {
+        const names = [
+            ...(page.auth.user.roles?.map((r) => r.name) ?? []),
+            page.auth.user.role?.name,
+        ].filter(Boolean) as string[];
+        return new Set(names);
+    }, [page.auth.user]);
+
+    const userApprovalLevel = useMemo(() => {
+        if (roles.has('risk_analyst')) return 2; // ERO
+        if (roles.has('kadept_bisnis')) return 3; // KADEPT_BISNIS
+        if (roles.has('kadept_risk')) return 4; // KADIV_ERO
+        return null;
+    }, [roles]);
     const { borrower, creator, period, summary, answers, aspects, facilities, approvals } = useMemo(() => {
         const borrower = report.borrower;
         const creator = report.creator;
@@ -101,6 +117,7 @@ export default function ReportShow({ report }: PageProps) {
         borrower: true,
         facilities: true,
         aspects: true,
+        answers: true,
         summary: true,
         approvals: true,
     });
@@ -147,7 +164,7 @@ export default function ReportShow({ report }: PageProps) {
                 await router.post(
                     `/approvals/${approvalId}/reject`,
                     {
-                        reason: rejectionReason,
+                        notes: rejectionReason,
                     },
                     {
                         preserveState: false,
@@ -169,8 +186,17 @@ export default function ReportShow({ report }: PageProps) {
         [rejectionReason],
     );
 
-    const getApprovalStatusBadge = (status: string) => {
-        switch (status) {
+    // Normalize approval status coming as number (0/1/2) or string
+    const normalizeApprovalStatus = (status: string | number) => {
+        if (typeof status === 'number') {
+            return status === 0 ? 'pending' : status === 1 ? 'approved' : status === 2 ? 'rejected' : status.toString();
+        }
+        return status;
+    };
+
+    const getApprovalStatusBadge = (status: string | number) => {
+        const statusStr = normalizeApprovalStatus(status);
+        switch (statusStr) {
             case 'approved':
                 return <Badge className="bg-green-100 text-green-800">Disetujui</Badge>;
             case 'rejected':
@@ -182,16 +208,45 @@ export default function ReportShow({ report }: PageProps) {
 
     const getApprovalLevelLabel = (level: string) => {
         switch (level) {
-            case 'L1':
-                return 'Level 1';
-            case 'L2':
-                return 'Level 2';
-            case 'L3':
-                return 'Level 3';
+            case 'RM':
+                return 'Relationship Manager';
+            case 'ERO':
+                return 'ERO (Risk Analyst)';
+            case 'KADEPT_BISNIS':
+                return 'Kepala Departemen Bisnis';
+            case 'KADIV_ERO':
+                return 'Kepala Divisi ERO';
             default:
                 return level;
         }
     };
+
+    const normalizeApprovalLevelToNumber = (level: string | number) => {
+        if (typeof level === 'number') return level;
+        switch (level) {
+            case 'RM':
+                return 1;
+            case 'ERO':
+                return 2;
+            case 'KADEPT_BISNIS':
+                return 3;
+            case 'KADIV_ERO':
+                return 4;
+            default: {
+                const parsed = parseInt(level.toString());
+                return Number.isNaN(parsed) ? -1 : parsed;
+            }
+        }
+    };
+
+    const canUserApprove = useCallback(
+        (approval: Approval) => {
+            const status = normalizeApprovalStatus(approval.status);
+            const levelNum = normalizeApprovalLevelToNumber(approval.level);
+            return status === 'pending' && userApprovalLevel !== null && levelNum === userApprovalLevel;
+        },
+        [userApprovalLevel],
+    );
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -207,6 +262,30 @@ export default function ReportShow({ report }: PageProps) {
             href: reports.show(report.id).url,
         },
     ];
+
+    const answersWithNotes = useMemo(() => {
+        try {
+            return (answers || []).filter((a: any) => typeof a?.notes === 'string' && a.notes.trim() !== '');
+        } catch {
+            return [] as any[];
+        }
+    }, [answers]);
+
+    const getQuestionText = (answer: any) => {
+        return (
+            answer?.questionVersion?.question_text ||
+            answer?.question_version?.question_text ||
+            'Pertanyaan'
+        );
+    };
+
+    const getOptionText = (answer: any) => {
+        return (
+            answer?.questionOption?.option_text ||
+            answer?.question_option?.option_text ||
+            '-'
+        );
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -235,10 +314,10 @@ export default function ReportShow({ report }: PageProps) {
                                 </div>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                                {approvals && approvals.some((approval) => approval.status === 'pending') && (
+                                {approvals && approvals.some((approval) => canUserApprove(approval)) && (
                                     <div className="flex gap-2">
                                         {approvals
-                                            .filter((approval) => approval.status === 'pending')
+                                            .filter((approval) => canUserApprove(approval))
                                             .map((approval) => (
                                                 <div key={approval.id} className="flex gap-1">
                                                     <Button
@@ -264,7 +343,7 @@ export default function ReportShow({ report }: PageProps) {
                                     </div>
                                 )}
 
-                                {report.summary.final_classification === 0 && (
+                                {summary?.final_classification === 0 && (
                                     <Button variant={'default'} size={'sm'} onClick={() => window.open(`/watchlist?reportId=${report.id}`, '_self')}>
                                         <FileTextIcon className="h-4 w-4" />
                                         Lihat NAW
@@ -281,7 +360,7 @@ export default function ReportShow({ report }: PageProps) {
                     </Card>
 
                     {/* Rejection Reason Input - Only show when there are pending approvals */}
-                    {approvals && approvals.some((approval) => approval.status === 'pending') && (
+                    {approvals && approvals.some((approval) => canUserApprove(approval)) && (
                         <Card className="mb-6">
                             <CardContent className="pt-6">
                                 <div className="space-y-3">
@@ -465,6 +544,47 @@ export default function ReportShow({ report }: PageProps) {
                         )}
                     </Card>
 
+                    {/* Jawaban & Catatan */}
+                    {answersWithNotes.length > 0 && (
+                        <Card className="mb-6">
+                            <CardHeader className="cursor-pointer" onClick={() => toggleSection('answers')}>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <FileTextIcon className="h-5 w-5" />
+                                        Jawaban & Catatan ({answersWithNotes.length})
+                                    </CardTitle>
+                                    {expandedSections.answers ? (
+                                        <ChevronUpIcon className="h-4 w-4" />
+                                    ) : (
+                                        <ChevronDownIcon className="h-4 w-4" />
+                                    )}
+                                </div>
+                            </CardHeader>
+                            {expandedSections.answers && (
+                                <CardContent>
+                                    <div className="space-y-4">
+                                        {answersWithNotes.map((ans: any, idx: number) => (
+                                            <div key={ans.id ?? idx} className="rounded-lg border p-4">
+                                                <div className="mb-2 flex items-center justify-between">
+                                                    <h4 className="font-medium">
+                                                        {getQuestionText(ans)}
+                                                    </h4>
+                                                    <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                                        {getOptionText(ans)}
+                                                    </Badge>
+                                                </div>
+                                                <Label className="text-sm font-medium text-gray-500">Catatan</Label>
+                                                <p className="mt-1 rounded border bg-gray-50 p-3 text-sm whitespace-pre-wrap">
+                                                    {ans.notes}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            )}
+                        </Card>
+                    )}
+
                     {/* Ringkasan */}
                     {summary && (
                         <Card className="mb-6">
@@ -543,7 +663,7 @@ export default function ReportShow({ report }: PageProps) {
                                                     {approval.reviewer && <div className="text-sm text-gray-500">oleh: {approval.reviewer.name}</div>}
                                                 </div>
 
-                                                {approval.status === 'pending' && (
+                                                {normalizeApprovalStatus(approval.status) === 'pending' && canUserApprove(approval) && (
                                                     <div className="mt-4 space-y-3">
                                                         <Separator />
                                                         <div className="space-y-3">

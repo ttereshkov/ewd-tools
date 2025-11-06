@@ -167,7 +167,7 @@ export default function UserEdit({ user, divisions, roles }: Props) {
                                     </Button>
                                 )}
                                 <Button type="submit" disabled={!isDirty || processing}>
-                                    Simpan
+                                    {processing ? 'Menyimpan...' : 'Simpan'}
                                 </Button>
                             </CardFooter>
                         </form>
