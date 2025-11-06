@@ -41,7 +41,8 @@ class SubmitApprovalRequest extends FormRequest
         if ($this->routeIs('approvals.reject')) {
             $rules['notes'] = ['required', 'string', 'min:10', 'max:1000'];
         } else if ($this->routeIs('approvals.approve')) {
-            $rules['notes'] = ['nullable', 'string', 'min:10', 'max:1000'];
+            // Catatan saat approve boleh kosong atau pendek
+            $rules['notes'] = ['nullable', 'string', 'max:1000'];
         }
 
         return $rules;

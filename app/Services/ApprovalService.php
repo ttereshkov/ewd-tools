@@ -120,7 +120,7 @@ class ApprovalService extends BaseService
     {
         $expectedStatus = match ($attemptingLevel) {
             ApprovalLevel::ERO => ReportStatus::SUBMITTED,
-            ApprovalLevel::KADEPT_BISNIS => ReportStatus::APPROVED,
+            ApprovalLevel::KADEPT_BISNIS => ReportStatus::REVIEWED,
             ApprovalLevel::KADIV_ERO => ReportStatus::APPROVED,
             default => throw new InvalidArgumentException('Level approval tidak valid.'),
         };
@@ -159,7 +159,7 @@ class ApprovalService extends BaseService
         }
 
         return match ($level) {
-            ApprovalLevel::ERO => ReportStatus::APPROVED,
+            ApprovalLevel::ERO => ReportStatus::REVIEWED,
             ApprovalLevel::KADEPT_BISNIS => ReportStatus::APPROVED,
             ApprovalLevel::KADIV_ERO => ReportStatus::DONE,
             default => $report->status

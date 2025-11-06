@@ -155,6 +155,7 @@ export interface Report {
     answers: any;
     aspects: ReportAspect[];
     watchlist?: Watchlist;
+    audits?: ReportAudit[];
     created_at: string;
     updated_at: string;
 }
@@ -188,6 +189,21 @@ export interface Watchlist {
     id: number;
     report_id: number;
     status: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ReportAudit {
+    id: number;
+    report_id: number;
+    action: string;
+    auditable_type: string;
+    user?: { id: number; name: string } | null;
+    level?: number | null;
+    before?: Record<string, any> | null;
+    after?: Record<string, any> | null;
+    source?: string | null;
+    readable_message: string;
     created_at: string;
     updated_at: string;
 }

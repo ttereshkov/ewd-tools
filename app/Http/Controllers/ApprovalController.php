@@ -36,6 +36,12 @@ class ApprovalController extends Controller
     public function approve(SubmitApprovalRequest $request, Approval $approval): RedirectResponse
     {
         try {
+            // Authorize action based on approval level and user role
+            if ($approval->level->value === \App\Enums\ApprovalLevel::ERO->value) {
+                $this->authorize('review', $approval);
+            } else {
+                $this->authorize('approve', $approval);
+            }
             $this->approvalService->processApproval(
                 $approval,
                 $request->user(),
@@ -52,6 +58,7 @@ class ApprovalController extends Controller
     public function reject(SubmitApprovalRequest $request, Approval $approval): RedirectResponse
     {
         try {
+            $this->authorize('reject', $approval);
             $this->approvalService->processApproval(
                 $approval,
                 $request->user(),

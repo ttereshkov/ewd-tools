@@ -50,7 +50,7 @@ class FormService extends BaseService
 
     public function submit(array $validated, User $actor): Report
     {
-        $this->authorize($actor, 'create report');
+        $this->authorize($actor, 'submit report');
 
         return $this->tx(function () use ($validated, $actor) {
             $borrowerId = $validated['informationBorrower']['borrowerId'];

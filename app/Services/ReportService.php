@@ -68,6 +68,8 @@ class ReportService
                 'aspects.aspectVersion',
                 'approvals',
                 'approvals.reviewer',
+                'audits',
+                'audits.user',
             ])->findOrFail($id);
         return $report;
     }
@@ -119,17 +121,17 @@ class ReportService
 
         // Filter based on approval level and workflow
         if ($approvalLevel === ApprovalLevel::ERO) {
-            // ERO can approve reports that are SUBMITTED
+            // ERO reviews reports that are SUBMITTED
             $query->where('status', ReportStatus::SUBMITTED);
         } elseif ($approvalLevel === ApprovalLevel::KADEPT_BISNIS) {
-            // Kadept Bisnis can approve reports that are APPROVED (by ERO)
-            $query->where('status', ReportStatus::APPROVED)
+            // Kadept Bisnis approves after ERO review; report should be REVIEWED
+            $query->where('status', ReportStatus::REVIEWED)
                   ->whereHas('approvals', function($q) {
                       $q->where('level', ApprovalLevel::ERO)
                         ->where('status', ApprovalStatus::APPROVED);
                   });
         } elseif ($approvalLevel === ApprovalLevel::KADIV_ERO) {
-            // Kadiv Risk can approve reports that are APPROVED (by Kadept Bisnis)
+            // Kadiv Risk final approval after Kadept Bisnis; report should be APPROVED
             $query->where('status', ReportStatus::APPROVED)
                   ->whereHas('approvals', function($q) {
                       $q->where('level', ApprovalLevel::KADEPT_BISNIS)

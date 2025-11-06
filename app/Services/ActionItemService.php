@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\ActionItemStatus;
-use App\ActionItemType;
+use App\Enums\ActionItemStatus;
+use App\Enums\ActionItemType;
 use App\Models\ActionItem;
 use App\Models\MonitoringNote;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,11 +28,6 @@ class ActionItemService extends BaseService
                 'previous_action_item_id' => $data['previous_action_item_id'] ?? null,
                 'created_by'              => Auth::id(),
                 'updated_by'              => Auth::id(),
-            ]);
-
-            $this->audit('ActionItem', $actionItem->id, 'created', [
-                'monitoring_note_id' => $monitoringNoteId,
-                'item_type' => $actionItem->item_type,
             ]);
 
             return $actionItem;
@@ -60,11 +55,6 @@ class ActionItemService extends BaseService
 
             $actionItem->update($updateData);
 
-            $this->audit('ActionItem', $actionItem->id, 'updated', [
-                'before' => $before,
-                'after'  => $actionItem->toArray(),
-            ]);
-
             return $actionItem->fresh();
         });
     }
@@ -77,8 +67,6 @@ class ActionItemService extends BaseService
             $actionItem = ActionItem::findOrFail($actionItemId);
             $id = $actionItem->id;
             $result = $actionItem->delete();
-
-            $this->audit('ActionItem', $id, 'deleted');
 
             return $result;
         });
@@ -97,10 +85,6 @@ class ActionItemService extends BaseService
                 ->first();
 
             if (!$previousNote) {
-                $this->audit('ActionItem', 0, 'copy_skipped', [
-                    'borrower_id' => $borrowerId,
-                    'reason' => 'No previous monitoring note found'
-                ]);
                 return new Collection();
             }
 
@@ -123,12 +107,7 @@ class ActionItemService extends BaseService
 
                 $copiedItems->push($newItem);
             }
-
-            $this->audit('ActionItem', 0, 'copied_from_previous_period', [
-                'borrower_id' => $borrowerId,
-                'copied_count' => $copiedItems->count(),
-            ]);
-
+            
             return $copiedItems;
         });
     }

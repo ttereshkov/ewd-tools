@@ -77,4 +77,9 @@ class Report extends Model
     {
         return $this->hasMany(Approval::class);
     }   
+
+    public function audits(): HasMany
+    {
+        return $this->hasMany(ReportAudit::class)->latest();
+    }
 }

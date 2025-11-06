@@ -35,6 +35,8 @@ type Approval = {
         id: number;
         name: string;
     };
+    // Catatan persetujuan/penolakan jika ada
+    notes?: string;
     created_at: string;
     updated_at: string;
 };
@@ -70,7 +72,7 @@ const formatBoolean = (value: boolean | undefined) => {
 const getClassificationBg = (c?: number) => (c === 0 ? 'bg-red-100' : 'bg-green-100');
 const getClassificationIcon = (c?: number) => (c === 0 ? AlertTriangleIcon : CheckIcon);
 
-export default function ReportShow({ report }: PageProps) {
+export default function ReportShow({ report, template, watchlist }: PageProps) {
     const page = usePage<SharedData>().props;
     const roles = useMemo(() => {
         const names = [
@@ -120,6 +122,8 @@ export default function ReportShow({ report }: PageProps) {
         answers: true,
         summary: true,
         approvals: true,
+        audits: true,
+        debug: true,
     });
 
     const [rejectionReason, setRejectionReason] = useState('');
@@ -441,10 +445,10 @@ export default function ReportShow({ report }: PageProps) {
                         {expandedSections.facilities && (
                             <CardContent>
                                 <div className="space-y-4">
-                                    {facilities.map((facility, index) => (
+                                    {facilities.map((facility) => (
                                         <div key={facility.id} className="rounded-lg border p-4">
                                             <h4 className="mb-3 font-medium">
-                                                Fasilitas {index + 1}: {facility.facility_name}
+                                                {facility.facility_name}
                                             </h4>
                                             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                                                 <div>
@@ -626,6 +630,13 @@ export default function ReportShow({ report }: PageProps) {
                                             </div>
                                         )}
 
+                                        {summary.business_notes && (
+                                            <div>
+                                                <Label className="text-sm font-medium text-gray-500">Catatan Bisnis</Label>
+                                                <p className="mt-1 rounded border bg-gray-50 p-3 text-sm">{summary.business_notes}</p>
+                                            </div>
+                                        )}
+
                                         {summary.reviewer_notes && (
                                             <div>
                                                 <Label className="text-sm font-medium text-gray-500">Catatan Reviewer</Label>
@@ -696,20 +707,92 @@ export default function ReportShow({ report }: PageProps) {
                                                     </div>
                                                 )}
 
+                    {approval.notes && (
+                        <div className="mt-3">
+                            <Label className="text-sm font-medium text-gray-500">Catatan</Label>
+                            <p className="mt-1 rounded border bg-gray-50 p-3 text-sm whitespace-pre-wrap">{approval.notes}</p>
+                        </div>
+                    )}
+
                                                 <div className="mt-2 text-xs text-gray-500">
                                                     Dibuat: {formatDate(approval.created_at)} | Diperbarui: {formatDate(approval.updated_at)}
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
-                                </CardContent>
-                            )}
-                        </Card>
+                        </CardContent>
                     )}
+                </Card>
+            )}
+
+            {/* Log Audit */}
+            <Card className="mb-6">
+                <CardHeader className="cursor-pointer" onClick={() => toggleSection('audits')}>
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                            <FileTextIcon className="h-5 w-5" />
+                            Log Audit
+                        </CardTitle>
+                        {expandedSections.audits ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
+                    </div>
+                </CardHeader>
+                {expandedSections.audits && (
+                    <CardContent>
+                        {report.audits && report.audits.length > 0 ? (
+                            <div className="space-y-4">
+                                {report.audits.map((audit) => (
+                                    <div key={audit.id} className="rounded border p-3">
+                                        <div className="text-sm">
+                                            {audit.readable_message}
+                                        </div>
+                                        <div className="mt-1 text-xs text-gray-500">
+                                            {formatDate(audit.created_at)}
+                                            {audit.user?.name ? ` • oleh ${audit.user.name}` : ''}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-sm text-gray-600">Belum ada aktivitas audit untuk laporan ini.</div>
+                        )}
+                    </CardContent>
+                )}
+            </Card>
+
+                    {/* Semua Data (JSON) */}
+                    {/* <Card className="mb-6">
+                        <CardHeader className="cursor-pointer" onClick={() => toggleSection('debug')}>
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="flex items-center gap-2">
+                                    <FileTextIcon className="h-5 w-5" />
+                                    Semua Data (JSON)
+                                </CardTitle>
+                                {expandedSections.debug ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
+                            </div>
+                        </CardHeader>
+                        {expandedSections.debug && (
+                            <CardContent>
+                                <div className="space-y-6">
+                                    <div>
+                                        <Label className="text-sm font-medium text-gray-500">Report</Label>
+                                        <pre className="mt-1 max-h-[500px] overflow-auto rounded bg-gray-100 p-4 text-xs">{JSON.stringify(report, null, 2)}</pre>
+                                    </div>
+                                    <div>
+                                        <Label className="text-sm font-medium text-gray-500">Template</Label>
+                                        <pre className="mt-1 max-h-[500px] overflow-auto rounded bg-gray-100 p-4 text-xs">{JSON.stringify(template, null, 2)}</pre>
+                                    </div>
+                                    {watchlist && (
+                                        <div>
+                                            <Label className="text-sm font-medium text-gray-500">Watchlist</Label>
+                                            <pre className="mt-1 max-h-[500px] overflow-auto rounded bg-gray-100 p-4 text-xs">{JSON.stringify(watchlist, null, 2)}</pre>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        )}
+                    </Card> */}
                 </div>
             </div>
-            {/* Debug JSON - Remove in production */}
-            {/* <pre className="rounded bg-gray-100 p-4 text-sm">{JSON.stringify(report, null, 2)}</pre> */}
         </AppLayout>
     );
 }

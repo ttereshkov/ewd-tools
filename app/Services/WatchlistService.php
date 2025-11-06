@@ -28,17 +28,7 @@ class WatchlistService extends BaseService
                     'status' => WatchlistStatus::ACTIVE,
                     'added_by' => Auth::id(),
                 ]);
-
-                $this->audit('Watchlist', $watchlist->id, 'created', [
-                    'borrower_id' => $report->borrower_id,
-                    'report_id'   => $report->id,
-                    'status'      => WatchlistStatus::ACTIVE,
-                ]);
             } else {
-                $this->audit('Watchlist', $watchlist->id, 'retrieved', [
-                    'borrower_id' => $report->borrower_id,
-                    'status'      => $watchlist->status->label(),
-                ]);
             }
 
             return $watchlist->fresh(['borrower', 'report']);
@@ -59,12 +49,6 @@ class WatchlistService extends BaseService
                 'resolved_notes' => $reason,
             ]);
 
-            $this->audit('Watchlist', $watchlist->id, 'resolved', [
-                'before' => $before,
-                'after'  => $watchlist->toArray(),
-                'reason' => $reason,
-            ]);
-
             return $watchlist->fresh();
         });
     }
@@ -74,15 +58,9 @@ class WatchlistService extends BaseService
         $this->authorize('update watchlist');
 
         return $this->tx(function () use ($watchlist) {
-            $before = $watchlist->toArray();
 
             $watchlist->update([
                 'status' => WatchlistStatus::ARCHIVED,
-            ]);
-
-            $this->audit('Watchlist', $watchlist->id, 'archived', [
-                'before' => $before,
-                'after'  => $watchlist->toArray(),
             ]);
 
             return $watchlist->fresh();

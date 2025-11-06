@@ -525,6 +525,7 @@ export default function ApprovalIndex({ reports, user }: PageProps) {
                                                 <TableHead>Status Laporan</TableHead>
                                                 <TableHead>Level Persetujuan</TableHead>
                                                 <TableHead>Status Persetujuan</TableHead>
+                                                <TableHead>Catatan Persetujuan</TableHead>
                                                 <TableHead>Aksi</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -559,6 +560,25 @@ export default function ApprovalIndex({ reports, user }: PageProps) {
                                                                 ) : null;
                                                             })()}
                                                         </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {(() => {
+                                                            const approvals = report.approvals || [];
+                                                            const latestWithNotes = [...approvals]
+                                                                .reverse()
+                                                                .find((a) => typeof a.notes === 'string' && a.notes.trim().length > 0);
+                                                            const text = latestWithNotes?.notes || '';
+                                                            return text ? (
+                                                                <div
+                                                                    className="max-w-[320px] truncate text-sm text-muted-foreground"
+                                                                    title={text}
+                                                                >
+                                                                    {text}
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-sm text-muted-foreground">-</span>
+                                                            );
+                                                        })()}
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex flex-wrap gap-2">

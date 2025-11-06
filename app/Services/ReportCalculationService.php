@@ -25,6 +25,8 @@ class ReportCalculationService extends BaseService
                 'borrower.detail',
                 'borrower.facilities',
                 'template.latestTemplateVersion.aspects.latestAspectVersion.visibilityRules',
+                'template.latestTemplateVersion.aspects.latestAspectVersion.questionVersions.questionOptions',
+                'template.latestTemplateVersion.aspects.latestAspectVersion.questionVersions.visibilityRules',
                 'answers.questionVersion',
                 'answers.questionOption',
                 'answers.questionVersion.visibilityRules',
@@ -34,7 +36,12 @@ class ReportCalculationService extends BaseService
 
             $aspectWeightMap = $this->buildAspectWeightMap($report, $borrowerData, $facilityData);
 
-            $aspectScores = $this->calculateAspectScores($report->answers, $borrowerData, $facilityData);
+            $aspectScores = $this->calculateAspectScores(
+                $report->answers,
+                $borrowerData,
+                $facilityData,
+                $report->template?->latestTemplateVersion
+            );
 
             $overallSummary = $this->calculateOverallSummary(
                 $aspectScores,
@@ -94,7 +101,7 @@ class ReportCalculationService extends BaseService
      * Hitung skor untuk setiap aspek berdasarkan jawaban.
      * Kembalikan koleksi DTO.
      */
-    private function calculateAspectScores(Collection $answers, array $borrowerData, array $facilityData): SupportCollection
+    private function calculateAspectScores(Collection $answers, array $borrowerData, array $facilityData, ?\App\Models\TemplateVersion $templateVersion = null): SupportCollection
     {
         $visibleAnswers = $answers->filter(function ($answer) use ($borrowerData, $facilityData) {
             $qv = $answer->questionVersion;
@@ -107,13 +114,44 @@ class ReportCalculationService extends BaseService
 
         $answersByAspect = $visibleAnswers->groupBy('questionVersion.aspectVersion.id');
 
-        return $answersByAspect->map(function ($aspectAnswers, $aspectVersionId) {
+        // Build map of all questions per visible aspect from template version
+        $allQuestionsByAspect = [];
+        if ($templateVersion) {
+            foreach ($templateVersion->aspects as $aspect) {
+                $aspectVersion = $aspect->latestAspectVersion;
+                if (!$aspectVersion) { continue; }
+                if (method_exists($aspectVersion, 'checkVisibility') && !$aspectVersion->checkVisibility($borrowerData, $facilityData)) {
+                    continue; // skip aspects hidden by visibility rules
+                }
+                $allQuestionsByAspect[$aspectVersion->id] = $aspectVersion->questionVersions;
+            }
+        }
+
+        return $answersByAspect->map(function ($aspectAnswers, $aspectVersionId) use ($allQuestionsByAspect, $borrowerData, $facilityData) {
             $totalScore = 0;
 
             foreach ($aspectAnswers as $answer) {
                 $questionWeight = ($answer->questionVersion->weight ?? 0) / 100;
                 $optionScore = $answer->questionOption->score ?? 0;
                 $totalScore += $questionWeight * $optionScore;
+            }
+
+            // Add max-score contribution for hidden questions (do not appear due to visibility)
+            if (isset($allQuestionsByAspect[$aspectVersionId])) {
+                foreach ($allQuestionsByAspect[$aspectVersionId] as $questionVersion) {
+                    // If question is NOT visible, add weighted max option score
+                    $isVisible = method_exists($questionVersion, 'checkVisibility')
+                        ? $questionVersion->checkVisibility($borrowerData, $facilityData)
+                        : true;
+                    if (!$isVisible) {
+                        $questionWeight = ($questionVersion->weight ?? 0) / 100;
+                        $maxOptionScore = $questionVersion->questionOptions->max('score');
+                        if ($maxOptionScore === null) { // safe fallback
+                            $maxOptionScore = 100;
+                        }
+                        $totalScore += $questionWeight * $maxOptionScore;
+                    }
+                }
             }
 
             $totalScore = round($totalScore, 2);

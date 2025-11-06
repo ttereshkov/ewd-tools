@@ -33,7 +33,7 @@ class BorrowerController extends Controller
                 'division_id' => $request->get('division_id'),
             ];
             $borrowers = $this->borrowerService->getAllBorrowers($perPage, $filters);
-            $divisions = $this->divisionService->getAllDivisions();
+            $divisions = $this->divisionService->getDivisionsForFilters();
             return Inertia::render('borrower/index', [
                 'borrowers' => $borrowers,
                 'divisions' => $divisions,
@@ -48,7 +48,7 @@ class BorrowerController extends Controller
     public function create()
     {
         try {
-            $divisions = $this->divisionService->getAllDivisions();
+            $divisions = $this->divisionService->getDivisionsForFilters();
             return Inertia::render('borrower/create', [
                 'divisions' => $divisions
             ]);
@@ -85,7 +85,7 @@ class BorrowerController extends Controller
     public function edit(Borrower $borrower)
     {
         try {
-            $divisions = $this->divisionService->getAllDivisions();
+            $divisions = $this->divisionService->getDivisionsForFilters();
             return Inertia::render('borrower/edit', [
                 'borrower' => $borrower->load('division'),
                 'divisions' => $divisions,

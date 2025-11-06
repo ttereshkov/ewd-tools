@@ -255,6 +255,9 @@ export default function PeriodIndex() {
                                         placeholder="Cari nama/tanggal periode..."
                                         value={q}
                                         onChange={(e) => setQ(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') applySearch();
+                                        }}
                                         className="min-w-0 flex-1 sm:w-80"
                                     />
                                     <Button variant="secondary" onClick={applySearch} aria-label="Cari">

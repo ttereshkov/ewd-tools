@@ -63,6 +63,7 @@ class RolePermissionSeeder extends Seeder
             'create report',
             'update report',
             'delete report',
+            'submit report',
 
             // Report Summary permissions
             'view report summary',
@@ -124,6 +125,7 @@ class RolePermissionSeeder extends Seeder
             'create report',
             'update report',
             'delete report',
+            'submit report',
             
             'view report summary',
             'create report summary',

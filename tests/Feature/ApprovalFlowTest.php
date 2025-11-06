@@ -42,7 +42,7 @@ test('sequential approvals by correct roles progress report to DONE', function (
     ])->assertRedirect()->assertSessionHas('success');
 
     $report->refresh();
-    expect($report->status)->toBe(ReportStatus::APPROVED);
+    expect($report->status)->toBe(ReportStatus::REVIEWED);
     assertDatabaseHas('approvals', ['id' => $approvalERO->id, 'status' => ApprovalStatusEnum::APPROVED->value]);
 
     // Kadept Bisnis approves next
